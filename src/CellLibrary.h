@@ -8,7 +8,8 @@
 
 using namespace std;
 
-class BaseCell {
+class BaseCell
+{
 public:
     BaseCell() : _width(0), _height(0), _isFF(false), _pinNum(-1) {}
     BaseCell(string &name, double width, double height, int pinNum) : _name(name), _width(width), _height(height),
@@ -33,12 +34,17 @@ public:
     int getPinNum() const { return _pinNum; }
     pair<double, double> getPinOffset(string &pinName) { return _pinOffset[pinName]; }
     bool isOutPin(string &pinName) { return _isOutPin[pinName]; }
-    virtual double getPower() const {
+    virtual double getPower() const
+    {
         cout << "Not FF cell !!!" << endl;
+        return -1;
     }
-    virtual double getQdelay() const {
+    virtual double getQdelay() const
+    {
         cout << "Not FF cell !!!" << endl;
+        return -1;
     }
+
 private:
     string _name;
     double _width;
@@ -50,11 +56,12 @@ private:
     map<string, pair<double, double>> _pinOffset;
 };
 
-class FFCell : public BaseCell {
+class FFCell : public BaseCell
+{
 public:
     FFCell() : BaseCell(), _qDelay(0), _power(0) {}
     FFCell(string &name, double width, double height, int pinNum) : BaseCell(name, width, height, pinNum, true),
-                                                                    _qDelay(0), _power(0) {};
+                                                                    _qDelay(0), _power(0){};
     FFCell(double qDelay, double power) : _qDelay(qDelay), _power(power) {}
 
     // set

@@ -4,21 +4,24 @@
 #include <vector>
 
 #include "Rectangle.h"
-#include "Point.h"
+// #include "Point.h"
 #include "DatabaseDef.h"
 using namespace std;
 
-class Bin : public Rectangle {
-   public:
-    Bin() : Rectangle(), _overlapArea(0), _binArea(0) {
-
+class Bin : public Rectangle
+{
+public:
+    Bin() : Rectangle(), _overlapArea(0), _binArea(0)
+    {
     }
 
-    Bin(double left, double bottom, double right, double top, double binArea) : _overlapArea(0), _binArea(binArea) {
+    Bin(double left, double bottom, double right, double top, double binArea) : _overlapArea(0), _binArea(binArea)
+    {
         setBounds(left, bottom, right, top);
     }
 
-    void resetBin() {
+    void resetBin()
+    {
         _overlapArea = 0;
     }
 
@@ -27,9 +30,9 @@ class Bin : public Rectangle {
 
     double getDensity() const { return _overlapArea / _binArea; }
 
-   private:
+private:
     double _binArea;
-    double _overlapArea;  // cal in Rectangle.h
+    double _overlapArea; // cal in Rectangle.h
 };
 
-#endif //BIN_H
+#endif // BIN_H

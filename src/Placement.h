@@ -6,8 +6,14 @@
 class Placement
 {
 public:
-    // hello
+    void mainLoop();
+    void constructDiamond();
+    void constructGraph();
+    void findMST();
+    void mergeFF();
+
 private:
+    Database _dataBase;
 };
 
 #endif // PLACEMENT_H
