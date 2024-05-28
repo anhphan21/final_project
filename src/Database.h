@@ -22,6 +22,14 @@ public:
 
 	//set
 	void setName(string &name) { _name = name; }
+	double boundaryTop() const { return _boundaryTop; }
+	double boundaryLeft() const { return _boundaryLeft; }
+	double boundaryBottom() const { return _boundaryBottom; }
+	double boundaryRight() const { return _boundaryRight; }
+	double alpha() const { return _alpha; }
+	double beta() const { return _beta; }
+	double gamma() const { return _gamma; }
+	double lambda() const { return _lambda; }
 
 	// methods for design (hyper-graph) construction
 	void addModule(Module *module) { _modules.push_back(module); }

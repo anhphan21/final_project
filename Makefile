@@ -1,15 +1,16 @@
 CC=g++
-CXXFLAGS=-std=c++17 -static -O2 -Wall -D_GLIBCXX_ISE_CXX11_ABI=1  # for release
-# CXXFLAGS=-std=c++17 -g -static -Wall -D_GLIBCXX_ISE_CXX11_ABI=1  # for debug
-LDFLAGS=-Llib -lDetailPlace -lGlobalPlace -lLegalizer -lPlacement -lParser -lPlaceCommon
-SOURCES=src/ObjectiveFunction.cpp src/Optimizer.cpp src/GlobalPlacer.cpp src/main.cpp
+LDFLAGS=-std=c++11 -O3 -lm
+SOURCES= src/Placement.cpp src/main.cpp src/Database.cpp 
 OBJECTS=$(SOURCES:.c=.o)
-EXECUTABLE=place
-
+EXECUTABLE=fp
+INCLUDES=src/Bin.h src/Module.h src/Net.h src/Pin.h src/Placement.h src/Rectangle.h src/Row.h src/CellLibrary.h src/Database.h src/DatabaseDef.h 
 all: $(SOURCES) bin/$(EXECUTABLE)
 
 bin/$(EXECUTABLE): $(OBJECTS)
-	$(CC) $(OBJECTS) $(CXXFLAGS) $(LDFLAGS) -o $@
+	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+
+%.o:  %.c  ${INCLUDES}
+	$(CC) $(CFLAGS) $< -o $@
 
 clean:
 	rm -rf *.o bin/$(EXECUTABLE)
