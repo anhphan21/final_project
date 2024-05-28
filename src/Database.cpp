@@ -8,7 +8,7 @@ using namespace std;
 Database::Database()
 		: _name(), _boundaryTop(-1), _boundaryBottom(-1), _boundaryLeft(-1), _boundaryRight(-1), _numModules(0),
 		  _numNets(0), _numInput(-1), _numOutput(-1), _numBinCol(0), _numBinRow(0), _binWidth(-1), _binHeight(-1), _binMaxUtil(-1),
-		  _deltaDelay(-1), _alpha(-1), _beta(-1), _gamma(-1), _lambda(-1) {
+		  _QpinDelay(-1), _alpha(-1), _beta(-1), _gamma(-1), _lambda(-1) {
 
 }
 
@@ -107,6 +107,8 @@ void Database::parser(const string& filename) {
                 string temp, name, type;
                 double x, y;
                 iss >> temp >> name >> type >> x >> y;
+                // Module* currentM = new Module(name, type, x, y, 0);
+                //this->_cellLib.push_back(currentM);
 
             }
         }
@@ -126,7 +128,7 @@ void Database::parser(const string& filename) {
                     auto pos = type.find("/");
                     if (pos == type.npos)
                     {
-
+                        
                     }
                     else
                     {
@@ -152,18 +154,51 @@ void Database::parser(const string& filename) {
         else if (keyword == "PlacementRows") {
             int startX, startY, siteWidth, siteHeight, totalNumOfSites;
             iss >> startX >> startY >> siteWidth >> siteHeight >> totalNumOfSites;
+            // for (auto& rows : _rows) {
+            //     rows->setHeight(siteHeight);
+            //     rows->setWidth(siteWidth);
+            //     rows->numsites(totalNumOfSites);
+            //     rows->x(startX);
+            //     rows->y(startY);
+                
+            // }
 
         }
-        else if (keyword == "DisplacementDelay") {
-            double delay;
-            iss >> delay;
-
+        else if (keyword == "TimingSlack") {
+            string name, Dpin;
+            double timing;
+            iss >> name >> Dpin >> timing;
+            for (auto& row : _ffLib) {
+                for (auto& cell : row) {
+                    if (cell->getName() == name) {
+                        cell->setPower(timing);
+                    }
+                }
+            }
+            // Delete memory
+            for (auto& row : _ffLib) {
+                for (auto& cell : row) {
+                    delete cell;
+                }
+            }
         }
         else if (keyword == "QpinDelay") {
             string type;
             double delay;
             iss >> type >> delay;
-
+            for (auto& row : _ffLib) {
+                for (auto& cell : row) {
+                    if (cell->getName() == type) {
+                        cell->setQdelay(delay);
+                    }
+                }
+            }
+            // Delete memory
+            for (auto& row : _ffLib) {
+                for (auto& cell : row) {
+                    delete cell;
+                }
+            }
         }
         else if (keyword == "TimingSlack") {
             string name, Dpin;
@@ -175,7 +210,19 @@ void Database::parser(const string& filename) {
             string type;
             double power;
             iss >> type >> power;
-
+            for (auto& row : _ffLib) {
+                for (auto& cell : row) {
+                    if (cell->getName() == type) {
+                        cell->setPower(power);
+                    }
+                }
+            }
+            // Delete memory
+            for (auto& row : _ffLib) {
+                for (auto& cell : row) {
+                    delete cell;
+                }
+            }
         }
     }
 

@@ -76,7 +76,7 @@ public:
 	unsigned getNumInputs() const { return _numInput; }
 	unsigned getNumOutputs() const { return _numOutput; }
 	unsigned getNumRows() const { return _rows.size(); }
-	double getDeltaDelay() const { return _deltaDelay; }
+	double getQDelay() const { return _QpinDelay; }
 	double getAlpha() const { return _alpha; }
 	double getBeta() const { return _beta; }
 	double getGamma() const { return _gamma; }
@@ -106,6 +106,7 @@ private:
 	double _boundaryLeft;
 	double _boundaryBottom;
 	double _boundaryRight;
+	//double _timingSlack;
 
 	size_t _numModules;
 	size_t _numNets;
@@ -120,7 +121,7 @@ private:
 	int _numBinRow;			//Like y index
 
 	//For FF merging
-	double _deltaDelay;
+	double _QpinDelay;
 	double _alpha;
 	double _beta;
 	double _gamma;
