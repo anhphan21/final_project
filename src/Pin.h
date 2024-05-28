@@ -2,9 +2,10 @@
 #define PIN_H
 
 #include "DatabaseDef.h"
+#include "Module.h"
+#include "CellLibrary.h"
+#include <cmath>
 using namespace std;
-
-Database *DatabaseMgr;
 
 class Pin {
 public:
@@ -16,7 +17,8 @@ public:
 	Pin(Net *net, Module *module, string &pinName, double xOffset, double yOffset) : _net(net), _module(module),
 																					 _name(pinName), _xOffset(xOffset),
 																					 _yOffset(yOffset) {
-		
+		_x = 0;
+		_y = 0;
 	}
 
 	string name() const { return _name; }
@@ -27,6 +29,7 @@ public:
 	Module *module() const { return _module; }
 	Net *net() const { return _net; }
 	unsigned pinId() const { return _pinId; }
+	bool isIOdie() const { return (_module == nullptr); }
 
 	void setPosition(double x, double y) {
 		_x = x;
@@ -37,18 +40,22 @@ public:
 		_yOffset = yOffset;
 	}
 
-	void setModuleId(Module *module) { _module = module; }
-	void setNetId(Net *net) { _net = net; }
+	void setModulePtr(Module *module) { _module = module; }
+	void setNetPtr(Net *net) { _net = net; }
 	void setPinId(unsigned pinId) { _pinId = pinId; }
+
+	static double calHPWL(const Pin &pin0, const Pin &pin1) {
+		return {abs(pin0.x() -pin1.x()) + abs(pin0.y() - pin1.y())};
+	}
 
 private:
 	// variables from benchmark input
 	string _name;
 	double _x, _y;              // absolute x and y
 	double _xOffset, _yOffset;  // offsets from the bottom-left of the module
-	Module *_module;         	// ptr of the associated module
-	Net *_net;                	// ptr to the associated net
-	unsigned _pinId;        	// Pin ID (preserved for nothing)
+	Module *_module;            // ptr of the associated module
+	Net *_net;                    // ptr to the associated net
+	unsigned _pinId;            // Pin ID (preserved for nothing)
 };
 
 #endif  // PIN_H`
