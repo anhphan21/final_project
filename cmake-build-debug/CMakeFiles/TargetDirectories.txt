@@ -1,3 +1,0 @@
-/home/users/anhph/CLionProjects/final_project/cmake-build-debug/CMakeFiles/final_project.dir
-/home/users/anhph/CLionProjects/final_project/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/users/anhph/CLionProjects/final_project/cmake-build-debug/CMakeFiles/rebuild_cache.dir
