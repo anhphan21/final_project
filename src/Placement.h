@@ -3,9 +3,11 @@
 
 #include "Database.h"
 
-class Placement {
-
+class Placement
+{
+public:
+    // hello
+private:
 };
 
-
-#endif //PLACEMENT_H
+#endif // PLACEMENT_H
