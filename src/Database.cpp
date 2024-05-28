@@ -2,7 +2,8 @@
 
 Database::Database()
 		: _name(), _boundaryTop(-1), _boundaryBottom(-1), _boundaryLeft(-1), _boundaryRight(-1), _numModules(0),
-		  _numNets(0), _numInput(-1), _numOutput(-1), _numBinCol(0), _numBinRow(0), _binWidth(-1), _binHeight(-1), _binMaxUtil(-1),
+		  _numNets(0), _numInput(-1), _numOutput(-1), _numBinCol(0), _numBinRow(0), _binWidth(-1), _binHeight(-1),
+		  _binMaxUtil(-1),
 		  _deltaDelay(-1), _alpha(-1), _beta(-1), _gamma(-1), _lambda(-1) {
 
 }
@@ -12,7 +13,19 @@ void Database::parser() {
 }
 
 void Database::connectPinsWithModulesAndNets() {
-	//TODO:
+	unsigned _checkOutIdx;
+	Pin *_tmpPin;
+
+	for (unsigned i = 0; i < _numNets; ++i) {
+		_checkOutIdx = _nets[i]->getOutIdx();
+		for (unsigned j = 0, endj = _nets[i]->pinNum(); j < endj; ++j) {
+			_tmpPin = _nets[i]->pin(j);
+			if (j == _checkOutIdx)
+				_tmpPin->module()->addOutPin(_tmpPin);
+			else
+				_tmpPin->module()->addInPin(_tmpPin);
+		}
+	}
 }
 
 
@@ -80,6 +93,4 @@ void Database::updateBinUtil() {
 			}
 		}
 	}
-
-
 }

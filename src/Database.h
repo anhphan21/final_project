@@ -26,6 +26,7 @@ public:
 	double boundaryLeft() const { return _boundaryLeft; }
 	double boundaryBottom() const { return _boundaryBottom; }
 	double boundaryRight() const { return _boundaryRight; }
+	double deltaDelay() const { return _deltaDelay; }
 	double alpha() const { return _alpha; }
 	double beta() const { return _beta; }
 	double gamma() const { return _gamma; }
@@ -62,16 +63,6 @@ public:
 	Row *row(unsigned rowId) { return _rows[rowId]; }
 	Bin *bin(unsigned colIdx, unsigned rowIdx) { return _bins[colIdx][rowIdx]; }
 
-	double boundaryTop() const { return _boundaryTop; }
-	double boundaryLeft() const { return _boundaryLeft; }
-	double boundaryBottom() const { return _boundaryBottom; }
-	double boundaryRight() const { return _boundaryRight; }
-	double deltaDelay() const { return _deltaDelay; }
-	double alpha() const { return _alpha; }
-	double beta() const { return _beta; }
-	double gamma() const { return _gamma; }
-	double lambda() const { return _lambda; }
-
 	unsigned getNumModules() const { return _modules.size(); }
 	unsigned getNumFF() const { return _ffModules.size(); }
 	unsigned getNumNets() const { return _nets.size(); }
@@ -96,8 +87,8 @@ private:
 	NetList _clkNets;
 
 	//Library
-	static CellLibrary _cellLib;
-	static FFLLibrary _ffLib;
+	CellLibrary _cellLib;
+	FFLLibrary _ffLib;
 
 	//Design statics
 	Rectangle _dieRectangle;
@@ -111,7 +102,7 @@ private:
 	size_t _numInput;
 	size_t _numOutput;
 
-	//Bin statics
+	//Bin statics1
 	double _binWidth;
 	double _binHeight;
 	double _binMaxUtil;

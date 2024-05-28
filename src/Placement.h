@@ -3,17 +3,16 @@
 
 #include "Database.h"
 
-class Placement
-{
+class Placement {
 public:
-    void mainLoop();
-    void constructDiamond();
-    void constructGraph();
-    void findMST();
-    void mergeFF();
+	void mainLoop();
+	void constructDiamond();
+	void constructGraph();
+	void findMST();
+	void mergeFF();
 
 private:
-    Database _dataBase;
+	Database _dataBase;
 };
 
 #endif // PLACEMENT_H
