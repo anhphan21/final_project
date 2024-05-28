@@ -3,3 +3,6 @@
 //
 
 #include "Placement.h"
+void Placement::mainLoop(Database *database)
+{
+}

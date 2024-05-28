@@ -11,9 +11,9 @@ using namespace std;
 class BaseCell
 {
 public:
-    BaseCell() : _width(0), _height(0), _isFF(false), _pinNum(-1) {}
+    BaseCell() : _width(0), _height(0), _pinNum(-1), _isFF(false) {}
     BaseCell(string &name, double width, double height, int pinNum) : _name(name), _width(width), _height(height),
-                                                                      _isFF(false), _pinNum(pinNum) {}
+                                                                      _pinNum(pinNum), _isFF(false) {}
     BaseCell(string &name, double width, double height, int pinNum, bool isFF) : _name(name), _width(width),
                                                                                  _height(height), _pinNum(pinNum),
                                                                                  _isFF(isFF) {}
@@ -49,8 +49,8 @@ private:
     string _name;
     double _width;
     double _height;
-    bool _isFF;
     int _pinNum;
+    bool _isFF;
 
     map<string, bool> _isOutPin;
     map<string, pair<double, double>> _pinOffset;

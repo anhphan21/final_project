@@ -31,8 +31,8 @@ public:
     double getDensity() const { return _overlapArea / _binArea; }
 
 private:
-    double _binArea;
     double _overlapArea; // cal in Rectangle.h
+    double _binArea;
 };
 
 #endif // BIN_H

@@ -2,18 +2,26 @@
 #define PLACEMENT_H
 
 #include "Database.h"
-
+// We declare a Placement every time we are doing merge on a clk net
 class Placement
 {
 public:
-    void mainLoop();
+    void mainLoop(Database *database);
     void constructDiamond();
     void constructGraph();
     void findMST();
     void mergeFF();
+    // methods for design (hyper-graph) construction
+    void addNode(Node *node) { _nodes.push_back(node); }
+    unsigned getNumNode() { return _nodes.size(); }
+    void setNodesize(unsigned size) { _nodes.resize(size); }
+    void clearNode() { _nodes.clear(); }
+
+    // get design property
+    Node *node(unsigned nodeId) { return _nodes[nodeId]; }
 
 private:
-    Database _dataBase;
+    NodeList _nodes;
 };
 
 #endif // PLACEMENT_H

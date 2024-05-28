@@ -15,7 +15,7 @@ using namespace std;
 class Module
 {
 public:
-    Module() : _x(-1), _y(-1), _isFixed(false), _type(nullptr)
+    Module() : _type(nullptr), _x(-1), _y(-1), _isFixed(false)
     {
     }
 
@@ -101,9 +101,9 @@ public:
 private:
     // variables from benchmark input
     string _name;
+    CellType *_type;
     double _x, _y; // bottom-left coordinate
     bool _isFixed;
-    CellType *_type;
 
     // pins of the module
     vector<Pin *> _inPins;

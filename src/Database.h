@@ -11,6 +11,7 @@
 #include "Bin.h"
 #include "Pin.h"
 #include "Net.h"
+#include "Node.h"
 using namespace std;
 
 class Database

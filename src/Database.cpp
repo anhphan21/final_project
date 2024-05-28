@@ -1,20 +1,22 @@
 #include "Database.h"
 
 Database::Database()
-		: _name(), _boundaryTop(-1), _boundaryBottom(-1), _boundaryLeft(-1), _boundaryRight(-1), _numModules(0),
-		  _numNets(0), _numInput(-1), _numOutput(-1), _numBinCol(0), _numBinRow(0), _binWidth(-1), _binHeight(-1), _binMaxUtil(-1),
-		  _deltaDelay(-1), _alpha(-1), _beta(-1), _gamma(-1), _lambda(-1) {
-
+	: _name(), _boundaryTop(-1), _boundaryLeft(-1), _boundaryBottom(-1), _boundaryRight(-1), _numModules(0),
+	  _numNets(0), _numInput(-1), _numOutput(-1), _binWidth(-1), _binHeight(-1), _binMaxUtil(-1), _numBinCol(0), _numBinRow(0),
+	  _deltaDelay(-1), _alpha(-1), _beta(-1), _gamma(-1), _lambda(-1)
+{
 }
 
-void Database::parser() {
-	//TODO:
+void Database::parser()
+{
+	// TODO:
 }
 
-void Database::initialBinArray() {
-	//Initial Die Boundary
+void Database::initialBinArray()
+{
+	// Initial Die Boundary
 	assert((_boundaryRight != -1) || (_boundaryLeft != -1) || (_boundaryTop != -1) || (_boundaryBottom != -1));
-	//Initial Bin information
+	// Initial Bin information
 	assert((_binWidth != -1) || (_binHeight != -1) || (_binMaxUtil != -1));
 
 	_numBinRow = _dieRectangle.height() / _binHeight;
@@ -28,25 +30,31 @@ void Database::initialBinArray() {
 	// Create bin array
 	double _tempLeft, _tempBottom;
 	_bins.resize(_numBinCol);
-	for (int i = 0; i < _numBinCol; ++i) {
+	for (int i = 0; i < _numBinCol; ++i)
+	{
 		_bins[i].resize(_numBinRow);
 		_tempLeft = _xPos + _binWidth * i;
-		for (int j = 0; j < _numBinRow; ++j) {
+		for (int j = 0; j < _numBinRow; ++j)
+		{
 			_tempBottom = _yPos + _binHeight * j;
 			_bins[i][j] = new Bin(_tempLeft, _tempBottom, _tempLeft + _binWidth, _tempBottom + _binHeight, _binArea);
 		}
 	}
 }
 
-void Database::resetBin() {
-	for (size_t i = 0; i < _numBinCol; ++i) {
-		for (size_t j = 0; j < _numBinRow; ++j) {
+void Database::resetBin()
+{
+	for (size_t i = 0; i < _numBinCol; ++i)
+	{
+		for (size_t j = 0; j < _numBinRow; ++j)
+		{
 			_bins[i][j]->resetBin();
 		}
 	}
 }
 
-void Database::updateBinUtil() {
+void Database::updateBinUtil()
+{
 	Module *_tmpModule;
 	double _tmpCenterX, _tmpCenterY;
 	int _rowIdx, _colIdx;
@@ -54,10 +62,11 @@ void Database::updateBinUtil() {
 	double _cellArea;
 	double _Ox, _Oy;
 	double _cogDistX, _cogDistY;
-	//Reset bin util to 0
+	// Reset bin util to 0
 	resetBin();
-	//Update bin util
-	for (size_t i = 0; i < _numModules; ++i) {
+	// Update bin util
+	for (size_t i = 0; i < _numModules; ++i)
+	{
 		_tmpModule = module(i);
 		_tmpCenterX = _tmpModule->centerX();
 		_tmpCenterY = _tmpModule->centerY();
