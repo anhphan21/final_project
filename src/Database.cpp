@@ -13,7 +13,6 @@ Database::Database()
 }
 
 void Database::parser(const string& filename) {
-	//TODO:
     ifstream file(filename);
     string line;
 
@@ -23,12 +22,12 @@ void Database::parser(const string& filename) {
         iss >> keyword;
         if (keyword == "Alpha" || keyword == "Beta" || keyword == "Gamma" || keyword == "Lambda") 
         {
-            double a, b, g, l;
-            iss >> a >> b >> g >> l;
-            setalpha(a);
-            setbeta(b);
-            setgamma(g);
-            setlambda(l);
+            double alpha, beta, gamma, lambda;
+            iss >> alpha >> beta >> gamma >> lambda;
+            setalpha(alpha);
+            setbeta(beta);
+            setgamma(gamma);
+            setlambda(lambda);
 
         }
         else if (keyword == "DieSize") 
@@ -70,21 +69,26 @@ void Database::parser(const string& filename) {
             int bitCount, width, height, pinCount, numPin;
             string id;
             iss >> bitCount >> id >> width >> height >> pinCount >> numPin;
+            FFCell* FFcellptr = new FFCell(id, width, height, pinCount);
+            this->_ffLib[pinCount].push_back(FFcellptr);
+            this->CellType2Ptr.insert({ id,FFcellptr });
             for (int i = 0; i < numPin; i++) 
             {
-                string type, name, x, y;
-                iss >> type >> name >> x >> y;
+                string temp, name;
+                double  x, y;
+                iss >> temp >> name >> x >> y;
                 if (name.find("Q") != string::npos)
                 {
-                    //碰到輸出該幹嘛幹嘛
+                    FFcellptr->setOutput(name, 1);
+                    FFcellptr->setPinOffset(name, pair<double,double>(x, y));
                 }
                 else if (name == "CLK")
                 {
-
+                    FFcellptr->setPinOffset(name, pair<double, double>(x, y));
                 }
                 else
                 {
-                
+                    FFcellptr->setPinOffset(name, pair<double, double>(x, y));
                 }
 
             }
@@ -92,26 +96,8 @@ void Database::parser(const string& filename) {
             cout << "FF" << " " << bitCount << " " << id << " " << width << " " << height << endl;
 
         }
-        //else if (keyword == "Pin" && currentFF != nullptr) {
-        //    string name;
-        //    int x, y;
-        //    iss >> name >> x >> y;
-        //    /*currentPin = new Pin(name, x, y);*/
-        //    if (name.find("Q") != string::npos) {
-        //        /*currentFF->setOutput(currentPin); */
-        //        currentPin->setOffset(x, y);
-        //    }
-        //    else if (name == "CLK") {
-        //        /*currentFF->setClockPin(currentPin);*/
-        //        currentPin->setOffset(x, y);
-        //    }
-        //    else {
-        //        /*currentFF->addDataPin(currentPin);*/
-        //        currentPin->setOffset(x, y);
-        //    }
-        //    cout << "Pin" << " " << name << " " << x << " " << y << endl;
-        //}
-        
+
+
         else if (keyword == "NumInstances") {
             // Handle Instances
             int numInst;
@@ -124,27 +110,43 @@ void Database::parser(const string& filename) {
 
             }
         }
+
+
         else if (keyword == "NumNets") {
-            int num;
+            int num,PinNum;
+            string temp, Netname;
             iss >> num;
+            for (int i = 0; i < num; i++)
+            {
+                iss >> temp >> Netname >> PinNum;
+                string type, FFname , TargetPin;
+                for (int j = 0; j < PinNum; j++)
+                {
+                    iss >> temp >> type;
+                    auto pos = type.find("/");
+                    if (pos == type.npos)
+                    {
+
+                    }
+                    else
+                    {
+                        FFname = type.substr(0, pos);
+                        TargetPin = type.substr(pos + 1);
+                    }
+                }
+
+            }
 
 
         }
-        //else if (keyword == "Net") {
-        //    int numNet;
-        //    string netType, netName;
-        //    iss >> netType >> netName >> numNet;
-        //}
-        //else if (keyword == "Pin" && currentModule != nullptr) {
-        //    string p1, p2, slash;
-        //    iss >> p1 >> slash >> p2;
-        //    // where to save a pair of pin with net
 
-        //}
+
         else if (keyword == "BinWidth" || keyword == "BinHeight" || keyword == "BinMaxUtil") {
             int width, height, maxUtil;
             iss >> width >> height >> maxUtil;
-
+            setBinWidth(width);
+            setBinHeight(height);
+            setBinUtil(maxUtil);
 
         }
         else if (keyword == "PlacementRows") {
