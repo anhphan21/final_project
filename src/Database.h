@@ -13,15 +13,14 @@
 #include "Net.h"
 using namespace std;
 
-class Database
-{
+class Database {
 public:
 	Database();
 	~Database() = default;
 
 	void parser();
 
-	// set
+	//set
 	void setName(string &name) { _name = name; }
 	double boundaryTop() const { return _boundaryTop; }
 	double boundaryLeft() const { return _boundaryLeft; }
@@ -41,30 +40,37 @@ public:
 	void addRow(Row *row) { _rows.push_back(row); }
 	void addCellLib(CellType *cellLib) { _cellLib.push_back(cellLib); }
 	void addFFLib(FFCell *ffLib, unsigned bitNum) { _ffLib[bitNum].push_back(ffLib); }
+	void connectPinsWithModulesAndNets();
 
-	// Bin operation
+	//Bin operation
 	void initialBinArray();
 	void resetBin();
 	void updateBinUtil();
 
-	// get design property
+	//get design property
 	Module *module(unsigned moduleId) { return _modules[moduleId]; }
 	Net *net(unsigned netId) { return _nets[netId]; }
 	Pin *pin(unsigned pinId) { return _pins[pinId]; }
-	Row *row(unsigned rowId) { return _rows[rowId]; }
-	Bin *bin(unsigned colIdx, unsigned rowIdx) { return _bins[colIdx][rowIdx]; }
-
-	Pin *input(unsigned inId)
-	{
+	Pin *input(unsigned inId) {
 		assert(inId < _numInput);
 		return _pins[inId];
 	}
-
-	Pin *output(unsigned outId)
-	{
+	Pin *output(unsigned outId) {
 		assert(outId < _numOutput);
 		return _pins[_numInput + outId];
 	}
+	Row *row(unsigned rowId) { return _rows[rowId]; }
+	Bin *bin(unsigned colIdx, unsigned rowIdx) { return _bins[colIdx][rowIdx]; }
+
+	double boundaryTop() const { return _boundaryTop; }
+	double boundaryLeft() const { return _boundaryLeft; }
+	double boundaryBottom() const { return _boundaryBottom; }
+	double boundaryRight() const { return _boundaryRight; }
+	double deltaDelay() const { return _deltaDelay; }
+	double alpha() const { return _alpha; }
+	double beta() const { return _beta; }
+	double gamma() const { return _gamma; }
+	double lambda() const { return _lambda; }
 
 	unsigned getNumModules() const { return _modules.size(); }
 	unsigned getNumFF() const { return _ffModules.size(); }
@@ -75,30 +81,25 @@ public:
 	unsigned getNumInputs() const { return _numInput; }
 	unsigned getNumOutputs() const { return _numOutput; }
 	unsigned getNumRows() const { return _rows.size(); }
-	double getDeltaDelay() const { return _deltaDelay; }
-	double getAlpha() const { return _alpha; }
-	double getBeta() const { return _beta; }
-	double getGamma() const { return _gamma; }
-	double getLambda() const { return _lambda; }
 
 private:
-	string _name; // Design Name
+	string _name;   //Design Name
 
-	// Design Data
+	//Design Data
 	ModuleList _modules;
 	NetList _nets;
 	PinList _pins;
 	RowList _rows;
 	BinList _bins;
-	// Caching the list for processing
+	//Caching the list for processing
 	ModuleList _ffModules;
 	NetList _clkNets;
 
-	// Library
-	CellLibrary _cellLib;
-	FFLLibrary _ffLib;
+	//Library
+	static CellLibrary _cellLib;
+	static FFLLibrary _ffLib;
 
-	// Design statics
+	//Design statics
 	Rectangle _dieRectangle;
 	double _boundaryTop;
 	double _boundaryLeft;
@@ -110,24 +111,24 @@ private:
 	size_t _numInput;
 	size_t _numOutput;
 
-	// Bin statics
+	//Bin statics
 	double _binWidth;
 	double _binHeight;
 	double _binMaxUtil;
-	int _numBinCol; // Like x index
-	int _numBinRow; // Like y index
+	int _numBinCol;			//Like x index
+	int _numBinRow;			//Like y index
 
-	// For FF merging
+	//For FF merging
 	double _deltaDelay;
 	double _alpha;
 	double _beta;
 	double _gamma;
 	double _lambda;
 
-	// Caching
+	//Caching
 	map<string, BaseCell *> CellType2Ptr;
 	map<string, Module *> ModuleName2Ptr;
 	map<string, Net *> Netname2Ptr;
 };
 
-#endif // DATABASE_H
+#endif //DATABASE_H

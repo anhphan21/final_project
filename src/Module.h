@@ -115,13 +115,13 @@ private:
         for (unsigned i = 0, endi = numInPins(); i < endi; ++i)
         {
             Pin &pin = this->inPin(i);
-            pin.setPosition(centerX() + pin.xOffset(), centerY() + pin.yOffset());
+            pin.setPosition(x() + pin.xOffset(), y() + pin.yOffset());
         }
 
         for (unsigned i = 0, endi = numOutPins(); i < endi; ++i)
         {
             Pin &pin = this->outPin(i);
-            pin.setPosition(centerX() + pin.xOffset(), centerY() + pin.yOffset());
+            pin.setPosition(y() + pin.xOffset(), y() + pin.yOffset());
         }
     }
 };
