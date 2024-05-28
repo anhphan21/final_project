@@ -49,7 +49,9 @@ void Database::parser(const string& filename) {
                 string temp, type;
                 double x, y;
                 iss >> temp >> type >> x >> y;
-
+                // PinID is "unsigned" type?
+                //input(num)->setPinId(type);
+                //input(num)->setPosition(x, y);
             }
         }
         else if (keyword == "NumOutput") 
@@ -61,7 +63,9 @@ void Database::parser(const string& filename) {
                 string temp, type;
                 double x, y;
                 iss >> temp >> type >> x >> y;
-
+                // PinID is "unsigned" type?
+                //output(num)->setPinId(type);
+                //output(num)->setPosition(x, y);
             }
         }
         else if (keyword == "FlipFlop")
@@ -107,7 +111,7 @@ void Database::parser(const string& filename) {
                 string temp, name, type;
                 double x, y;
                 iss >> temp >> name >> type >> x >> y;
-                // Module* currentM = new Module(name, type, x, y, 0);
+                //Module* currentM = new Module(name, type, x, y, 0);
                 //this->_cellLib.push_back(currentM);
 
             }
@@ -164,23 +168,10 @@ void Database::parser(const string& filename) {
             // }
 
         }
-        else if (keyword == "TimingSlack") {
-            string name, Dpin;
-            double timing;
-            iss >> name >> Dpin >> timing;
-            for (auto& row : _ffLib) {
-                for (auto& cell : row) {
-                    if (cell->getName() == name) {
-                        cell->setPower(timing);
-                    }
-                }
-            }
-            // Delete memory
-            for (auto& row : _ffLib) {
-                for (auto& cell : row) {
-                    delete cell;
-                }
-            }
+        else if (keyword == "DisplacementDelay") {
+            double delay;
+            iss >> delay;
+
         }
         else if (keyword == "QpinDelay") {
             string type;
@@ -204,7 +195,19 @@ void Database::parser(const string& filename) {
             string name, Dpin;
             double timing;
             iss >> name >> Dpin >> timing;
-
+            for (auto& row : _ffLib) {
+                for (auto& cell : row) {
+                    if (cell->getName() == name) {
+                        cell->setPower(timing);
+                    }
+                }
+            }
+            // Delete memory
+            for (auto& row : _ffLib) {
+                for (auto& cell : row) {
+                    delete cell;
+                }
+            }
         }
         else if (keyword == "GatePower") {
             string type;
