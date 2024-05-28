@@ -11,6 +11,11 @@ void Database::parser() {
 	//TODO:
 }
 
+void Database::connectPinsWithModulesAndNets() {
+	//TODO:
+}
+
+
 void Database::initialBinArray() {
 	//Initial Die Boundary
 	assert((_boundaryRight != -1) || (_boundaryLeft != -1) || (_boundaryTop != -1) || (_boundaryBottom != -1));
@@ -48,26 +53,33 @@ void Database::resetBin() {
 
 void Database::updateBinUtil() {
 	Module *_tmpModule;
-	double _tmpCenterX, _tmpCenterY;
-	int _rowIdx, _colIdx;
 	int _lbinIdx, _bbinIdx, _rbinIdx, _tbinIdx;
-	double _cellArea;
-	double _Ox, _Oy;
-	double _cogDistX, _cogDistY;
+	Rectangle _tmpRect;
+
 	//Reset bin util to 0
 	resetBin();
 	//Update bin util
 	for (size_t i = 0; i < _numModules; ++i) {
 		_tmpModule = module(i);
-		_tmpCenterX = _tmpModule->centerX();
-		_tmpCenterY = _tmpModule->centerY();
+		_tmpRect = _tmpModule->rectangle();
 
-		_colIdx = (_tmpCenterX - _dieRectangle.left()) / _binWidth;
-		_rowIdx = (_tmpCenterY - _dieRectangle.bottom()) / _binHeight;
+		_lbinIdx = _tmpModule->x() / _binWidth;
+		_rbinIdx = (_tmpModule->x() + _tmpModule->width()) / _binWidth;
+		_bbinIdx = _tmpModule->y() / _binHeight;
+		_tbinIdx = (_tmpModule->y() + _tmpModule->height()) / _binHeight;
 
-		_rbinIdx = ((_colIdx + 3) >= _numBinCol) ? _numBinCol : (_colIdx + 3);
-		_tbinIdx = ((_rowIdx + 3) >= _numBinRow) ? _numBinRow : (_rowIdx + 3);
-		_lbinIdx = ((_colIdx - 3) < 0) ? 0 : (_colIdx - 3);
-		_bbinIdx = ((_rowIdx - 3) < 0) ? 0 : (_rowIdx - 3);
+		_lbinIdx = (_lbinIdx < 0) ? 0 : _lbinIdx;
+		_rbinIdx = ((_rbinIdx + 1) >= _numBinCol) ? _numBinCol : (_rbinIdx + 1);
+		_bbinIdx = (_bbinIdx < 0) ? 0 : _bbinIdx;
+		_tbinIdx = ((_tbinIdx + 1) >= _numBinRow) ? _numBinRow : (_tbinIdx + 1);
+
+		for (size_t j = _lbinIdx; j < _rbinIdx; ++j) {
+			size_t k = _bbinIdx;
+			for (; k < _tbinIdx; ++k) {
+				_bins[j][k]->updateOverlapArea(Rectangle::overlapArea(*_bins[j][k], _tmpRect));
+			}
+		}
 	}
+
+
 }
