@@ -1,4 +1,9 @@
 #include "Database.h"
+#include <sstream>
+#include <fstream>
+
+using namespace std;
+
 
 Database::Database()
 		: _name(), _boundaryTop(-1), _boundaryBottom(-1), _boundaryLeft(-1), _boundaryRight(-1), _numModules(0),
@@ -7,8 +12,12 @@ Database::Database()
 
 }
 
-void Database::parser() {
+void Database::parser(const string& filename) {
 	//TODO:
+	ifstream file(filename);
+	string line;
+	
+
 }
 
 void Database::initialBinArray() {

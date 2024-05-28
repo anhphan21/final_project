@@ -18,7 +18,7 @@ public:
 	Database();
 	~Database() = default;
 
-	void parser();
+	void parser(const string& filename);
 
 	//set
 	void setName(string &name) { _name = name; }
