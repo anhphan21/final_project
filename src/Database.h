@@ -22,10 +22,10 @@ public:
 
 	//set
 	void setName(string &name) { _name = name; }
-	void boundaryTop(double boundaryTop) const { return _boundaryTop; }
-	void boundaryLeft(double boundaryLeft) const { return _boundaryLeft; }
-	void boundaryBottom(double boundaryBottom) const { return _boundaryBottom; }
-	void boundaryRight(double boundaryRight) const { return _boundaryRight; }
+	void boundaryTop(double boundaryTop) { _boundaryTop = boundaryTop; }
+	void boundaryLeft(double boundaryLeft) { _boundaryLeft = boundaryLeft; }
+	void boundaryBottom(double boundaryBottom) { _boundaryBottom = boundaryBottom; }
+	void boundaryRight(double boundaryRight) { _boundaryRight = boundaryRight; }
 	void setalpha(double alpha) { _alpha = alpha; }
 	void setbeta(double beta) { _beta = beta; }
 	void setgamma(double gamma) { _gamma = gamma; }
