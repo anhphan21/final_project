@@ -30,6 +30,10 @@ public:
 	void setbeta(double beta) { _beta = beta; }
 	void setgamma(double gamma) { _gamma = gamma; }
 	void setlambda(double lambda) { _lambda = lambda; }
+	void setBinWidth(double w) { _binWidth = w; }
+	void setBinHeight(double h) { _binHeight = h; }
+	void setBinUtil(double u) { _binMaxUtil = u; }
+
 
 	// methods for design (hyper-graph) construction
 	void addModule(Module *module) { _modules.push_back(module); }

@@ -14,11 +14,172 @@ Database::Database()
 
 void Database::parser(const string& filename) {
 	//TODO:
-	ifstream file(filename);
-	string line;
-	
+    ifstream file(filename);
+    string line;
 
+    while (getline(file, line)) {
+        istringstream iss(line);
+        string keyword;
+        iss >> keyword;
+        if (keyword == "Alpha" || keyword == "Beta" || keyword == "Gamma" || keyword == "Lambda") 
+        {
+            double a, b, g, l;
+            iss >> a >> b >> g >> l;
+            setalpha(a);
+            setbeta(b);
+            setgamma(g);
+            setlambda(l);
+
+        }
+        else if (keyword == "DieSize") 
+        {
+            int left, bottom, right, top;
+            iss >> left >> bottom >> right >> top;
+            boundaryLeft(left);
+            boundaryBottom(bottom);
+            boundaryRight(right);
+            boundaryTop(top);
+
+        }
+        else if (keyword == "NumInput") 
+        {
+            double num;
+            iss >> num;
+            for (int i = 0; i < num; i++) 
+            {
+                string temp, type;
+                double x, y;
+                iss >> temp >> type >> x >> y;
+
+            }
+        }
+        else if (keyword == "NumOutput") 
+        {
+            double num;
+            iss >> num;
+            for (int i = 0; i < num; i++)
+            {
+                string temp, type;
+                double x, y;
+                iss >> temp >> type >> x >> y;
+
+            }
+        }
+        else if (keyword == "FlipFlop")
+        {
+            int bitCount, width, height, pinCount, numPin;
+            string id;
+            iss >> bitCount >> id >> width >> height >> pinCount >> numPin;
+            for (int i = 0; i < numPin; i++) 
+            {
+                string type, name, x, y;
+                iss >> type >> name >> x >> y;
+                if (name.find("Q") != string::npos)
+                {
+                    //碰到輸出該幹嘛幹嘛
+                }
+                else if (name == "CLK")
+                {
+
+                }
+                else
+                {
+                
+                }
+
+            }
+
+            cout << "FF" << " " << bitCount << " " << id << " " << width << " " << height << endl;
+
+        }
+        //else if (keyword == "Pin" && currentFF != nullptr) {
+        //    string name;
+        //    int x, y;
+        //    iss >> name >> x >> y;
+        //    /*currentPin = new Pin(name, x, y);*/
+        //    if (name.find("Q") != string::npos) {
+        //        /*currentFF->setOutput(currentPin); */
+        //        currentPin->setOffset(x, y);
+        //    }
+        //    else if (name == "CLK") {
+        //        /*currentFF->setClockPin(currentPin);*/
+        //        currentPin->setOffset(x, y);
+        //    }
+        //    else {
+        //        /*currentFF->addDataPin(currentPin);*/
+        //        currentPin->setOffset(x, y);
+        //    }
+        //    cout << "Pin" << " " << name << " " << x << " " << y << endl;
+        //}
+        
+        else if (keyword == "NumInstances") {
+            // Handle Instances
+            int numInst;
+            iss >> numInst;
+            for (int i = 0; i < numInst; i++)
+            {
+                string temp, name, type;
+                double x, y;
+                iss >> temp >> name >> type >> x >> y;
+
+            }
+        }
+        else if (keyword == "NumNets") {
+            int num;
+            iss >> num;
+
+
+        }
+        //else if (keyword == "Net") {
+        //    int numNet;
+        //    string netType, netName;
+        //    iss >> netType >> netName >> numNet;
+        //}
+        //else if (keyword == "Pin" && currentModule != nullptr) {
+        //    string p1, p2, slash;
+        //    iss >> p1 >> slash >> p2;
+        //    // where to save a pair of pin with net
+
+        //}
+        else if (keyword == "BinWidth" || keyword == "BinHeight" || keyword == "BinMaxUtil") {
+            int width, height, maxUtil;
+            iss >> width >> height >> maxUtil;
+
+
+        }
+        else if (keyword == "PlacementRows") {
+            int startX, startY, siteWidth, siteHeight, totalNumOfSites;
+            iss >> startX >> startY >> siteWidth >> siteHeight >> totalNumOfSites;
+
+        }
+        else if (keyword == "DisplacementDelay") {
+            double delay;
+            iss >> delay;
+
+        }
+        else if (keyword == "QpinDelay") {
+            string type;
+            double delay;
+            iss >> type >> delay;
+
+        }
+        else if (keyword == "TimingSlack") {
+            string name, Dpin;
+            double timing;
+            iss >> name >> Dpin >> timing;
+
+        }
+        else if (keyword == "GatePower") {
+            string type;
+            double power;
+            iss >> type >> power;
+
+        }
+    }
+
+    file.close();
 }
+	
 
 void Database::initialBinArray() {
 	//Initial Die Boundary
