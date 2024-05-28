@@ -63,7 +63,7 @@ public:
     void setIsFixed(bool isFixed) { _isFixed = isFixed; }
 
     /////////////////////////////////////////////
-    // get (for pins of this modules)
+    // get (for pins of these modules)
     /////////////////////////////////////////////
     unsigned totnumPins() { return numInPins() + numOutPins(); }
     unsigned numInPins() { return _inPins.size(); }
@@ -124,6 +124,16 @@ private:
             pin.setPosition(y() + pin.xOffset(), y() + pin.yOffset());
         }
     }
+};
+
+class FFModule : public Module {
+public:
+	FFModule() : Module(), _slack(0) {}
+	FFModule(string &name, CellType* type, double x, double y) : Module(name, type, x, y), _slack(0) {}
+	double getSlack() const { return _slack; }
+	void setSlack(double slack) { _slack = slack; }
+private:
+	double _slack;
 };
 
 #endif
