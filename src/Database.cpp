@@ -1,4 +1,6 @@
 #include "Database.h"
+#include "Row.h"
+#include "Pin.h"
 #include <sstream>
 #include <fstream>
 
@@ -49,7 +51,7 @@ void Database::parser(const string& filename) {
                 string temp, type;
                 double x, y;
                 iss >> temp >> type >> x >> y;
-                // PinID is "unsigned" type?
+                //// PinID is "unsigned" type?
                 //input(num)->setPinId(type);
                 //input(num)->setPosition(x, y);
             }
@@ -63,7 +65,7 @@ void Database::parser(const string& filename) {
                 string temp, type;
                 double x, y;
                 iss >> temp >> type >> x >> y;
-                // PinID is "unsigned" type?
+                //// PinID is "unsigned" type?
                 //output(num)->setPinId(type);
                 //output(num)->setPosition(x, y);
             }
@@ -111,7 +113,17 @@ void Database::parser(const string& filename) {
                 string temp, name, type;
                 double x, y;
                 iss >> temp >> name >> type >> x >> y;
-                //Module* currentM = new Module(name, type, x, y, 0);
+                auto it = CellType2Ptr.find(type); //??????
+                if (it == CellType2Ptr.end())
+                {
+                    cout << "Test error 0907120" << endl;
+                }
+                else
+                {
+                    Module* currentM = new Module( name , it->second , x, y);
+                }
+
+               
                 //this->_cellLib.push_back(currentM);
 
             }
@@ -124,17 +136,30 @@ void Database::parser(const string& filename) {
             iss >> num;
             for (int i = 0; i < num; i++)
             {
+                bool clkFlag = 0;
+                string type, FFname, TargetPin;
                 iss >> temp >> Netname >> PinNum;
-                string type, FFname , TargetPin;
+                if (Netname == "clk")
+                {
+                    clkFlag = 1;
+                }
+                else
+                {
+                    clkFlag = 0;
+                }
+
+                Net * netptr =new Net();
                 for (int j = 0; j < PinNum; j++)
                 {
                     iss >> temp >> type;
                     auto pos = type.find("/");
-                    if (pos == type.npos)
+                    if (pos == type.npos) //If there is no '/' Net pin
                     {
-                        
+                       
+
+
                     }
-                    else
+                    else  //Net Pin with '/' cut
                     {
                         FFname = type.substr(0, pos);
                         TargetPin = type.substr(pos + 1);
@@ -156,21 +181,23 @@ void Database::parser(const string& filename) {
 
         }
         else if (keyword == "PlacementRows") {
-            int startX, startY, siteWidth, siteHeight, totalNumOfSites;
-            iss >> startX >> startY >> siteWidth >> siteHeight >> totalNumOfSites;
-            // for (auto& rows : _rows) {
-            //     rows->setHeight(siteHeight);
-            //     rows->setWidth(siteWidth);
-            //     rows->numsites(totalNumOfSites);
-            //     rows->x(startX);
-            //     rows->y(startY);
+            int startX, startY, siteSpacing, siteHeight, totalNumOfSites;
+            iss >> startX >> startY >> siteSpacing >> siteHeight >> totalNumOfSites;
+            for (auto& rows : _rows) {
+                rows->setHeight(siteHeight);
+                rows->setSiteSpacing(siteSpacing);
+                rows->setNumSites(totalNumOfSites);
+                rows->setPosition(startX, startY);
                 
-            // }
+            }
+            
+
 
         }
         else if (keyword == "DisplacementDelay") {
             double delay;
             iss >> delay;
+            setDisplacementDelay(delay);
 
         }
         else if (keyword == "QpinDelay") {

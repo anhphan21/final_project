@@ -33,6 +33,7 @@ public:
 	void setBinWidth(double w) { _binWidth = w; }
 	void setBinHeight(double h) { _binHeight = h; }
 	void setBinUtil(double u) { _binMaxUtil = u; }
+	void setDisplacementDelay(double delay) { _dDelay = delay; }
 
 
 	// methods for design (hyper-graph) construction
@@ -81,6 +82,7 @@ public:
 	double getBeta() const { return _beta; }
 	double getGamma() const { return _gamma; }
 	double getLambda() const { return _lambda; }
+	double getDisplacementDelay() const { return _dDelay; }
 
 
 private:
@@ -107,6 +109,7 @@ private:
 	double _boundaryBottom;
 	double _boundaryRight;
 	//double _timingSlack;
+	double _dDelay;
 
 	size_t _numModules;
 	size_t _numNets;
