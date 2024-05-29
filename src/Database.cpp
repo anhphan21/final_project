@@ -46,39 +46,49 @@ void Database::parser(const string& filename) {
         {
             double num;
             iss >> num;
+            Pin* pinptr = new Pin();
             for (int i = 0; i < num; i++) 
             {
                 string temp, type;
                 double x, y;
                 iss >> temp >> type >> x >> y;
-                //// PinID is "unsigned" type?
-                //input(num)->setPinId(type);
+ 
+                //input(num)->name(type);
                 //input(num)->setPosition(x, y);
+                IODesign.insert({ type, pinptr });
             }
         }
         else if (keyword == "NumOutput") 
         {
             double num;
             iss >> num;
+            /*Pin* pinptr = new Pin();*/
             for (int i = 0; i < num; i++)
             {
                 string temp, type;
                 double x, y;
                 iss >> temp >> type >> x >> y;
-                //// PinID is "unsigned" type?
-                //output(num)->setPinId(type);
+                Pin* pinptr = new Pin();
+
+                //output(num)->name(type);
                 //output(num)->setPosition(x, y);
+                IODesign.insert({ type,pinptr });
             }
         }
         else if (keyword == "FlipFlop")
         {
-            int bitCount, width, height, pinCount, numPin;
+            int bitCount, width, height, pinCount;
             string id;
-            iss >> bitCount >> id >> width >> height >> pinCount >> numPin;
+            iss >> bitCount >> id >> width >> height >> pinCount;
             FFCell* FFcellptr = new FFCell(id, width, height, pinCount);
-            this->_ffLib[pinCount].push_back(FFcellptr);
+            
+            // ensure the size of _ffLib
+            if (_ffLib.size() <= bitCount) {
+                _ffLib.resize(bitCount + 1);
+            }
+            this->_ffLib[bitCount].push_back(FFcellptr);
             this->CellType2Ptr.insert({ id,FFcellptr });
-            for (int i = 0; i < numPin; i++) 
+            for (int i = 0; i < pinCount; i++) 
             {
                 string temp, name;
                 double  x, y;
@@ -108,24 +118,38 @@ void Database::parser(const string& filename) {
             // Handle Instances
             int numInst;
             iss >> numInst;
-            for (int i = 0; i < numInst; i++)
-            {
+            //for (int i = 0; i < numInst; i++)
+            //{
+            //    string temp, name, type;
+            //    double x, y;
+            //    iss >> temp >> name >> type >> x >> y;
+            //    auto it = CellType2Ptr.find(type);
+            //    if (it == CellType2Ptr.end()) {
+            //        cout << "Test error 0907120" << type << endl;
+            //    }
+            //    else {
+            //        Module* currentM = new Module(name, it->second, x, y);
+            //        ModuleName2Ptr.insert({ name, currentM });
+            //        _modules.push_back(currentM);
+            //    }
+            //}
+            for (int i = 0; i < numInst; i++) {
+                getline(file, line); 
+                istringstream instIss(line);
                 string temp, name, type;
                 double x, y;
-                iss >> temp >> name >> type >> x >> y;
-                auto it = CellType2Ptr.find(type); //??????
-                if (it == CellType2Ptr.end())
-                {
-                    cout << "Test error 0907120" << endl;
-                }
-                else
-                {
-                    Module* currentM = new Module( name , it->second , x, y);
-                }
+                instIss >> temp >> name >> type >> x >> y;
+                cout << temp << " " << name << " " << type << " " << x << " " << y << endl;
 
-               
-                //this->_cellLib.push_back(currentM);
-
+                auto it = CellType2Ptr.find(type);
+                if (it == CellType2Ptr.end()) {
+                    cout << "Test error 0907120" << type << endl;
+                }
+                else {
+                    Module* currentM = new Module(name, it->second, x, y);
+                    ModuleName2Ptr.insert({ name, currentM });
+                    _modules.push_back(currentM);
+                }
             }
         }
 
@@ -139,30 +163,38 @@ void Database::parser(const string& filename) {
                 bool clkFlag = 0;
                 string type, FFname, TargetPin;
                 iss >> temp >> Netname >> PinNum;
+                Net* netptr = new Net();
                 if (Netname == "clk")
                 {
-                    clkFlag = 1;
+                    netptr->setclkFlag(1);
+                    this->_nets.push_back(netptr);
+                    this->Netname2Ptr.insert({ Netname, netptr });
                 }
-                else
+                else if(Netname == "out")
                 {
-                    clkFlag = 0;
+                    netptr->setOutputPins(1);
+                    this->_nets.push_back(netptr);
+                    this->Netname2Ptr.insert({ Netname, netptr });
                 }
 
-                Net * netptr =new Net();
                 for (int j = 0; j < PinNum; j++)
                 {
                     iss >> temp >> type;
                     auto pos = type.find("/");
-                    if (pos == type.npos) //If there is no '/' Net pin
+                    Pin* pinptr = new Pin();
+                    if (pos == type.npos) //如果沒有'/'的Net pin角
                     {
-                       
-
-
+                        netptr->addPin(pinptr);
+                        this->_pins.push_back(pinptr);
+                        
                     }
-                    else  //Net Pin with '/' cut
+                    else  //有'/'切割的Net Pin角
                     {
                         FFname = type.substr(0, pos);
                         TargetPin = type.substr(pos + 1);
+                        netptr->addPin(pinptr);
+                        this->_pins.push_back(pinptr);
+
                     }
                 }
 
@@ -211,12 +243,12 @@ void Database::parser(const string& filename) {
                     }
                 }
             }
-            // Delete memory
-            for (auto& row : _ffLib) {
-                for (auto& cell : row) {
-                    delete cell;
-                }
-            }
+            //// Delete memory
+            //for (auto& row : _ffLib) {
+            //    for (auto& cell : row) {
+            //        delete cell;
+            //    }
+            //}
         }
         else if (keyword == "TimingSlack") {
             string name, Dpin;
@@ -229,12 +261,12 @@ void Database::parser(const string& filename) {
                     }
                 }
             }
-            // Delete memory
-            for (auto& row : _ffLib) {
-                for (auto& cell : row) {
-                    delete cell;
-                }
-            }
+            //// Delete memory
+            //for (auto& row : _ffLib) {
+            //    for (auto& cell : row) {
+            //        delete cell;
+            //    }
+            //}
         }
         else if (keyword == "GatePower") {
             string type;
@@ -247,16 +279,17 @@ void Database::parser(const string& filename) {
                     }
                 }
             }
-            // Delete memory
-            for (auto& row : _ffLib) {
-                for (auto& cell : row) {
-                    delete cell;
-                }
-            }
+            //// Delete memory
+            //for (auto& row : _ffLib) {
+            //    for (auto& cell : row) {
+            //        delete cell;
+            //    }
+            //}
         }
     }
 
     file.close();
+
 }
 	
 
