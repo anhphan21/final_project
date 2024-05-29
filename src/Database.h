@@ -22,19 +22,14 @@ public:
 
 	//set
 	void setName(string &name) { _name = name; }
-	void boundaryTop(double boundaryTop) { _boundaryTop = boundaryTop; }
-	void boundaryLeft(double boundaryLeft) { _boundaryLeft = boundaryLeft; }
-	void boundaryBottom(double boundaryBottom) { _boundaryBottom = boundaryBottom; }
-	void boundaryRight(double boundaryRight) { _boundaryRight = boundaryRight; }
-	void setalpha(double alpha) { _alpha = alpha; }
-	void setbeta(double beta) { _beta = beta; }
-	void setgamma(double gamma) { _gamma = gamma; }
-	void setlambda(double lambda) { _lambda = lambda; }
-	void setBinWidth(double w) { _binWidth = w; }
-	void setBinHeight(double h) { _binHeight = h; }
-	void setBinUtil(double u) { _binMaxUtil = u; }
-	void setDisplacementDelay(double delay) { _dDelay = delay; }
-
+	double boundaryTop() const { return _boundaryTop; }
+	double boundaryLeft() const { return _boundaryLeft; }
+	double boundaryBottom() const { return _boundaryBottom; }
+	double boundaryRight() const { return _boundaryRight; }
+	double alpha() const { return _alpha; }
+	double beta() const { return _beta; }
+	double gamma() const { return _gamma; }
+	double lambda() const { return _lambda; }
 
 	// methods for design (hyper-graph) construction
 	void addModule(Module *module) { _modules.push_back(module); }
@@ -45,6 +40,7 @@ public:
 	void addRow(Row *row) { _rows.push_back(row); }
 	void addCellLib(CellType *cellLib) { _cellLib.push_back(cellLib); }
 	void addFFLib(FFCell *ffLib, unsigned bitNum) { _ffLib[bitNum].push_back(ffLib); }
+	void connectPinsWithModulesAndNets();
 
 	//Bin operation
 	void initialBinArray();
@@ -55,18 +51,16 @@ public:
 	Module *module(unsigned moduleId) { return _modules[moduleId]; }
 	Net *net(unsigned netId) { return _nets[netId]; }
 	Pin *pin(unsigned pinId) { return _pins[pinId]; }
-	Row *row(unsigned rowId) { return _rows[rowId]; }
-	Bin *bin(unsigned colIdx, unsigned rowIdx) { return _bins[colIdx][rowIdx]; }
-
 	Pin *input(unsigned inId) {
 		assert(inId < _numInput);
 		return _pins[inId];
 	}
-
 	Pin *output(unsigned outId) {
 		assert(outId < _numOutput);
 		return _pins[_numInput + outId];
 	}
+	Row *row(unsigned rowId) { return _rows[rowId]; }
+	Bin *bin(unsigned colIdx, unsigned rowIdx) { return _bins[colIdx][rowIdx]; }
 
 	unsigned getNumModules() const { return _modules.size(); }
 	unsigned getNumFF() const { return _ffModules.size(); }
@@ -77,12 +71,11 @@ public:
 	unsigned getNumInputs() const { return _numInput; }
 	unsigned getNumOutputs() const { return _numOutput; }
 	unsigned getNumRows() const { return _rows.size(); }
-	double getQDelay() const { return _QpinDelay; }
+	double getDeltaDelay() const { return _deltaDelay; }
 	double getAlpha() const { return _alpha; }
 	double getBeta() const { return _beta; }
 	double getGamma() const { return _gamma; }
 	double getLambda() const { return _lambda; }
-	double getDisplacementDelay() const { return _dDelay; }
 
 
 private:
@@ -116,7 +109,7 @@ private:
 	size_t _numInput;
 	size_t _numOutput;
 
-	//Bin statics
+	//Bin statics1
 	double _binWidth;
 	double _binHeight;
 	double _binMaxUtil;
