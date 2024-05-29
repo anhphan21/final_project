@@ -9,30 +9,30 @@ using namespace std;
 class Node
 {
 public:
-    Node();
+    Node() : _FF(nullptr)
+    {
+        _neighbor.resize(0);
+    };
     Node(FFCell *FF) : _FF(FF) { _neighbor.resize(0); }
     void addNeighborPair(pair<Node *, double> n) { _neighbor.push_back(n); }
-    void setFF(FFCell *f) { _FF = f; } // not sure if it's right
-    ////////////////////////////////
-    // I think to use this function:
-    // FFCell f1;
-    // setFF(&f1);
-    ////////////////////////////////
+    void setFFinNode(FFCell *f) { _FF = f; } // not sure if it's right
     void updateNeighbornode(unsigned id, Node *n) { _neighbor[id].first = n; }
     void updateNeighborweight(unsigned id, double weight) { _neighbor[id].second = weight; }
     void setNeighborsize(unsigned size) { _neighbor.resize(size); }
+    unsigned getNeighborsize() { return _neighbor.size(); }
+    pair<Node *, double> getNeighborPair(unsigned idx) { return _neighbor[idx]; }
     // get////////////////////////////////
-    Node &neighborNode(unsigned idx)
+    Node *getneighborNode(unsigned idx)
     {
         assert(idx < _neighbor.size());
-        return *_neighbor[idx].first;
+        return _neighbor[idx].first;
     }
-    double neighborweight(unsigned idx)
+    double getneighborweight(unsigned idx)
     {
         assert(idx < _neighbor.size());
         return _neighbor[idx].second;
     }
-    FFCell &ff() { return *_FF; }
+    FFCell *getFFinNode() { return _FF; }
 
 private:
     vector<pair<Node *, double>> _neighbor;

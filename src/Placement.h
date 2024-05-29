@@ -6,6 +6,11 @@
 class Placement
 {
 public:
+    Placement()
+    {
+        _nodes.resize(1);
+        _nodes[0] = nullptr;
+    };
     void mainLoop(Database *database);
     void constructDiamond();
     void constructGraph();
@@ -14,8 +19,8 @@ public:
     // methods for design (hyper-graph) construction
     void addNode(Node *node) { _nodes.push_back(node); }
     unsigned getNumNode() { return _nodes.size(); }
-    void setNodesize(unsigned size) { _nodes.resize(size); }
-    void clearNode() { _nodes.clear(); }
+    void setNodesize(unsigned size);
+    void clearNode();
 
     // get design property
     Node *node(unsigned nodeId) { return _nodes[nodeId]; }
