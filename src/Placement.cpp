@@ -4,6 +4,7 @@
 
 #include "Placement.h"
 #include <vector>
+#include <limits>
 using namespace std;
 void Placement::setNodesize(unsigned size)
 {
@@ -65,7 +66,6 @@ void Placement::findMST()
     }
     p.first = _nodes[1];
     p.second = 4;
-    cout << "here" << endl;
     _nodes[0]->addNeighborPair(p);
     p.first = _nodes[7];
     p.second = 8;
@@ -149,4 +149,38 @@ void Placement::findMST()
     p.second = 2;
     _nodes[8]->addNeighborPair(p);
     // Testcase for MST//////////////////////////////////////////
+    // graph should be in _nodes////////////////////////////////
+    vector<pair<Node *, pair<double, Node *>>> qheap; // <Node,key,predecessor>
+    qheap.resize(_nodes.size());
+    for (size_t i = 0; i < _nodes.size(); i++)
+    {
+        qheap[i].first = new Node();
+        qheap[i].first->setFFinNode(_nodes[i]->getFFinNode());
+        qheap[i].first->setNeighborsize(_nodes[i]->getNeighborsize());
+        for (size_t j = 0; j < _nodes[i]->getNeighborsize(); j++)
+        {
+            qheap[i].first->setNeighborPair(j, _nodes[i]->getNeighborPair(j));
+        }
+        qheap[i].second.first = __DBL_MAX__;
+        qheap[i].second.second = nullptr;
+    }
+    qheap[0].second.first = 0;
+    // for (size_t i = 0; i < qheap.size(); i++)
+    // {
+    //     cout << "Node" << qheap[i].first->getFFinNode()->getName() << "has neighbor: ";
+    //     for (size_t j = 0; j < qheap[i].first->getNeighborsize(); j++)
+    //     {
+    //         cout << qheap[i].first->getneighborNode(j)->getFFinNode()->getName() << " " << qheap[i].first->getneighborweight(j) << " ";
+    //     }
+    //     cout << endl;
+    // }
+}
+void Placement::DecreaseKeyMST(vector<pair<Node *, pair<double, Node *>>> &heap, unsigned idx, double key)
+{
+    return;
+}
+Node *Placement::extractMinMST(vector<pair<Node *, pair<double, Node *>>> &heap)
+{
+    Node *n;
+    return n;
 }

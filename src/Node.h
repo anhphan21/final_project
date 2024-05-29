@@ -15,6 +15,7 @@ public:
     };
     Node(FFCell *FF) : _FF(FF) { _neighbor.resize(0); }
     void addNeighborPair(pair<Node *, double> n) { _neighbor.push_back(n); }
+    void setNeighborPair(unsigned idx, pair<Node *, double> n) { _neighbor[idx] = n; }
     void setFFinNode(FFCell *f) { _FF = f; } // not sure if it's right
     void updateNeighbornode(unsigned id, Node *n) { _neighbor[id].first = n; }
     void updateNeighborweight(unsigned id, double weight) { _neighbor[id].second = weight; }

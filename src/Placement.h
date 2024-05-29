@@ -21,6 +21,9 @@ public:
     unsigned getNumNode() { return _nodes.size(); }
     void setNodesize(unsigned size);
     void clearNode();
+    // maybe need to modified after i think about it
+    void DecreaseKeyMST(vector<pair<Node *, pair<double, Node *>>> &heap, unsigned idx, double key);
+    Node *extractMinMST(vector<pair<Node *, pair<double, Node *>>> &heap);
 
     // get design property
     Node *node(unsigned nodeId) { return _nodes[nodeId]; }
