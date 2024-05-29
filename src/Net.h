@@ -22,6 +22,7 @@ public:
     void setOutputPins(int outIdx) { _outputIdx = outIdx; }
 
 private:
+    string _name;
     vector<Pin *> _pPins;
     bool _clkFlag;      // false for normal net, true for clk
     int _outputIdx;  // Store the index of the input of net

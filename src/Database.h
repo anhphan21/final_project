@@ -134,6 +134,7 @@ private:
 	map<string, BaseCell *> CellType2Ptr;
 	map<string, Module *> ModuleName2Ptr;
 	map<string, Net *> Netname2Ptr;
+	map<string, Pin*> IODesign;
 };
 
 #endif //DATABASE_H
