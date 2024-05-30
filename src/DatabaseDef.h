@@ -13,6 +13,7 @@ class Net;
 class BaseCell;
 class FFCell;
 class Module;
+class FFModule;
 class Node;
 
 class Database;

@@ -1,8 +1,9 @@
 #include "Database.h"
 
 Database::Database()
-	: _name(), _boundaryTop(-1), _boundaryLeft(-1), _boundaryBottom(-1), _boundaryRight(-1), _numModules(0),
-	  _numNets(0), _numInput(-1), _numOutput(-1), _binWidth(-1), _binHeight(-1), _binMaxUtil(-1), _numBinCol(0), _numBinRow(0),
+	: _name(), _boundaryTop(-1), _boundaryBottom(-1), _boundaryLeft(-1), _boundaryRight(-1), _numModules(0),
+	  _numNets(0), _numInput(-1), _numOutput(-1), _numBinCol(0), _numBinRow(0), _binWidth(-1), _binHeight(-1),
+	  _binMaxUtil(-1),
 	  _deltaDelay(-1), _alpha(-1), _beta(-1), _gamma(-1), _lambda(-1)
 {
 }
@@ -10,6 +11,25 @@ Database::Database()
 void Database::parser()
 {
 	// TODO:
+}
+
+void Database::connectPinsWithModulesAndNets()
+{
+	unsigned _checkOutIdx;
+	Pin *_tmpPin;
+
+	for (unsigned i = 0; i < _numNets; ++i)
+	{
+		_checkOutIdx = _nets[i]->getOutIdx();
+		for (unsigned j = 0, endj = _nets[i]->pinNum(); j < endj; ++j)
+		{
+			_tmpPin = _nets[i]->pin(j);
+			if (j == _checkOutIdx)
+				_tmpPin->module()->addOutPin(_tmpPin);
+			else
+				_tmpPin->module()->addInPin(_tmpPin);
+		}
+	}
 }
 
 void Database::initialBinArray()
@@ -56,27 +76,34 @@ void Database::resetBin()
 void Database::updateBinUtil()
 {
 	Module *_tmpModule;
-	double _tmpCenterX, _tmpCenterY;
-	int _rowIdx, _colIdx;
 	int _lbinIdx, _bbinIdx, _rbinIdx, _tbinIdx;
-	double _cellArea;
-	double _Ox, _Oy;
-	double _cogDistX, _cogDistY;
+	Rectangle _tmpRect;
+
 	// Reset bin util to 0
 	resetBin();
 	// Update bin util
 	for (size_t i = 0; i < _numModules; ++i)
 	{
 		_tmpModule = module(i);
-		_tmpCenterX = _tmpModule->centerX();
-		_tmpCenterY = _tmpModule->centerY();
+		_tmpRect = _tmpModule->rectangle();
 
-		_colIdx = (_tmpCenterX - _dieRectangle.left()) / _binWidth;
-		_rowIdx = (_tmpCenterY - _dieRectangle.bottom()) / _binHeight;
+		_lbinIdx = _tmpModule->x() / _binWidth;
+		_rbinIdx = (_tmpModule->x() + _tmpModule->width()) / _binWidth;
+		_bbinIdx = _tmpModule->y() / _binHeight;
+		_tbinIdx = (_tmpModule->y() + _tmpModule->height()) / _binHeight;
 
-		_rbinIdx = ((_colIdx + 3) >= _numBinCol) ? _numBinCol : (_colIdx + 3);
-		_tbinIdx = ((_rowIdx + 3) >= _numBinRow) ? _numBinRow : (_rowIdx + 3);
-		_lbinIdx = ((_colIdx - 3) < 0) ? 0 : (_colIdx - 3);
-		_bbinIdx = ((_rowIdx - 3) < 0) ? 0 : (_rowIdx - 3);
+		_lbinIdx = (_lbinIdx < 0) ? 0 : _lbinIdx;
+		_rbinIdx = ((_rbinIdx + 1) >= _numBinCol) ? _numBinCol : (_rbinIdx + 1);
+		_bbinIdx = (_bbinIdx < 0) ? 0 : _bbinIdx;
+		_tbinIdx = ((_tbinIdx + 1) >= _numBinRow) ? _numBinRow : (_tbinIdx + 1);
+
+		for (size_t j = _lbinIdx; j < _rbinIdx; ++j)
+		{
+			size_t k = _bbinIdx;
+			for (; k < _tbinIdx; ++k)
+			{
+				_bins[j][k]->updateOverlapArea(Rectangle::overlapArea(*_bins[j][k], _tmpRect));
+			}
+		}
 	}
 }
