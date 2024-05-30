@@ -109,21 +109,11 @@ private:
 			pin.setPosition(x() + pin.xOffset(), y() + pin.yOffset());
 		}
 
-		for (unsigned i = 0, endi = numOutPins(); i < endi; ++i) {
-			Pin &pin = this->outPin(i);
-			pin.setPosition(y() + pin.xOffset(), y() + pin.yOffset());
-		}
-	}
-};
-
-class FFModule : public Module {
-public:
-	FFModule() : Module(), _slack(0) {}
-	FFModule(string &name, CellType *type, double x, double y) : Module(name, type, x, y), _slack(0) {}
-	double getSlack() const { return _slack; }
-	void setSlack(double slack) { _slack = slack; }
-private:
-	double _slack;
+        for (unsigned i = 0, endi = numOutPins(); i < endi; ++i) {
+            Pin &pin = this->outPin(i);
+            pin.setPosition(centerX() + pin.xOffset(), centerY() + pin.yOffset());
+        }
+    }
 };
 
 #endif
