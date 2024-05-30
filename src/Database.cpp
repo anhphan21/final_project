@@ -14,6 +14,7 @@ Database::Database()
 
 }
 
+
 void Database::parser(const string& filename) {
     ifstream file(filename);
     string line;
@@ -46,39 +47,64 @@ void Database::parser(const string& filename) {
         {
             double num;
             iss >> num;
-            Pin* pinptr = new Pin();
+            map<string, Pin*> IODesignPin;
             for (int i = 0; i < num; i++) 
             {
+                getline(file, line);
+                istringstream iss(line);
                 string temp, type;
                 double x, y;
                 iss >> temp >> type >> x >> y;
- 
+                Pin* pinptr = new Pin();
                 //input(num)->name(type);
                 //input(num)->setPosition(x, y);
+                
+                pinptr->setPinName(type);
+                pinptr->setPosition(x, y);
+                pinptr->setModulePtr(nullptr);
+                _pins.push_back(pinptr);
+                if (type == "clk")
+                {
+                    cout << "HEE" << endl;
+                    type = "CLK";
+                }
                 IODesign.insert({ type, pinptr });
+                IODesignPin.insert({ type , pinptr });
+                
             }
+            PinName2Ptr.insert({ "IODesignIn",IODesignPin });
         }
         else if (keyword == "NumOutput") 
         {
             double num;
             iss >> num;
-            /*Pin* pinptr = new Pin();*/
+            map<string, Pin*> IODesignPin;
             for (int i = 0; i < num; i++)
             {
+                getline(file, line);
+                istringstream iss(line);
                 string temp, type;
                 double x, y;
                 iss >> temp >> type >> x >> y;
                 Pin* pinptr = new Pin();
-
                 //output(num)->name(type);
                 //output(num)->setPosition(x, y);
                 IODesign.insert({ type,pinptr });
+                pinptr->setPinName(type);
+                pinptr->setPosition(x, y);
+                pinptr->setModulePtr(nullptr);
+                _pins.push_back(pinptr);
+                IODesignPin.insert({ type , pinptr });
             }
+            PinName2Ptr.insert({ "IODesignOut",IODesignPin });
         }
         else if (keyword == "FlipFlop")
         {
             int bitCount, width, height, pinCount;
             string id;
+            string test;
+            string test1;
+    
             iss >> bitCount >> id >> width >> height >> pinCount;
             FFCell* FFcellptr = new FFCell(id, width, height, pinCount);
             
@@ -90,13 +116,18 @@ void Database::parser(const string& filename) {
             this->CellType2Ptr.insert({ id,FFcellptr });
             for (int i = 0; i < pinCount; i++) 
             {
+                getline(file, line);
+                istringstream iss(line);
                 string temp, name;
                 double  x, y;
                 iss >> temp >> name >> x >> y;
+                FFcellptr->AllPinName.push_back(name);
                 if (name.find("Q") != string::npos)
                 {
+
                     FFcellptr->setOutput(name, 1);
                     FFcellptr->setPinOffset(name, pair<double,double>(x, y));
+                    
                 }
                 else if (name == "CLK")
                 {
@@ -114,41 +145,43 @@ void Database::parser(const string& filename) {
         }
 
 
-        else if (keyword == "NumInstances") {
+        else if (keyword == "NumInstances") 
+        {
             // Handle Instances
             int numInst;
             iss >> numInst;
-            //for (int i = 0; i < numInst; i++)
-            //{
-            //    string temp, name, type;
-            //    double x, y;
-            //    iss >> temp >> name >> type >> x >> y;
-            //    auto it = CellType2Ptr.find(type);
-            //    if (it == CellType2Ptr.end()) {
-            //        cout << "Test error 0907120" << type << endl;
-            //    }
-            //    else {
-            //        Module* currentM = new Module(name, it->second, x, y);
-            //        ModuleName2Ptr.insert({ name, currentM });
-            //        _modules.push_back(currentM);
-            //    }
-            //}
             for (int i = 0; i < numInst; i++) {
                 getline(file, line); 
                 istringstream instIss(line);
                 string temp, name, type;
                 double x, y;
                 instIss >> temp >> name >> type >> x >> y;
-                cout << temp << " " << name << " " << type << " " << x << " " << y << endl;
-
                 auto it = CellType2Ptr.find(type);
-                if (it == CellType2Ptr.end()) {
+                int PinOfMnum = it->second->getPinNum();
+                map<string, Pin*> PinOfM;
+                if (it == CellType2Ptr.end()) //can't find Standard Cell
+                {
                     cout << "Test error 0907120" << type << endl;
                 }
-                else {
+                else 
+                {
                     Module* currentM = new Module(name, it->second, x, y);
                     ModuleName2Ptr.insert({ name, currentM });
                     _modules.push_back(currentM);
+                    for (int i = 0; i < PinOfMnum; i++)
+                    {
+                        string PinName = it->second->AllPinName[i];
+                     
+                        Pin* pinptr = new Pin();
+                        pinptr->setPosition(x, y);
+                        pinptr->setPinName(PinName);
+                        pair<double, double > tempOffset = it->second->getPinOffset(PinName);
+                        pinptr->setOffset(tempOffset.first, tempOffset.second);
+                        pinptr->setModulePtr(currentM);
+                        PinOfM.insert({ PinName,pinptr });
+                        _pins.push_back(pinptr);
+                    }
+                    PinName2Ptr.insert({ name ,PinOfM });
                 }
             }
         }
@@ -160,40 +193,64 @@ void Database::parser(const string& filename) {
             iss >> num;
             for (int i = 0; i < num; i++)
             {
+                getline(file, line);
+                istringstream iss(line);
                 bool clkFlag = 0;
                 string type, FFname, TargetPin;
                 iss >> temp >> Netname >> PinNum;
                 Net* netptr = new Net();
+                netptr->setName(Netname);
+                this->_nets.push_back(netptr);
                 if (Netname == "clk")
                 {
                     netptr->setclkFlag(1);
-                    this->_nets.push_back(netptr);
                     this->Netname2Ptr.insert({ Netname, netptr });
                 }
                 else if(Netname == "out")
                 {
                     netptr->setOutputPins(1);
-                    this->_nets.push_back(netptr);
                     this->Netname2Ptr.insert({ Netname, netptr });
                 }
 
                 for (int j = 0; j < PinNum; j++)
                 {
+
+                    getline(file, line);
+                    istringstream iss(line);
                     iss >> temp >> type;
                     auto pos = type.find("/");
-                    Pin* pinptr = new Pin();
                     if (pos == type.npos) //如果沒有'/'的Net pin角
                     {
-                        netptr->addPin(pinptr);
-                        this->_pins.push_back(pinptr);
+                        auto  it = IODesign.find(type);
+                        if (it == IODesign.end())
+                        {
+                            /*cout << "催謀" << endl;*/
+                        }
+                        else
+                        {
+                            netptr->addPin(it->second);
+                            it->second->setNetPtr(netptr);
+                        }
+                        
                         
                     }
                     else  //有'/'切割的Net Pin角
                     {
                         FFname = type.substr(0, pos);
                         TargetPin = type.substr(pos + 1);
-                        netptr->addPin(pinptr);
-                        this->_pins.push_back(pinptr);
+                        auto it = ModuleName2Ptr.find(FFname);
+                        if (it == ModuleName2Ptr.end())
+                        {
+                            cout << "真的崔謀" << endl;
+                        }
+                        else
+                        {
+                            auto it = PinName2Ptr.find(FFname);
+                            auto PinOfM = it->second.find(TargetPin);
+                            PinOfM->second->setNetPtr(netptr);
+                            netptr->addPin(PinOfM->second);
+                            
+                        }
 
                     }
                 }
@@ -254,17 +311,11 @@ void Database::parser(const string& filename) {
             string name, Dpin;
             double timing;
             iss >> name >> Dpin >> timing;
-            for (auto& row : _ffLib) {
-                for (auto& cell : row) {
-                    if (cell->getName() == name) {
-                        cell->setPower(timing);
-                    }
-                }
-            }
-            //// Delete memory
             //for (auto& row : _ffLib) {
             //    for (auto& cell : row) {
-            //        delete cell;
+            //        if (cell->getName() == name) {
+            //            cell->setPower(timing);
+            //        }
             //    }
             //}
         }
@@ -291,6 +342,45 @@ void Database::parser(const string& filename) {
     file.close();
 
 }
+
+//void Database::testParser()
+//{
+//    cout <<"測試Pin 共"<< _pins.size() << endl;
+//    for (int i = 0; i < _pins.size(); i++)
+//    {
+//        if (_pins[i]->module() != nullptr)
+//        {
+//            cout << "模組名稱 " << _pins[i]->module()->name() << " pin名稱" << _pins[i]->name() << " 所屬Net名稱" << _pins[i]->net()->getNetname() << endl;
+//        }
+//        else
+//        {
+//            cout<<"IODesign "<< " pin名稱" << _pins[i]->name() << " 所屬Net名稱" << _pins[i]->net()->getNetname() << endl;
+//        }
+//         }
+//    cout << endl << endl << "測試Net 共" << _nets.size() << endl;
+//    for (int i = 0; i < _nets.size(); i++)
+//    {
+//        cout << "第" << i << "條 Net名稱" << _nets[i]->getNetname()<<" 連接的pin角" << endl;
+//        for (int j = 0; j < _nets[i]->numPins(); j++)
+//        {
+//            if (_nets[i]->pin(j).module() != nullptr)
+//            {
+//                cout << _nets[i]->pin(j).module()->name() << "/" << _nets[i]->pin(j).name() << endl;
+//            }
+//            else
+//            {
+//                cout << "IODesign: " << _nets[i]->pin(j).name() << endl;
+//            }
+//            
+//        }
+//    }
+//    
+//    //cout << "Displacement Delay: "<< getDisplacementDelay() << endl;
+//    //cout << "Qpin Delay: " << endl;
+//    //cout << "TimingSlack: " << endl;
+//    //cout << "GatePower: " << ff->getPower() << endl;
+//
+//}
 
 void Database::initialBinArray() {
 	//Initial Die Boundary
@@ -329,31 +419,26 @@ void Database::resetBin() {
 
 void Database::updateBinUtil() {
 	Module *_tmpModule;
+	double _tmpCenterX, _tmpCenterY;
+	int _rowIdx, _colIdx;
 	int _lbinIdx, _bbinIdx, _rbinIdx, _tbinIdx;
-	Rectangle _tmpRect;
-
+	double _cellArea;
+	double _Ox, _Oy;
+	double _cogDistX, _cogDistY;
 	//Reset bin util to 0
 	resetBin();
 	//Update bin util
 	for (size_t i = 0; i < _numModules; ++i) {
 		_tmpModule = module(i);
-		_tmpRect = _tmpModule->rectangle();
+		_tmpCenterX = _tmpModule->centerX();
+		_tmpCenterY = _tmpModule->centerY();
 
-		_lbinIdx = _tmpModule->x() / _binWidth;
-		_rbinIdx = (_tmpModule->x() + _tmpModule->width()) / _binWidth;
-		_bbinIdx = _tmpModule->y() / _binHeight;
-		_tbinIdx = (_tmpModule->y() + _tmpModule->height()) / _binHeight;
+		_colIdx = (_tmpCenterX - _dieRectangle.left()) / _binWidth;
+		_rowIdx = (_tmpCenterY - _dieRectangle.bottom()) / _binHeight;
 
-		_lbinIdx = (_lbinIdx < 0) ? 0 : _lbinIdx;
-		_rbinIdx = ((_rbinIdx + 1) >= _numBinCol) ? _numBinCol : (_rbinIdx + 1);
-		_bbinIdx = (_bbinIdx < 0) ? 0 : _bbinIdx;
-		_tbinIdx = ((_tbinIdx + 1) >= _numBinRow) ? _numBinRow : (_tbinIdx + 1);
-
-		for (size_t j = _lbinIdx; j < _rbinIdx; ++j) {
-			size_t k = _bbinIdx;
-			for (; k < _tbinIdx; ++k) {
-				_bins[j][k]->updateOverlapArea(Rectangle::overlapArea(*_bins[j][k], _tmpRect));
-			}
-		}
+		_rbinIdx = ((_colIdx + 3) >= _numBinCol) ? _numBinCol : (_colIdx + 3);
+		_tbinIdx = ((_rowIdx + 3) >= _numBinRow) ? _numBinRow : (_rowIdx + 3);
+		_lbinIdx = ((_colIdx - 3) < 0) ? 0 : (_colIdx - 3);
+		_bbinIdx = ((_rowIdx - 3) < 0) ? 0 : (_rowIdx - 3);
 	}
 }
