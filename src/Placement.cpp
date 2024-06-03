@@ -159,14 +159,25 @@ void Placement::findMST()
     while (qheap.size() > 0)
     {
         pair<Node *, pair<double, Node *>> min = extractMinMST(qheap);
-        cout << "Node: " << min.first->getFFinNode()->name() << "   key : " << min.second.first << "predecessor : " << min.second.second->getFFinNode() << endl;
-        map<string, pair<Node *, double>> neighbor = min.first->getneighbormap();
+        min.first->setNodeidxheap(-1);
+        // print MST///////////////////////////////////////////////
+        cout << "Node: " << min.first->getFFinNode()->name() << "   key : " << min.second.first;
+        if (min.second.second != nullptr)
+        {
+            cout << "predecessor : " << min.second.second->getFFinNode()->name();
+        }
+        cout << endl;
+        // print MST///////////////////////////////////////////////
+        map<string, pair<Node *, double>> neighbor = min.first->getneighbormap(); // previous node's neighbor
         for (const auto &pair : neighbor)
         {
-            if (pair.second.second < qheap[pair.second.first->getNodeidxheap()].second.first)
+            if (pair.second.first->getNodeidxheap() != -1)
             {
-                qheap[pair.second.first->getNodeidxheap()].second.second = min.first;
-                DecreaseKeyMST(qheap, pair.second.first->getNodeidxheap(), pair.second.second);
+                if (pair.second.second < qheap[pair.second.first->getNodeidxheap()].second.first)
+                {
+                    qheap[pair.second.first->getNodeidxheap()].second.second = min.first; // set predecessor
+                    DecreaseKeyMST(qheap, pair.second.first->getNodeidxheap(), pair.second.second);
+                }
             }
         }
     }
