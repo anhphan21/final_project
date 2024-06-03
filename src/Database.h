@@ -93,7 +93,7 @@ public:
 
 	//Handling clock net
 	void sortClkNet();
-	
+
 private:
 	string _name;   //Design Name
 
@@ -140,7 +140,7 @@ private:
 	//Caching
 	map<string, BaseCell *> CellType2Ptr;
 	map<string, Module *> ModuleName2Ptr;
-	map<string, pair<string,Pin*>> PinName2Ptr;
+	map<string, map<string,Pin*>> PinName2Ptr;
 	map<string, Net *> Netname2Ptr;
 	map<string, Pin*> IODesign;
 };

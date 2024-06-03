@@ -6,18 +6,18 @@
 #include "DatabaseDef.h"
 #include "Module.h"
 #include "CellLibrary.h"
+#include "Timing.h"
 using namespace std;
 
 class Pin {
 public:
 
-	Pin() : _x(-1), _y(-1), _xOffset(-1), _yOffset(-1), _module(nullptr), _net(nullptr), _pinId(-1), _slack(0) {
-
+	Pin() : _x(-1), _y(-1), _xOffset(-1), _yOffset(-1), _module(nullptr), _net(nullptr), _pinId(-1) {
 	}
 
 	Pin(Net *net, Module *module, string &pinName, double xOffset, double yOffset) : _net(net), _module(module),
 																					 _name(pinName), _xOffset(xOffset),
-																					 _yOffset(yOffset), _x(0), _y(0), _slack(0) {
+																					 _yOffset(yOffset), _x(0), _y(0) {
 	}
 
 	string name() const { return _name; }
@@ -29,7 +29,7 @@ public:
 	Net *net() const { return _net; }
 	unsigned pinId() const { return _pinId; }
 	bool isIOdie() const { return (_module == nullptr); }
-	double getSlack() const { return _slack; }
+	Timing getSlackInfor() const { return _slackInfo; }
 
 	void setPinName(string &name) { _name = name; }
 
@@ -45,7 +45,6 @@ public:
 	void setModulePtr(Module *module) { _module = module; }
 	void setNetPtr(Net *net) { _net = net; }
 	void setPinId(unsigned pinId) { _pinId = pinId; }
-	void setSlack(double slack) { _slack = slack; }
 
 	static double calHPWL(const Pin &pin0, const Pin &pin1) {
 		return abs(pin0.x() -pin1.x()) + abs(pin0.y() - pin1.y());
@@ -60,7 +59,7 @@ private:
 	Net *_net;                    // ptr to the associated net
 	unsigned _pinId;            // Pin ID (preserved for nothing)
 
-	double _slack;
+	Timing _slackInfo;
 };
 
 #endif  // PIN_H`
