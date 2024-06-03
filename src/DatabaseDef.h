@@ -4,7 +4,11 @@
 #include <vector>
 using namespace std;
 
+<<<<<<< HEAD
 // struct Point2;
+=======
+//struct Point2;
+>>>>>>> master
 class Rectangle;
 class Bin;
 class Row;
@@ -13,6 +17,7 @@ class Net;
 class BaseCell;
 class FFCell;
 class Module;
+class FFModule;
 
 class Database;
 
