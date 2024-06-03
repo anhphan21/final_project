@@ -91,8 +91,10 @@ public:
 	double getDisplacementDelay() const { return _dDelay; }
 
 
-	//Handling clock net
+	//For slack update
 	void sortClkNet();
+	void updateSlack();
+	void resetVisit();
 
 private:
 	string _name;   //Design Name

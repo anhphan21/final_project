@@ -28,20 +28,3 @@ typedef vector<Row*> RowList;
 typedef vector<vector<Bin*>> BinList;
 
 #endif  // DATABASEDEF_H
-
-// class A;
-// class B;
-
-// class A {
-//    private:
-//     B* _B;
-
-//    public:
-//     A(/* args */);
-//     ~A();
-// };
-
-// class B {
-//    private:
-//     A* _A;
-// };

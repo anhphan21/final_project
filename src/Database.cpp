@@ -8,7 +8,7 @@ using namespace std;
 
 
 Database::Database()
-		: _name(), _boundaryTop(-1), _boundaryBottom(-1), _boundaryLeft(-1), _boundaryRight(-1), _numModules(0),
+		: _name(""), _boundaryTop(-1), _boundaryBottom(-1), _boundaryLeft(-1), _boundaryRight(-1), _numModules(0),
 		  _numNets(0), _numInput(-1), _numOutput(-1), _numBinCol(0), _numBinRow(0), _binWidth(-1), _binHeight(-1), _binMaxUtil(-1),
 		  _alpha(-1), _beta(-1), _gamma(-1), _lambda(-1) {
 
@@ -347,40 +347,6 @@ void Database::parser(const string& filename) {
 
 }
 
-// void Database::testParser()
-// {
-//     cout <<"����Pin �@"<< _pins.size() << endl;
-//     for (int i = 0; i < _pins.size(); i++)
-//     {
-//         if (_pins[i]->module() != nullptr)
-//         {
-//             cout << "�ҲզW�� " << _pins[i]->module()->name() << " pin�W��" << _pins[i]->name() << " ����Net�W��" << _pins[i]->net()->getNetname() << endl;
-//         }
-//         else
-//         {
-//             cout<<"IODesign "<< " pin�W��" << _pins[i]->name() << " ����Net�W��" << _pins[i]->net()->getNetname() << endl;
-//         }
-//          }
-//     cout << endl << endl << "����Net �@" << _nets.size() << endl;
-//     for (int i = 0; i < _nets.size(); i++)
-//     {
-//         cout << "��" << i << "�� Net�W��" << _nets[i]->getNetname()<<" �s����pin��" << endl;
-//         for (int j = 0; j < _nets[i]->numPins(); j++)
-//         {
-//             if (_nets[i]->pin(j).module() != nullptr)
-//             {
-//                 cout << _nets[i]->pin(j).module()->name() << "/" << _nets[i]->pin(j).name() << endl;
-//             }
-//             else
-//             {
-//                 cout << "IODesign: " << _nets[i]->pin(j).name() << endl;
-//             }
-            
-//         }
-//     }
-
-// }
-
 void Database::initialBinArray() {
 	//Initial Die Boundary
 	assert((_boundaryRight != -1) || (_boundaryLeft != -1) || (_boundaryTop != -1) || (_boundaryBottom != -1));
@@ -445,7 +411,15 @@ void Database::updateBinUtil() {
 }
 
 void Database::sortClkNet() {
+    //TODO: 
+    for (unsigned i = 0, endi = _clkNets.size(); i < endi; ++i) {
+   
+    }
+}
+
+void Database::resetVisit() {
     for (unsigned i = 0, endi = _clkNets.size(); i < endi; ++i) {
         
     }
+    
 }

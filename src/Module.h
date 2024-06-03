@@ -14,11 +14,11 @@ using namespace std;
 
 class Module {
 public:
-	Module() : _x(-1), _y(-1), _isFixed(false), _type(nullptr), _radius(0), _marked(0) {
+	Module() : _x(-1), _y(-1), _isFixed(false), _type(nullptr), _radius(0) {
 	}
 
 	Module(string &name, CellType *type, double x, double y)
-			: _name(name), _type(type), _x(x), _y(y), _isFixed(false), _radius(0), _marked(0) {
+			: _name(name), _type(type), _x(x), _y(y), _isFixed(false), _radius(0) {
 
 	}
 
@@ -44,7 +44,6 @@ public:
 	double getQdelay() const { return _type->getQdelay(); }
 
 	double radius() const { return _radius; }
-	bool isVisited() const { return _marked; }
 
 	/////////////////////////////////////////////
 	// set
@@ -96,8 +95,6 @@ public:
 		_outPins.clear();
 	}
 
-	void setVisited(bool marked) { _marked = marked; } 
-
 private:
 	// variables from benchmark input
 	string _name;
@@ -108,8 +105,6 @@ private:
 	// pins of the module
 	vector<Pin *> _inPins;
 	vector<Pin *> _outPins;
-
-	bool _marked;
 
 	// update pin positions
 	void updatePinPositions() {

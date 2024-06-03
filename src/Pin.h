@@ -30,6 +30,7 @@ public:
 	unsigned pinId() const { return _pinId; }
 	bool isIOdie() const { return (_module == nullptr); }
 	Timing getSlackInfor() const { return _slackInfo; }
+	bool isVisited() const { return _marked; }
 
 	void setPinName(string &name) { _name = name; }
 
@@ -45,6 +46,7 @@ public:
 	void setModulePtr(Module *module) { _module = module; }
 	void setNetPtr(Net *net) { _net = net; }
 	void setPinId(unsigned pinId) { _pinId = pinId; }
+	void setVisited(bool marked) { _marked = marked; } 
 
 	static double calHPWL(const Pin &pin0, const Pin &pin1) {
 		return abs(pin0.x() -pin1.x()) + abs(pin0.y() - pin1.y());
@@ -59,6 +61,7 @@ private:
 	Net *_net;                    // ptr to the associated net
 	unsigned _pinId;            // Pin ID (preserved for nothing)
 
+	bool _marked;				//use for checking the flipflop timing
 	Timing _slackInfo;
 };
 
