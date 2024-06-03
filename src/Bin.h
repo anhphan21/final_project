@@ -11,7 +11,7 @@ using namespace std;
 class Bin : public Rectangle {
    public:
     Bin() : Rectangle(), _overlapArea(0), _binArea(0) {
-        // cout << "Hello" << endl;
+
     }
 
 	Bin(double left, double bottom, double right, double top, double binArea) : _overlapArea(0), _binArea(binArea) {
