@@ -30,12 +30,12 @@ void Placement::findMST()
     // Testcase for MST//////////////////////////////////////////
     setNodesize(9);
     pair<Node *, double> p;
-    vector<FFCell *> j;
+    vector<Module *> j;
     j.clear();
     string name = "a";
     for (size_t i = 0; i < 9; i++)
     {
-        FFCell *ff = new FFCell();
+        Module *ff = new Module();
         j.push_back(ff);
     }
     name = "a";
@@ -59,6 +59,7 @@ void Placement::findMST()
     for (size_t i = 0; i < 9; i++)
     {
         _nodes[i]->setFFinNode(j[i]);
+        _nodes[i]->setNodeidxheap(i);
     }
     p.first = _nodes[1];
     p.second = 4;
@@ -150,33 +151,102 @@ void Placement::findMST()
     qheap.resize(_nodes.size());
     for (size_t i = 0; i < _nodes.size(); i++)
     {
-        qheap[i].first = new Node();
-        qheap[i].first->setFFinNode(_nodes[i]->getFFinNode());
-        qheap[i].first->setNeighborsize(_nodes[i]->getNeighborsize());
-        for (size_t j = 0; j < _nodes[i]->getNeighborsize(); j++)
-        {
-            qheap[i].first->setNeighborPair(j, _nodes[i]->getNeighborPair(j));
-        }
+        qheap[i].first = _nodes[i];
         qheap[i].second.first = __DBL_MAX__;
         qheap[i].second.second = nullptr;
     }
     qheap[0].second.first = 0;
-    // for (size_t i = 0; i < qheap.size(); i++)
-    // {
-    //     cout << "Node" << qheap[i].first->getFFinNode()->getName() << "has neighbor: ";
-    //     for (size_t j = 0; j < qheap[i].first->getNeighborsize(); j++)
-    //     {
-    //         cout << qheap[i].first->getneighborNode(j)->getFFinNode()->getName() << " " << qheap[i].first->getneighborweight(j) << " ";
-    //     }
-    //     cout << endl;
-    // }
+    while (qheap.size() > 0)
+    {
+        pair<Node *, pair<double, Node *>> min = extractMinMST(qheap);
+        cout << "Node: " << min.first->getFFinNode()->name() << "   key : " << min.second.first << "predecessor : " << min.second.second->getFFinNode() << endl;
+        map<string, pair<Node *, double>> neighbor = min.first->getneighbormap();
+        for (const auto &pair : neighbor)
+        {
+            if (pair.second.second < qheap[pair.second.first->getNodeidxheap()].second.first)
+            {
+                qheap[pair.second.first->getNodeidxheap()].second.second = min.first;
+                DecreaseKeyMST(qheap, pair.second.first->getNodeidxheap(), pair.second.second);
+            }
+        }
+    }
+    // print the heap//////////////////////////////////////////
+    for (size_t i = 0; i < qheap.size(); i++)
+    {
+        cout << "Node " << qheap[i].first->getFFinNode()->name() << " has neighbor: ";
+        cout << " " << qheap[i].first->getNodeidxheap() << " " << endl;
+        cout << "key : " << qheap[i].second.first << endl;
+        map<string, pair<Node *, double>> neighbor = qheap[i].first->getneighbormap();
+        for (const auto &pair : neighbor)
+        {
+            cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
+        }
+        cout << endl;
+    }
+    // print the heap//////////////////////////////////////////
 }
 void Placement::DecreaseKeyMST(vector<pair<Node *, pair<double, Node *>>> &heap, unsigned idx, double key)
-{
+{ // idx is the index of the node to be decreased in the heap
+    unsigned targetidx = idx;
+    heap[idx].second.first = key;
+    while (targetidx > 0 && heap[(targetidx - 1) / 2].second.first > key)
+    {
+        swapNodeMST(heap, targetidx, (targetidx - 1) / 2);
+        targetidx = (idx - 1) / 2;
+    }
     return;
 }
-Node *Placement::extractMinMST(vector<pair<Node *, pair<double, Node *>>> &heap)
+pair<Node *, pair<double, Node *>> Placement::extractMinMST(vector<pair<Node *, pair<double, Node *>>> &heap)
 {
-    Node *n;
+    pair<Node *, pair<double, Node *>> n = heap[0];
+    heap[0] = heap[heap.size() - 1];
+    heap[0].first->setNodeidxheap(0);
+    heap.pop_back();
+    unsigned targetidx = 0;
+    while (1)
+    {
+        if (targetidx * 2 + 1 >= heap.size())
+        {
+            break;
+        }
+        double key1 = __DBL_MAX__;
+        double key2 = __DBL_MAX__;
+        if (targetidx * 2 + 1 < heap.size())
+        {
+            key1 = heap[targetidx * 2 + 1].second.first;
+        }
+        if (targetidx * 2 + 2 < heap.size())
+        {
+            key2 = heap[targetidx * 2 + 2].second.first;
+        }
+        if (heap[targetidx].second.first > key1 || heap[targetidx].second.first > key2)
+        {
+            if (key1 < key2)
+            {
+                swapNodeMST(heap, targetidx, targetidx * 2 + 1);
+                targetidx = targetidx * 2 + 1;
+            }
+            else if (key1 > key2)
+            {
+                swapNodeMST(heap, targetidx, targetidx * 2 + 2);
+                targetidx = targetidx * 2 + 2;
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+
     return n;
+}
+void Placement::swapNodeMST(vector<pair<Node *, pair<double, Node *>>> &heap, unsigned idx1, unsigned idx2)
+{
+    pair<Node *, pair<double, Node *>> temp;
+    heap[idx1].first->setNodeidxheap(idx2);
+    heap[idx2].first->setNodeidxheap(idx1);
+    temp = heap[idx1];
+    heap[idx1] = heap[idx2];
+    heap[idx2] = temp;
+    return;
 }

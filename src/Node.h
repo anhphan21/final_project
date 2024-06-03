@@ -11,32 +11,37 @@ class Node
 public:
     Node() : _FF(nullptr)
     {
-        _neighbor.resize(0);
+        _neighbor_map.clear();
     };
-    Node(FFCell *FF) : _FF(FF) { _neighbor.resize(0); }
-    void addNeighborPair(pair<Node *, double> n) { _neighbor.push_back(n); }
-    void setNeighborPair(unsigned idx, pair<Node *, double> n) { _neighbor[idx] = n; }
-    void setFFinNode(FFCell *f) { _FF = f; } // not sure if it's right
-    void updateNeighbornode(unsigned id, Node *n) { _neighbor[id].first = n; }
-    void updateNeighborweight(unsigned id, double weight) { _neighbor[id].second = weight; }
-    void setNeighborsize(unsigned size) { _neighbor.resize(size); }
-    unsigned getNeighborsize() { return _neighbor.size(); }
-    pair<Node *, double> getNeighborPair(unsigned idx) { return _neighbor[idx]; }
+    Node(Module *FF) : _FF(FF) { _neighbor_map.clear(); }
+    void addNeighborPair(pair<Node *, double> n) { _neighbor_map.insert(make_pair(n.first->getFFinNode()->name(), n)); }
+    void setNeighborPair(string idx, pair<Node *, double> n) { _neighbor_map[idx] = n; }
+    void setFFinNode(Module *f) { _FF = f; } // not sure if it's right
+    void updateNeighbornode(string id, Node *n) { _neighbor_map[id].first = n; }
+    void updateNeighborweight(string id, double weight) { _neighbor_map[id].second = weight; }
+    // void setNeighborsize(unsigned size) { _neighbor.resize(size); }
+    void clearNeighbor() { _neighbor_map.clear(); }
+    void setNodeidxheap(unsigned id) { _heapidx = id; }
+    unsigned getNodeidxheap() { return _heapidx; }
+    unsigned getNeighborsize() { return _neighbor_map.size(); }
+    pair<Node *, double> getNeighborPair(string idx) { return _neighbor_map[idx]; }
     // get////////////////////////////////
-    Node *getneighborNode(unsigned idx)
+    Node *getneighborNode(string idx)
     {
-        assert(idx < _neighbor.size());
-        return _neighbor[idx].first;
+        assert(_neighbor_map.count(idx));
+        return _neighbor_map[idx].first;
     }
-    double getneighborweight(unsigned idx)
+    double getneighborweight(string idx)
     {
-        assert(idx < _neighbor.size());
-        return _neighbor[idx].second;
+        assert(_neighbor_map.count(idx));
+        return _neighbor_map[idx].second;
     }
-    FFCell *getFFinNode() { return _FF; }
+    map<string, pair<Node *, double>> getneighbormap() { return _neighbor_map; }
+    Module *getFFinNode() { return _FF; }
 
 private:
-    vector<pair<Node *, double>> _neighbor;
-    FFCell *_FF;
+    map<string, pair<Node *, double>> _neighbor_map;
+    Module *_FF;
+    unsigned _heapidx; // forMST
 };
 #endif
