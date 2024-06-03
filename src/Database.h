@@ -21,11 +21,12 @@ public:
 	void parser(const string& filename);
 
 	//set
+	void testParser();
 	void setName(string &name) { _name = name; }
-	void boundaryTop(double boundaryTop) { _boundaryTop = boundaryTop; }
-	void boundaryLeft(double boundaryLeft) { _boundaryLeft = boundaryLeft; }
-	void boundaryBottom(double boundaryBottom) { _boundaryBottom = boundaryBottom; }
-	void boundaryRight(double boundaryRight) { _boundaryRight = boundaryRight; }
+	void setBoundaryTop(double boundaryTop) { _boundaryTop = boundaryTop; }
+	void setBoundaryLeft(double boundaryLeft) { _boundaryLeft = boundaryLeft; }
+	void setBoundaryBottom(double boundaryBottom) { _boundaryBottom = boundaryBottom; }
+	void setBoundaryRight(double boundaryRight) { _boundaryRight = boundaryRight; }
 	void setalpha(double alpha) { _alpha = alpha; }
 	void setbeta(double beta) { _beta = beta; }
 	void setgamma(double gamma) { _gamma = gamma; }
@@ -108,7 +109,6 @@ private:
 	double _boundaryLeft;
 	double _boundaryBottom;
 	double _boundaryRight;
-	double _dDelay;
 
 	size_t _numModules;
 	size_t _numNets;
@@ -123,6 +123,7 @@ private:
 	int _numBinRow;			//Like y index
 
 	//For FF merging
+	double _dDelay;
 	double _QpinDelay;
 	double _alpha;
 	double _beta;
@@ -132,6 +133,7 @@ private:
 	//Caching
 	map<string, BaseCell *> CellType2Ptr;
 	map<string, Module *> ModuleName2Ptr;
+	map<string, pair<string,Pin*>> PinName2Ptr;
 	map<string, Net *> Netname2Ptr;
 	map<string, Pin*> IODesign;
 };

@@ -1,10 +1,11 @@
 #ifndef PIN_H
 #define PIN_H
 
+#include <cmath>
+#include <string>
 #include "DatabaseDef.h"
 #include "Module.h"
 #include "CellLibrary.h"
-#include <cmath>
 using namespace std;
 
 class Pin {
@@ -29,6 +30,8 @@ public:
 	unsigned pinId() const { return _pinId; }
 	bool isIOdie() const { return (_module == nullptr); }
 	double getSlack() const { return _slack; }
+
+	void setPinName(string &name) { _name = name; }
 
 	void setPosition(double x, double y) {
 		_x = x;

@@ -14,11 +14,11 @@ using namespace std;
 
 class Module {
 public:
-	Module() : _x(-1), _y(-1), _isFixed(false), _type(nullptr) {
+	Module() : _x(-1), _y(-1), _isFixed(false), _type(nullptr), _radius(0) {
 	}
 
 	Module(string &name, CellType *type, double x, double y)
-			: _name(name), _type(type), _x(x), _y(y), _isFixed(false) {
+			: _name(name), _type(type), _x(x), _y(y), _isFixed(false), _radius(0) {
 
 	}
 
@@ -43,6 +43,8 @@ public:
 	double getPower() const { return _type->getPower(); }
 	double getQdelay() const { return _type->getQdelay(); }
 
+	double radius() const { return _radius; }
+
 	/////////////////////////////////////////////
 	// set
 	/////////////////////////////////////////////
@@ -58,6 +60,8 @@ public:
 		updatePinPositions();
 	}
 	void setIsFixed(bool isFixed) { _isFixed = isFixed; }
+	//For construct the graph of timing
+	void setRadius(double rad) { _radius = rad; }
 
 	/////////////////////////////////////////////
 	// get (for pins of these modules)
@@ -114,6 +118,8 @@ private:
             pin.setPosition(centerX() + pin.xOffset(), centerY() + pin.yOffset());
         }
     }
+
+	double _radius;
 };
 
 #endif

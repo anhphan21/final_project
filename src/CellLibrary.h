@@ -41,6 +41,7 @@ public:
 		cout << "Not FF cell !!!" << endl;
 		return -1;
 	}
+	vector<string> AllPinName;
 
 private:
 	string _name;
