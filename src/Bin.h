@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "Rectangle.h"
-#include "Point.h"
+// #include "Point.h"
 #include "DatabaseDef.h"
 using namespace std;
 
@@ -14,22 +14,22 @@ class Bin : public Rectangle {
         // cout << "Hello" << endl;
     }
 
-    Bin(double left, double bottom, double right, double top, double binArea) : _overlapArea(0), _binArea(binArea) {
-        setBounds(left, bottom, right, top);
-    }
+	Bin(double left, double bottom, double right, double top, double binArea) : _overlapArea(0), _binArea(binArea) {
+		setBounds(left, bottom, right, top);
+	}
 
-    void resetBin() {
-        _overlapArea = 0;
-    }
+	void resetBin() {
+		_overlapArea = 0;
+	}
 
-    double getOverlapArea() const { return _overlapArea; }
-    void updateOverlapArea(double overlapArea) { _overlapArea += overlapArea; }
+	double getOverlapArea() const { return _overlapArea; }
+	void updateOverlapArea(double overlapArea) { _overlapArea += overlapArea; }
 
-    double getDensity() const { return _overlapArea / _binArea; }
+	double getDensity() const { return _overlapArea / _binArea; }
 
-   private:
-    double _binArea;
-    double _overlapArea;  // cal in Rectangle.h
+private:
+	double _binArea;
+	double _overlapArea; // cal in Rectangle.h
 };
 
-#endif //BIN_H
+#endif // BIN_H
