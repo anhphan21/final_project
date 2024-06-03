@@ -22,17 +22,24 @@ public:
 
 	//set
 	void setName(string &name) { _name = name; }
-	void boundaryTop(double boundaryTop) { _boundaryTop = boundaryTop; }
-	void boundaryLeft(double boundaryLeft) { _boundaryLeft = boundaryLeft; }
-	void boundaryBottom(double boundaryBottom) { _boundaryBottom = boundaryBottom; }
-	void boundaryRight(double boundaryRight) { _boundaryRight = boundaryRight; }
+
 	void setalpha(double alpha) { _alpha = alpha; }
 	void setbeta(double beta) { _beta = beta; }
 	void setgamma(double gamma) { _gamma = gamma; }
 	void setlambda(double lambda) { _lambda = lambda; }
+
+	void setBoundaryTop(double boundaryTop) { _boundaryTop = boundaryTop; }
+	void setBoundaryLeft(double boundaryLeft) { _boundaryLeft = boundaryLeft; }
+	void setBoundaryBottom(double boundaryBottom) { _boundaryBottom = boundaryBottom; }
+	void setBoundaryRight(double boundaryRight) { _boundaryRight = boundaryRight; }
+
+	void setNumInput(unsigned numIn) { _numInput = numIn; }
+	void setNumOutput(unsigned numOut) { _numOutput = numOut; }
+
 	void setBinWidth(double w) { _binWidth = w; }
 	void setBinHeight(double h) { _binHeight = h; }
 	void setBinUtil(double u) { _binMaxUtil = u; }
+
 	void setDisplacementDelay(double delay) { _dDelay = delay; }
 
 
@@ -77,7 +84,6 @@ public:
 	unsigned getNumInputs() const { return _numInput; }
 	unsigned getNumOutputs() const { return _numOutput; }
 	unsigned getNumRows() const { return _rows.size(); }
-	double getQDelay() const { return _QpinDelay; }
 	double getAlpha() const { return _alpha; }
 	double getBeta() const { return _beta; }
 	double getGamma() const { return _gamma; }
@@ -85,6 +91,9 @@ public:
 	double getDisplacementDelay() const { return _dDelay; }
 
 
+	//Handling clock net
+	void sortClkNet();
+	
 private:
 	string _name;   //Design Name
 
@@ -108,12 +117,11 @@ private:
 	double _boundaryLeft;
 	double _boundaryBottom;
 	double _boundaryRight;
-	double _dDelay;
 
-	size_t _numModules;
-	size_t _numNets;
-	size_t _numInput;
-	size_t _numOutput;
+	unsigned _numModules;
+	unsigned _numNets;
+	unsigned _numInput;
+	unsigned _numOutput;
 
 	//Bin statics
 	double _binWidth;
@@ -123,7 +131,7 @@ private:
 	int _numBinRow;			//Like y index
 
 	//For FF merging
-	double _QpinDelay;
+	double _dDelay;
 	double _alpha;
 	double _beta;
 	double _gamma;
@@ -132,6 +140,7 @@ private:
 	//Caching
 	map<string, BaseCell *> CellType2Ptr;
 	map<string, Module *> ModuleName2Ptr;
+	map<string, pair<string,Pin*>> PinName2Ptr;
 	map<string, Net *> Netname2Ptr;
 	map<string, Pin*> IODesign;
 };

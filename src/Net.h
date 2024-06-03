@@ -2,6 +2,7 @@
 #define NET_H
 
 #include <vector>
+#include <string>
 #include "DatabaseDef.h"
 using namespace std;
 
@@ -11,6 +12,7 @@ public:
 		
     }
 
+    string name() const { return _name; }
     unsigned numPins() const { return _pPins.size(); }
     Pin *pin(unsigned index) { return _pPins[index]; }  // index: 0 ~ (numPins-1), not Pin id
     Pin *getOutputPin() { return _pPins[_outputIdx]; }
@@ -18,6 +20,7 @@ public:
 	unsigned pinNum() const { return _pPins.size(); }
 	unsigned getOutIdx() const { return _outputIdx; }
 
+    void setName(string &name) { _name = name; }
     void setNumPins(unsigned numPins) { _pPins.resize(numPins); }
     void setclkFlag(bool flag) { _clkFlag = flag;}
     void addPin(Pin *pPin) { _pPins.push_back(pPin); }
