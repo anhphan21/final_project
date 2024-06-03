@@ -12,6 +12,7 @@ public:
 		
     }
 
+    string name() const { return _name; }
     unsigned numPins() const { return _pPins.size(); }
     Pin *pin(unsigned index) { return _pPins[index]; }  // index: 0 ~ (numPins-1), not Pin id
     Pin *getOutputPin() { return _pPins[_outputIdx]; }
