@@ -6,6 +6,7 @@ using namespace std;
 void Placement::mainLoop(Database *database)
 {
     // find same clk path-> calculate diamond -> construct graph according to cost -> find MST -> merge FFs
+    // TODO:find same clk path , and loop it
     NodeList mst = findMST();
     int leafsize = 0;
     for (size_t i = 0; i < mst.size(); i++)
@@ -30,6 +31,7 @@ void Placement::mainLoop(Database *database)
         }
         _nodes.clear();
         _nodes = mst;
+        mergeFFinG();
     }
     else // do nothing because leafsize is too large
     {
@@ -37,6 +39,18 @@ void Placement::mainLoop(Database *database)
     }
 }
 void Placement::mergeFFinG()
+{
+    while (_nodes.size() > 1)
+    {
+        // find leaf
+        unsigned idx = 0;
+        while (_nodes[idx]->getisleaf() == false)
+        {
+            idx++;
+        }
+    }
+}
+void Placement::mergeAdjFF()
 {
 }
 void Placement::setNodesize(unsigned size)
