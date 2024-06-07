@@ -6,6 +6,7 @@
         "initializer_list": "cpp",
         "utility": "cpp",
         "typeinfo": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "iostream": "cpp"
     }
 }

@@ -19,11 +19,13 @@ public:
     void setFFinNode(Module *f) { _FF = f; } // not sure if it's right
     void updateNeighbornode(string id, Node *n) { _neighbor_map[id].first = n; }
     void updateNeighborweight(string id, double weight) { _neighbor_map[id].second = weight; }
+    void setisleaf(bool b) { _isleaf = b; }
     // void setNeighborsize(unsigned size) { _neighbor.resize(size); }
     void clearNeighbor() { _neighbor_map.clear(); }
     void setNodeidxheap(unsigned id) { _heapidx = id; }
     unsigned getNodeidxheap() { return _heapidx; }
     unsigned getNeighborsize() { return _neighbor_map.size(); }
+    bool getisleaf() { return _isleaf; }
     pair<Node *, double> getNeighborPair(string idx) { return _neighbor_map[idx]; }
     // get////////////////////////////////
     Node *getneighborNode(string idx)
@@ -43,5 +45,6 @@ private:
     map<string, pair<Node *, double>> _neighbor_map;
     Module *_FF;
     unsigned _heapidx; // forMST
+    bool _isleaf;      // forMST
 };
 #endif

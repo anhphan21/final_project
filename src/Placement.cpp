@@ -2,6 +2,43 @@
 #include <vector>
 #include <limits>
 using namespace std;
+#define leafthresold 0.75 // TODO: can be changed
+void Placement::mainLoop(Database *database)
+{
+    // find same clk path-> calculate diamond -> construct graph according to cost -> find MST -> merge FFs
+    NodeList mst = findMST();
+    int leafsize = 0;
+    for (size_t i = 0; i < mst.size(); i++)
+    {
+        if (mst[i]->getNeighborsize() == 1)
+        {
+            mst[i]->setisleaf(true);
+            leafsize++;
+        }
+        else
+        {
+            mst[i]->setisleaf(false);
+        }
+    }
+    cout << "leafsize: " << leafsize << endl;
+    if (static_cast<double>(leafsize) / static_cast<double>(_nodes.size()) < leafthresold)
+    { // do merge & store mst into _nodes
+        for (size_t i = 0; i < _nodes.size(); i++)
+        {
+
+            free(_nodes[i]);
+        }
+        _nodes.clear();
+        _nodes = mst;
+    }
+    else // do nothing because leafsize is too large
+    {
+        /* code */
+    }
+}
+void Placement::mergeFFinG()
+{
+}
 void Placement::setNodesize(unsigned size)
 {
     clearNode();
@@ -21,11 +58,7 @@ void Placement::clearNode()
     _nodes.clear();
     return;
 }
-void mainLoop(Database *database)
-{
-    // find same clk path-> calculate diamond -> construct graph according to cost -> find MST -> merge FFs
-}
-void Placement::findMST()
+NodeList Placement::findMST()
 {
     // Testcase for MST//////////////////////////////////////////
     setNodesize(9);
@@ -156,6 +189,8 @@ void Placement::findMST()
         qheap[i].second.second = nullptr;
     }
     qheap[0].second.first = 0;
+    vector<pair<Node *, pair<double, Node *>>> mstHeap;
+    NodeList mst;
     while (qheap.size() > 0)
     {
         pair<Node *, pair<double, Node *>> min = extractMinMST(qheap);
@@ -180,20 +215,50 @@ void Placement::findMST()
                 }
             }
         }
+        mstHeap.push_back(min);
     }
-    // print the heap//////////////////////////////////////////
-    for (size_t i = 0; i < qheap.size(); i++)
+    for (size_t i = 0; i < mstHeap.size(); ++i)
     {
-        cout << "Node " << qheap[i].first->getFFinNode()->name() << " has neighbor: ";
-        cout << " " << qheap[i].first->getNodeidxheap() << " " << endl;
-        cout << "key : " << qheap[i].second.first << endl;
-        map<string, pair<Node *, double>> neighbor = qheap[i].first->getneighbormap();
+        mst.push_back(new Node(mstHeap[i].first->getFFinNode()));
+        mst[i]->setNodeidxheap(i);
+        mstHeap[i].first->setNodeidxheap(i);
+        mst[i]->setisleaf(false);
+    }
+    for (size_t i = mstHeap.size() - 1; i >= 1; --i)
+    {
+        mst[i]->addNeighborPair(make_pair(mst[mstHeap[i].second.second->getNodeidxheap()], mstHeap[i].second.first));
+        unsigned id = mstHeap[i].second.second->getNodeidxheap();
+        mst[id]->addNeighborPair(make_pair(mst[i], mstHeap[i].second.first));
+    }
+    // print MST///////////////////////////////////////////////
+    for (size_t i = 0; i < mst.size(); i++)
+    {
+        cout << "Node " << mst[i]->getFFinNode()->name() << " has neighbor: ";
+        cout << " " << mst[i]->getNodeidxheap() << endl;
+        map<string, pair<Node *, double>> neighbor = mst[i]->getneighbormap();
         for (const auto &pair : neighbor)
         {
             cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
         }
         cout << endl;
     }
+    // print MST///////////////////////////////////////////////
+    mstHeap.clear();
+    qheap.clear();
+    return mst;
+    //  print the heap//////////////////////////////////////////
+    // for (size_t i = 0; i < qheap.size(); i++)
+    // {
+    //     cout << "Node " << qheap[i].first->getFFinNode()->name() << " has neighbor: ";
+    //     cout << " " << qheap[i].first->getNodeidxheap() << " " << endl;
+    //     cout << "key : " << qheap[i].second.first << endl;
+    //     map<string, pair<Node *, double>> neighbor = qheap[i].first->getneighbormap();
+    //     for (const auto &pair : neighbor)
+    //     {
+    //         cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
+    //     }
+    //     cout << endl;
+    // }
     // print the heap//////////////////////////////////////////
 }
 void Placement::DecreaseKeyMST(vector<pair<Node *, pair<double, Node *>>> &heap, unsigned idx, double key)

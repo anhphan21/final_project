@@ -4,6 +4,7 @@
 int main(int argc, char **argv)
 {
     Placement p;
-    p.findMST();
+    Database *db = new Database();
+    p.mainLoop(db);
     return 0;
 }
