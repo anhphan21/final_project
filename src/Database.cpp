@@ -392,11 +392,20 @@ void Database::parser(const string& filename) {
 
 
         else if (keyword == "BinWidth" || keyword == "BinHeight" || keyword == "BinMaxUtil") {
-            int width, height, maxUtil;
-            iss >> width >> height >> maxUtil;
-            setBinWidth(width);
-            setBinHeight(height);
-            setBinUtil(maxUtil);
+            int data;
+            iss >> data;
+            if(keyword == "BinWidth")
+            {
+                setBinWidth(data);
+            }
+            else if(keyword == "BinHeight")
+            {
+                setBinHeight(data);
+            }
+            else if(keyword == "BinMaxUtil")
+            {
+                setBinUtil(data);
+            }
 
         }
         else if (keyword == "PlacementRows") {
