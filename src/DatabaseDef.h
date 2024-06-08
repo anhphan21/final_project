@@ -20,7 +20,8 @@ class Database;
 
 typedef BaseCell CellType;
 typedef vector<CellType*> CellLibrary;
-typedef vector<vector<FFCell*>> FFLLibrary;
+typedef map<unsigned, vector<FFCell*>> FFLLibrary;
+
 typedef vector<Module*> ModuleList;
 typedef vector<Pin*> PinList;
 typedef vector<Net*> NetList;
