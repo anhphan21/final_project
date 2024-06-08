@@ -38,13 +38,24 @@ void Database::parser(const string& filename) {
         iss >> keyword;
         if (keyword == "Alpha" || keyword == "Beta" || keyword == "Gamma" || keyword == "Lambda") 
         {
-            double alpha, beta, gamma, lambda;
-            iss >> alpha >> beta >> gamma >> lambda;
-            setalpha(alpha);
-            setbeta(beta);
-            setgamma(gamma);
-            setlambda(lambda);
-
+            double data;
+            iss >> data;
+            if(keyword == "Alpha")
+            {
+                setalpha(data);
+            }
+            else if(keyword == "Beta")
+            {
+                setbeta(data);
+            }
+            else if (keyword == "Gamma")
+            {
+                setgamma(data);
+            }
+            else if(keyword == "Lambda")
+            {
+                setlambda(data);
+            }
         }
         else if (keyword == "DieSize") 
         {
@@ -78,7 +89,7 @@ void Database::parser(const string& filename) {
                 _pins.push_back(pinptr);
                 if (type == "clk" ||type.find("C") != string::npos)
                 {
-                    cout << "HEE" << endl;
+                    //cout << "HEE" << endl;
                     type = "CLK";
                 }
                 IODesign.insert({ type, pinptr });
@@ -117,7 +128,7 @@ void Database::parser(const string& filename) {
             string id;
     
             iss >> bitCount >> id >> width >> height >> pinCount;
-            cout << "FF ferf" << width <<pinCount << endl;
+            //cout << "FF ferf" << width <<pinCount << endl;
             FFCell* FFcellptr = new FFCell(id, width, height, pinCount);
             
             // ensure the size of _ffLib
@@ -154,7 +165,7 @@ void Database::parser(const string& filename) {
 
             }
 
-            cout << "FF" << " " << bitCount << " " << id << " " << width << " " << height << endl;
+            //cout << "FF" << " " << bitCount << " " << id << " " << width << " " << height << endl;
 
         }
 
@@ -190,7 +201,7 @@ void Database::parser(const string& filename) {
 
             }
 
-            cout << "Gate" << " " << id << " " << width << " " << height << endl;
+            //cout << "Gate" << " " << id << " " << width << " " << height << endl;
 
         }
         else if (keyword == "NumInstances") 
@@ -204,17 +215,17 @@ void Database::parser(const string& filename) {
                 string temp, name, type;
                 double x, y;
                 instIss >> temp >> name >> type >> x >> y;
-                cout << "testhere" << name << endl;
+                //cout << "testhere" << name << endl;
                 //auto it = CellType2Ptr.find(type);
                 if (type.find("G") != string::npos)
                 {
-                    cout << "this is Gate type" << endl;
+                    //cout << "this is Gate type" << endl;
                     auto it = CellType2Ptr.find(type);
                     int PinOfMnum = it->second->getPinNum();
                     map<string, Pin*> PinOfM;
                     if (it == CellType2Ptr.end()) //can't find Standard Cell
                     {
-                        cout << "Test error" << type << endl;
+                        //cout << "Test error" << type << endl;
                     }
                     else
                     {
@@ -235,26 +246,26 @@ void Database::parser(const string& filename) {
                             _pins.push_back(pinptr);
                         }
                         PinName2Ptr.insert({ name ,PinOfM });
-                        cout <<"su3cl3"<< name << endl;
+                        //cout <<"su3cl3"<< name << endl;
                     }
                 }
                 else 
                 {
-                    cout <<"test point1"<< type << endl;
+                    //cout <<"test point1"<< type << endl;
                     auto it = CellType2Ptr.find(type);
                     int PinOfMnum = it->second->getPinNum();
-                    cout << "test point2" << PinOfMnum << endl;
+                    //cout << "test point2" << PinOfMnum << endl;
                     map<string, Pin*> PinOfM;
                     if (it == CellType2Ptr.end()) //can't find Standard Cell
                     {
-                        cout << "Test error" << type << endl;
+                        //cout << "Test error" << type << endl;
                     }
                     else
                     {
                         Module* currentM = new Module(name, it->second, x, y);
                         ModuleName2Ptr.insert({ name, currentM });
                         _modules.push_back(currentM);
-                        cout <<"HEREEE"<< PinOfMnum << endl;
+                        //cout <<"HEREEE"<< PinOfMnum << endl;
                         for (int i = 0; i < PinOfMnum; i++)
                         {
                             string PinName = it->second->AllPinName[i];
@@ -267,10 +278,9 @@ void Database::parser(const string& filename) {
                             pinptr->setModulePtr(currentM);
                             PinOfM.insert({ PinName,pinptr });
                             _pins.push_back(pinptr);
-                            cout << "模組" << name << " " << "PinName" << PinName << endl;
                         }
                         PinName2Ptr.insert({ name ,PinOfM });
-                        cout << name << endl;
+                        //cout << name << endl;
                         
                     }
                 }
@@ -294,7 +304,7 @@ void Database::parser(const string& filename) {
                 Net* netptr = new Net();
                 netptr->setName(Netname);
                 //this->_nets.push_back(netptr);
-                cout << "PinNum: " << PinNum << endl;
+                //cout << "PinNum: " << PinNum << endl;
                 
                 for (int j = 0; j < PinNum; j++)
                 {
@@ -302,7 +312,7 @@ void Database::parser(const string& filename) {
                     getline(file, line);
                     istringstream piniss(line);
                     piniss >> temp >> type;
-                    cout << "type: " << type << endl;
+                    //cout << "type: " << type << endl;
                     auto pos = type.find("/");
                     if (pos == type.npos) //如果沒有'/'的Net pin角 代表會再IODesign
                     {
@@ -310,7 +320,7 @@ void Database::parser(const string& filename) {
                         
                         if (it == IODesign.end()) //IODesignPin腳 處理跟FF不一樣
                         {
-                            cout << "催謀" << endl;
+                           //cout << "nothing" << endl; 
                         }
                         else if (type.find("CLK") != string::npos) //找到clk
                         {
@@ -330,7 +340,7 @@ void Database::parser(const string& filename) {
                         }*/
                         else
                         {
-                            cout << "對應input" << endl;
+                            //cout << "對應input" << endl;
                             auto it = this->IODesign.find(type);
                             it->second->setNetPtr(netptr);
                             netptr->addPin(it->second);
@@ -339,13 +349,13 @@ void Database::parser(const string& filename) {
                     }
                     else  //有'/'切割的Net Pin
                     {
-                        cout << "有'/'切割的Net Pin" << endl;
+                        //cout << "有'/'切割的Net Pin" << endl;
                         FFname = type.substr(0, pos);
                         TargetPin = type.substr(pos + 1);
                         auto it = ModuleName2Ptr.find(FFname);
                         if (it == ModuleName2Ptr.end())
                         {
-                            cout << "can't find" << endl;
+                            //cout << "can't find" << endl;
                         }
                         else if (TargetPin.find("Q") != string::npos)
                         {
@@ -359,7 +369,7 @@ void Database::parser(const string& filename) {
                         {
                             auto it = PinName2Ptr.find(FFname);
                             auto PinOfM = it->second.find(TargetPin);
-                            cout << FFname << endl;
+                            //cout << FFname << endl;
                             PinOfM->second->setNetPtr(netptr);// !!這裡會跑到end
                             netptr->addPin(PinOfM->second); 
                         }
