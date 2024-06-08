@@ -27,7 +27,7 @@ public:
     // func for MST //////////////
     // func for mergeFF////////////
     void mergeFFinG();
-    void mergeAdjFF();
+    void merge2FF(unsigned idx1, unsigned idx2);
     // get design property
     Node *node(unsigned nodeId) { return _nodes[nodeId]; }
 

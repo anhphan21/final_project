@@ -39,6 +39,7 @@ public:
         return _neighbor_map[idx].second;
     }
     map<string, pair<Node *, double>> getneighbormap() { return _neighbor_map; }
+    void eraseNeighbor(string idx) { _neighbor_map.erase(idx); }
     Module *getFFinNode() { return _FF; }
 
 private:

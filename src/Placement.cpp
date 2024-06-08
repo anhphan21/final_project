@@ -22,36 +22,81 @@ void Placement::mainLoop(Database *database)
         }
     }
     cout << "leafsize: " << leafsize << endl;
-    if (static_cast<double>(leafsize) / static_cast<double>(_nodes.size()) < leafthresold)
-    { // do merge & store mst into _nodes
-        for (size_t i = 0; i < _nodes.size(); i++)
-        {
-
-            free(_nodes[i]);
-        }
-        _nodes.clear();
-        _nodes = mst;
-        mergeFFinG();
-    }
-    else // do nothing because leafsize is too large
+    for (size_t i = 0; i < _nodes.size(); i++)
     {
-        /* code */
+
+        free(_nodes[i]);
     }
+    _nodes.clear();
+    _nodes = mst;
+    merge2FF(0, 1);
+    // print MST///////////////////////////////////////////////
+    for (size_t i = 0; i < _nodes.size(); i++)
+    {
+        cout << "Node " << _nodes[i]->getFFinNode()->name() << " has neighbor: ";
+        cout << " " << _nodes[i]->getNodeidxheap() << endl;
+        map<string, pair<Node *, double>> neighbor = _nodes[i]->getneighbormap();
+        for (const auto &pair : neighbor)
+        {
+            cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
+        }
+        cout << endl;
+    }
+    // print MST///////////////////////////////////////////////
+    // if (static_cast<double>(leafsize) / static_cast<double>(_nodes.size()) < leafthresold)
+    // { // do merge & store mst into _nodes
+    //     for (size_t i = 0; i < _nodes.size(); i++)
+    //     {
+
+    //         free(_nodes[i]);
+    //     }
+    //     _nodes.clear();
+    //     _nodes = mst;
+    //     mergeFFinG();
+    // }
+    // else // do nothing because leafsize is too large
+    // {
+    //     /* code */
+    // }
 }
 void Placement::mergeFFinG()
 {
     while (_nodes.size() > 1)
     {
-        // find leaf
+        // find a leaf
         unsigned idx = 0;
         while (_nodes[idx]->getisleaf() == false)
         {
             idx++;
         }
+        auto mymap = *_nodes[idx]->getneighbormap().begin();
+        unsigned idx2 = mymap.second.first->getNodeidxheap();
+        merge2FF(idx, idx2);
+        break; // TODO: temp
     }
+    return;
 }
-void Placement::mergeAdjFF()
+void Placement::merge2FF(unsigned idx1, unsigned idx2)
 {
+    // erase to FF from graph(_nodes)/////////////////////////////////
+    cout << "node1: " << _nodes[idx1]->getFFinNode()->name() << endl;
+    cout << "node2: " << _nodes[idx2]->getFFinNode()->name() << endl;
+    map<string, pair<Node *, double>> neighbor = _nodes[idx1]->getneighbormap();
+    for (const auto &pair : neighbor)
+    {
+        cout << pair.second.first->getFFinNode()->name() << " " << endl;
+        pair.second.first->eraseNeighbor(_nodes[idx1]->getFFinNode()->name());
+    }
+    neighbor = _nodes[idx2]->getneighbormap();
+    for (const auto &pair : neighbor)
+    {
+        cout << pair.second.first->getFFinNode()->name() << " " << endl;
+        pair.second.first->eraseNeighbor(_nodes[idx1]->getFFinNode()->name());
+    }
+    _nodes[idx1]->clearNeighbor();
+    _nodes[idx2]->clearNeighbor();
+    // erase to FF from graph(_nodes)/////////////////////////////////
+    return;
 }
 void Placement::setNodesize(unsigned size)
 {
