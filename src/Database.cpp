@@ -1,32 +1,18 @@
 #include "Database.h"
-
-#include <fstream>
-#include <sstream>
-
-#include "Pin.h"
 #include "Row.h"
+#include "Pin.h"
+#include <sstream>
+#include <fstream>
 
 using namespace std;
 
+
 Database::Database()
-    : _name(),
-      _boundaryTop(-1),
-      _boundaryBottom(-1),
-      _boundaryLeft(-1),
-      _boundaryRight(-1),
-      _numModules(0),
-      _numNets(0),
-      _numInput(-1),
-      _numOutput(-1),
-      _numBinCol(0),
-      _numBinRow(0),
-      _binWidth(-1),
-      _binHeight(-1),
-      _binMaxUtil(-1),
-      _alpha(-1),
-      _beta(-1),
-      _gamma(-1),
-      _lambda(-1) {}
+		: _name(), _boundaryTop(-1), _boundaryBottom(-1), _boundaryLeft(-1), _boundaryRight(-1), _numModules(0),
+		  _numNets(0), _numInput(-1), _numOutput(-1), _numBinCol(0), _numBinRow(0), _binWidth(-1), _binHeight(-1), _binMaxUtil(-1),
+		  _QpinDelay(-1), _alpha(-1), _beta(-1), _gamma(-1), _lambda(-1) {
+
+}
 
 void Database::parser(const string& filename) {
     ifstream file(filename);
@@ -38,7 +24,7 @@ void Database::parser(const string& filename) {
         iss >> keyword;
         if (keyword == "Alpha" || keyword == "Beta" || keyword == "Gamma" || keyword == "Lambda") 
         {
-            double data;
+			double data;
             iss >> data;
             if(keyword == "Alpha")
             {
@@ -56,6 +42,7 @@ void Database::parser(const string& filename) {
             {
                 setlambda(data);
             }
+
         }
         else if (keyword == "DieSize") 
         {
@@ -137,7 +124,7 @@ void Database::parser(const string& filename) {
             }
             this->_ffLib[bitCount].push_back(FFcellptr);
             this->CellType2Ptr.insert({ id,FFcellptr });
-            cout << "F PinNum" << FFcellptr->getPinNum() << endl;
+            //cout << "F PinNum" << FFcellptr->getPinNum() << endl;
             for (int i = 0; i < pinCount; i++) 
             {
                 getline(file, line);
@@ -150,7 +137,7 @@ void Database::parser(const string& filename) {
                 {
 
                     FFcellptr->setOutput(name, 1);
-                    FFcellptr->isOutPin(name);
+                    //FFcellptr->isOutPin(name);
                     FFcellptr->setPinOffset(name, pair<double,double>(x, y));
                     
                 }
@@ -217,6 +204,8 @@ void Database::parser(const string& filename) {
                 instIss >> temp >> name >> type >> x >> y;
                 //cout << "testhere" << name << endl;
                 //auto it = CellType2Ptr.find(type);
+                int outputNum = 0;
+                int inputNum = 0;
                 if (type.find("G") != string::npos)
                 {
                     //cout << "this is Gate type" << endl;
@@ -237,6 +226,19 @@ void Database::parser(const string& filename) {
                             string PinName = it->second->AllPinName[i];
 
                             Pin* pinptr = new Pin();
+                            
+                            bool ISOUTPUT = this->CellType2Ptr[name]->isOutPin(PinName);
+                            if (ISOUTPUT)
+                            {
+                                currentM->addOutPin(pinptr);
+                                outputNum++;
+                            }
+                            else
+                            {
+                                currentM->addInPin(pinptr);
+                                inputNum++;
+                            }
+
                             pinptr->setPosition(x, y);
                             pinptr->setPinName(PinName);
                             pair<double, double > tempOffset = it->second->getPinOffset(PinName);
@@ -247,6 +249,7 @@ void Database::parser(const string& filename) {
                         }
                         PinName2Ptr.insert({ name ,PinOfM });
                         //cout <<"su3cl3"<< name << endl;
+                        currentM->setNumPins(inputNum, outputNum);
                     }
                 }
                 else 
@@ -271,6 +274,18 @@ void Database::parser(const string& filename) {
                             string PinName = it->second->AllPinName[i];
 
                             Pin* pinptr = new Pin();
+                            //cout << type <<"==================" << endl;
+                            bool ISOUTPUT = this->CellType2Ptr[type]->isOutPin(PinName);
+                            if (ISOUTPUT)
+                            {
+                                currentM->addOutPin(pinptr);
+                                outputNum++;
+                            }
+                            else
+                            {
+                                currentM->addInPin(pinptr);
+                                inputNum++;
+                            }
                             pinptr->setPosition(x, y);
                             pinptr->setPinName(PinName);
                             pair<double, double > tempOffset = it->second->getPinOffset(PinName);
@@ -278,13 +293,14 @@ void Database::parser(const string& filename) {
                             pinptr->setModulePtr(currentM);
                             PinOfM.insert({ PinName,pinptr });
                             _pins.push_back(pinptr);
+                            //cout << "模組" << name << " " << "PinName" << PinName << endl;
                         }
                         PinName2Ptr.insert({ name ,PinOfM });
                         //cout << name << endl;
-                        
+                        currentM->setNumPins(inputNum, outputNum);
                     }
+                    
                 }
-
             }
         }
 
@@ -320,7 +336,7 @@ void Database::parser(const string& filename) {
                         
                         if (it == IODesign.end()) //IODesignPin腳 處理跟FF不一樣
                         {
-                           //cout << "nothing" << endl; 
+                            //cout << "催謀" << endl;
                         }
                         else if (type.find("CLK") != string::npos) //找到clk
                         {
@@ -402,7 +418,11 @@ void Database::parser(const string& filename) {
             {
                 setBinHeight(data);
             }
-            else if(keyword == "BinMaxUtil")
+            else if (keyword == "BinMaxUtil")
+            {
+                setgamma(data);
+            }
+            else if(keyword == "Lambda")
             {
                 setBinUtil(data);
             }
@@ -476,65 +496,105 @@ void Database::parser(const string& filename) {
     file.close();
 
 }
-void Database::initialBinArray() {
-    // Initial Die Boundary
-    assert((_boundaryRight != -1) || (_boundaryLeft != -1) ||
-           (_boundaryTop != -1) || (_boundaryBottom != -1));
-    // Initial Bin information
-    assert((_binWidth != -1) || (_binHeight != -1) || (_binMaxUtil != -1));
 
-    _numBinRow = _dieRectangle.height() / _binHeight;
-    _numBinCol = _dieRectangle.width() / _binWidth;
+void Database::testParser()
+{
 
-    double _binArea = _binHeight * _binWidth;
-
-    double _xPos = _dieRectangle.left();
-    double _yPos = _dieRectangle.bottom();
-
-    // Create bin array
-    double _tempLeft, _tempBottom;
-    _bins.resize(_numBinCol);
-    for (int i = 0; i < _numBinCol; ++i) {
-        _bins[i].resize(_numBinRow);
-        _tempLeft = _xPos + _binWidth * i;
-        for (int j = 0; j < _numBinRow; ++j) {
-            _tempBottom = _yPos + _binHeight * j;
-            _bins[i][j] = new Bin(_tempLeft, _tempBottom, _tempLeft + _binWidth,
-                                  _tempBottom + _binHeight, _binArea);
+    for (int i = 0; i < _modules.size(); i++)
+    {
+        cout << "name" << _modules[i]->name() << endl;
+        cout << "input" << _modules[i]->totnumPins() - _modules[i]->numOutPins() << endl;
+       
+        for (int j = 0; j < _modules[i]->totnumPins() - _modules[i]->numOutPins(); j++)
+        {
+            cout << _modules[i]->inPin(j).name() << endl;
+        }
+        cout  << "output" << _modules[i]->numOutPins() << endl;
+        for (int j = 0; j < _modules[i]->numOutPins(); j++)
+        {
+            cout << _modules[i]->outPin(j).name() << endl;
         }
     }
+
+    cout << endl << endl << "Total Net :" << _nets.size() << endl;
+    cout << "Total clkNet :" << _clkNets.size() << endl;
+    for (int i = 0; i < _nets.size(); i++)
+    {
+        cout << "No." << i << " Net's name " << _nets[i]->getNetname() << " Pin" << endl;
+        for (int j = 0; j < _nets[i]->numPins(); j++)
+        {
+            if (_nets[i]->pin(j).module() != nullptr)
+            {
+                cout << _nets[i]->pin(j).module()->name() << "/" << _nets[i]->pin(j).name() << endl;
+            }
+            else
+            {
+                cout << "IODesign: " << _nets[i]->pin(j).name() << endl;
+            }
+
+        }
+    }
+}
+
+
+
+void Database::initialBinArray() {
+	//Initial Die Boundary
+	assert((_boundaryRight != -1) || (_boundaryLeft != -1) || (_boundaryTop != -1) || (_boundaryBottom != -1));
+	//Initial Bin information
+	assert((_binWidth != -1) || (_binHeight != -1) || (_binMaxUtil != -1));
+
+	_numBinRow = _dieRectangle.height() / _binHeight;
+	_numBinCol = _dieRectangle.width() / _binWidth;
+
+	double _binArea = _binHeight * _binWidth;
+
+	double _xPos = _dieRectangle.left();
+	double _yPos = _dieRectangle.bottom();
+
+	// Create bin array
+	double _tempLeft, _tempBottom;
+	_bins.resize(_numBinCol);
+	for (int i = 0; i < _numBinCol; ++i) {
+		_bins[i].resize(_numBinRow);
+		_tempLeft = _xPos + _binWidth * i;
+		for (int j = 0; j < _numBinRow; ++j) {
+			_tempBottom = _yPos + _binHeight * j;
+			_bins[i][j] = new Bin(_tempLeft, _tempBottom, _tempLeft + _binWidth, _tempBottom + _binHeight, _binArea);
+		}
+	}
 }
 
 void Database::resetBin() {
-    for (size_t i = 0; i < _numBinCol; ++i) {
-        for (size_t j = 0; j < _numBinRow; ++j) {
-            _bins[i][j]->resetBin();
-        }
-    }
+	for (size_t i = 0; i < _numBinCol; ++i) {
+		for (size_t j = 0; j < _numBinRow; ++j) {
+			_bins[i][j]->resetBin();
+		}
+	}
 }
 
 void Database::updateBinUtil() {
-    Module* _tmpModule;
-    double _tmpCenterX, _tmpCenterY;
-    int _rowIdx, _colIdx;
-    int _lbinIdx, _bbinIdx, _rbinIdx, _tbinIdx;
-    double _cellArea;
-    double _Ox, _Oy;
-    double _cogDistX, _cogDistY;
-    // Reset bin util to 0
-    resetBin();
-    // Update bin util
-    for (size_t i = 0; i < _numModules; ++i) {
-        _tmpModule = module(i);
-        _tmpCenterX = _tmpModule->centerX();
-        _tmpCenterY = _tmpModule->centerY();
+	Module *_tmpModule;
+	double _tmpCenterX, _tmpCenterY;
+	int _rowIdx, _colIdx;
+	int _lbinIdx, _bbinIdx, _rbinIdx, _tbinIdx;
+	double _cellArea;
+	double _Ox, _Oy;
+	double _cogDistX, _cogDistY;
+	//Reset bin util to 0
+	resetBin();
+	//Update bin util
+	for (size_t i = 0; i < _numModules; ++i) {
+		_tmpModule = module(i);
+		_tmpCenterX = _tmpModule->centerX();
+		_tmpCenterY = _tmpModule->centerY();
 
-        _colIdx = (_tmpCenterX - _dieRectangle.left()) / _binWidth;
-        _rowIdx = (_tmpCenterY - _dieRectangle.bottom()) / _binHeight;
+		_colIdx = (_tmpCenterX - _dieRectangle.left()) / _binWidth;
+		_rowIdx = (_tmpCenterY - _dieRectangle.bottom()) / _binHeight;
 
-        _rbinIdx = ((_colIdx + 3) >= _numBinCol) ? _numBinCol : (_colIdx + 3);
-        _tbinIdx = ((_rowIdx + 3) >= _numBinRow) ? _numBinRow : (_rowIdx + 3);
-        _lbinIdx = ((_colIdx - 3) < 0) ? 0 : (_colIdx - 3);
-        _bbinIdx = ((_rowIdx - 3) < 0) ? 0 : (_rowIdx - 3);
-    }
+		_rbinIdx = ((_colIdx + 3) >= _numBinCol) ? _numBinCol : (_colIdx + 3);
+		_tbinIdx = ((_rowIdx + 3) >= _numBinRow) ? _numBinRow : (_rowIdx + 3);
+		_lbinIdx = ((_colIdx - 3) < 0) ? 0 : (_colIdx - 3);
+		_bbinIdx = ((_rowIdx - 3) < 0) ? 0 : (_rowIdx - 3);
+	}
 }
