@@ -10,6 +10,7 @@
 #include "DatabaseDef.h"
 #include "Module.h"
 #include "Net.h"
+#include "Node.h"
 #include "Pin.h"
 using namespace std;
 

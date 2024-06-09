@@ -16,6 +16,7 @@ class BaseCell;
 class FFCell;
 class Module;
 class FFModule;
+class Node;
 
 class Database;
 
@@ -28,5 +29,6 @@ typedef vector<Pin*> PinList;
 typedef vector<Net*> NetList;
 typedef vector<Row*> RowList;
 typedef vector<vector<Bin*>> BinList;
+typedef vector<Node *> NodeList;
 
 #endif  // DATABASEDEF_H
