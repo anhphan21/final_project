@@ -439,7 +439,18 @@ void Database::initialBinArray() {
 		}
 	}
 }
+void Timing::findPrePin(Pin* currentP) {
+    Pin* outputptr = currentP->net()->getOutputPin();
+    _preFFPin = outputptr;
+    //bool finish = 0;
+    //
+    //while (outputptr->module()->cellType()->getName().find("G") = string::npos)
+    //{
+    //    cout << "HI" << endl;
+    //    outputptr->module()->InPin().
+    //}
 
+}
 void Database::resetBin() {
 	for (size_t i = 0; i < _numBinCol; ++i) {
 		for (size_t j = 0; j < _numBinRow; ++j) {

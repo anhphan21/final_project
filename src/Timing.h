@@ -16,6 +16,8 @@ class Timing {
     void setPreFFPin(Pin *preFFPin) { _preFFPin = preFFPin; }
     void setOldPos(double x, double y) { _oldPos = make_pair(x, y); }
     void setOldQ(double oldQ) { _oldQ = oldQ; }
+    void findPrePin(Pin* currentP);
+
 
     double slack() const { return _slack; }
     Pin *preFFPin() const { return _preFFPin; }
