@@ -51,10 +51,17 @@ class Pin {
     // void setPinId(unsigned pinId) { _pinId = pinId; }
     void setVisited(bool marked) { _marked = marked; }
 
+    bool isMoved() const { return (_slackInfo.oldX() != _x) || (_slackInfo.oldY() != _y); }
+    
+    /**
+     * Check if D pin need to update slack ?
+     */
+    bool isUpdated() const { return isMoved() || _slackInfo.preFFPin()->isMoved(); }
+
     static double calHPWL(const Pin &pin0, const Pin &pin1) {
         return abs(pin0.x() - pin1.x()) + abs(pin0.y() - pin1.y());
     }
-
+    
    private:
     // variables from benchmark input
     string _name;

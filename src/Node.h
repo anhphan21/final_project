@@ -1,22 +1,21 @@
 #ifndef NODE_H
 #define NODE_H
-#include <vector>
 #include <utility>
-#include "Module.h"
+#include <vector>
+
 #include "DatabaseDef.h"
+#include "Module.h"
 using namespace std;
 
-class Node
-{
-public:
-    Node() : _FF(nullptr)
-    {
+class Node {
+   public:
+    Node() : _FF(nullptr) {
         _neighbor_map.clear();
     };
     Node(Module *FF) : _FF(FF) { _neighbor_map.clear(); }
     void addNeighborPair(pair<Node *, double> n) { _neighbor_map.insert(make_pair(n.first->getFFinNode()->name(), n)); }
     void setNeighborPair(string idx, pair<Node *, double> n) { _neighbor_map[idx] = n; }
-    void setFFinNode(Module *f) { _FF = f; } // not sure if it's right
+    void setFFinNode(Module *f) { _FF = f; }  // not sure if it's right
     void updateNeighbornode(string id, Node *n) { _neighbor_map[id].first = n; }
     void updateNeighborweight(string id, double weight) { _neighbor_map[id].second = weight; }
     void setisleaf(bool b) { _isleaf = b; }
@@ -28,13 +27,11 @@ public:
     bool getisleaf() { return _isleaf; }
     pair<Node *, double> getNeighborPair(string idx) { return _neighbor_map[idx]; }
     // get////////////////////////////////
-    Node *getneighborNode(string idx)
-    {
+    Node *getneighborNode(string idx) {
         assert(_neighbor_map.count(idx));
         return _neighbor_map[idx].first;
     }
-    double getneighborweight(string idx)
-    {
+    double getneighborweight(string idx) {
         assert(_neighbor_map.count(idx));
         return _neighbor_map[idx].second;
     }
@@ -42,10 +39,10 @@ public:
     void eraseNeighbor(string idx) { _neighbor_map.erase(idx); }
     Module *getFFinNode() { return _FF; }
 
-private:
+   private:
     map<string, pair<Node *, double>> _neighbor_map;
     Module *_FF;
-    unsigned _heapidx; // forMST
-    bool _isleaf;      // forMST
+    unsigned _heapidx;  // forMST
+    bool _isleaf;       // forMST
 };
 #endif

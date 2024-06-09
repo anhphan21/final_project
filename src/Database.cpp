@@ -339,6 +339,7 @@ void Database::parser(const string& filename) {
     }
     file.close();
 }
+
 void Database::initialBinArray() {
     // Initial Die Boundary
     assert((_boundaryRight != -1) || (_boundaryLeft != -1) ||
@@ -403,4 +404,27 @@ void Database::updateBinUtil() {
             }
         }
     }
+}
+
+// For timing slack
+
+/**
+ * Unmark the D pin of FF to update the slack
+ */
+void Database::unMarkedDPin() {
+    Module* _tModule;
+
+    for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
+        _tModule = _ffModules[i];
+        for (size_t j = 0, endj = _tModule->numInPins(); j < endj; ++j) {
+            _tModule->InPin(j)->setVisited(false);
+        }
+    }
+}
+
+/**
+ * Update slack value of D pins
+ */
+void Database::updateSlack() {
+    // For each FF
 }

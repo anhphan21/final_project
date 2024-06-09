@@ -99,6 +99,9 @@ class Database {
     void updateSlack();
     void resetVisit();
 
+    void unMarkedDPin();    //unmarked all clk pin of FF
+    
+
    private:
     string _name;  // Design Name
 
