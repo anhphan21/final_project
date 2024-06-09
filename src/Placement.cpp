@@ -1,12 +1,13 @@
 #include "Placement.h"
 #include <vector>
 #include <limits>
+#include <cstdlib>
 using namespace std;
 #define leafthresold 0.75 // TODO: can be changed
 void Placement::mainLoop(Database *database)
 {
     // find same clk path-> calculate diamond -> construct graph according to cost -> find MST -> merge FFs
-    // TODO:find same clk path , and loop it
+    // TODO:how to find same clk path , and loop it
     NodeList mst = findMST();
     int leafsize = 0;
     for (size_t i = 0; i < mst.size(); i++)
@@ -21,6 +22,7 @@ void Placement::mainLoop(Database *database)
             mst[i]->setisleaf(false);
         }
     }
+    // TODO:test /////////////////////////////////////
     cout << "leafsize: " << leafsize << endl;
     for (size_t i = 0; i < _nodes.size(); i++)
     {
@@ -29,7 +31,8 @@ void Placement::mainLoop(Database *database)
     }
     _nodes.clear();
     _nodes = mst;
-    merge2FF(0, 1);
+    merge2FF(5, 7);
+    // test /////////////////////////////////////
     // print MST///////////////////////////////////////////////
     for (size_t i = 0; i < _nodes.size(); i++)
     {
@@ -42,22 +45,42 @@ void Placement::mainLoop(Database *database)
         }
         cout << endl;
     }
+    cout << _nodes.size() << endl;
     // print MST///////////////////////////////////////////////
-    // if (static_cast<double>(leafsize) / static_cast<double>(_nodes.size()) < leafthresold)
-    // { // do merge & store mst into _nodes
-    //     for (size_t i = 0; i < _nodes.size(); i++)
-    //     {
+    if (static_cast<double>(leafsize) / static_cast<double>(_nodes.size()) < leafthresold)
+    { // do merge & store mst into _nodes
+        for (size_t i = 0; i < _nodes.size(); i++)
+        {
 
-    //         free(_nodes[i]);
-    //     }
-    //     _nodes.clear();
-    //     _nodes = mst;
-    //     mergeFFinG();
-    // }
-    // else // do nothing because leafsize is too large
-    // {
-    //     /* code */
-    // }
+            free(_nodes[i]);
+        }
+        _nodes.clear();
+        _nodes = mst;
+        mergeFFinG();
+    }
+    else // greedy pick to merge
+    {
+        for (size_t i = 0; i < mst.size(); i++)
+        {
+            free(mst[i]);
+        }
+        mst.clear();
+        unsigned target = rand() % _nodes.size();
+        while (_nodes[target]->getNeighborsize() < 1)
+        {
+            target = rand() % _nodes.size();
+        }
+        map<string, pair<Node *, double>> neighbor = _nodes[target]->getneighbormap();
+        string maxidx = neighbor.begin()->first;
+        for (const auto &pair : neighbor)
+        {
+            if (pair.second.second > neighbor[maxidx].second)
+            {
+                maxidx = pair.first;
+            }
+        }
+        merge2FF(target, neighbor[maxidx].first->getNodeidxheap());
+    }
 }
 void Placement::mergeFFinG()
 {
@@ -72,30 +95,44 @@ void Placement::mergeFFinG()
         auto mymap = *_nodes[idx]->getneighbormap().begin();
         unsigned idx2 = mymap.second.first->getNodeidxheap();
         merge2FF(idx, idx2);
-        break; // TODO: temp
+        break; // TODO: temp break
     }
     return;
 }
 void Placement::merge2FF(unsigned idx1, unsigned idx2)
 {
     // erase to FF from graph(_nodes)/////////////////////////////////
-    cout << "node1: " << _nodes[idx1]->getFFinNode()->name() << endl;
-    cout << "node2: " << _nodes[idx2]->getFFinNode()->name() << endl;
     map<string, pair<Node *, double>> neighbor = _nodes[idx1]->getneighbormap();
     for (const auto &pair : neighbor)
     {
-        cout << pair.second.first->getFFinNode()->name() << " " << endl;
         pair.second.first->eraseNeighbor(_nodes[idx1]->getFFinNode()->name());
     }
     neighbor = _nodes[idx2]->getneighbormap();
     for (const auto &pair : neighbor)
     {
-        cout << pair.second.first->getFFinNode()->name() << " " << endl;
         pair.second.first->eraseNeighbor(_nodes[idx1]->getFFinNode()->name());
     }
     _nodes[idx1]->clearNeighbor();
     _nodes[idx2]->clearNeighbor();
     // erase to FF from graph(_nodes)/////////////////////////////////
+    // TODO: need to know which FF should be chosed
+    // ex: merge two 1 bit, which 2 bit FF should be chosed?
+    // where to put the new FF?
+
+    // clear FFs with no neighbor out of graph(_nodes)/////////////////////////////////
+    for (auto it = _nodes.begin(); it != _nodes.end();)
+    {
+        if ((*it)->getNeighborsize() == 0)
+        {
+            delete *it;
+            it = _nodes.erase(it);
+        }
+        else
+        {
+            (*it)->setNodeidxheap(it - _nodes.begin());
+            ++it;
+        }
+    }
     return;
 }
 void Placement::setNodesize(unsigned size)
