@@ -2,6 +2,7 @@
 #define DATABASEDEF_H
 
 #include <vector>
+#include <map>
 using namespace std;
 
 // struct Point2;
@@ -10,6 +11,7 @@ class Bin;
 class Row;
 class Pin;
 class Net;
+class Timing;
 class BaseCell;
 class FFCell;
 class Module;
@@ -19,13 +21,14 @@ class Node;
 class Database;
 
 typedef BaseCell CellType;
-typedef vector<CellType *> CellLibrary;
-typedef vector<vector<FFCell *>> FFLLibrary;
-typedef vector<Module *> ModuleList;
-typedef vector<Pin *> PinList;
-typedef vector<Net *> NetList;
-typedef vector<Row *> RowList;
-typedef vector<vector<Bin *>> BinList;
+typedef vector<CellType*> CellLibrary;
+typedef map<unsigned, vector<FFCell*>> FFLLibrary;
+
+typedef vector<Module*> ModuleList;
+typedef vector<Pin*> PinList;
+typedef vector<Net*> NetList;
+typedef vector<Row*> RowList;
+typedef vector<vector<Bin*>> BinList;
 typedef vector<Node *> NodeList;
 
-#endif // DATABASEDEF_H
+#endif  // DATABASEDEF_H
