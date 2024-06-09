@@ -100,7 +100,8 @@ class Database {
     void resetVisit();
 
     void unMarkedDPin();    //unmarked all clk pin of FF
-    
+    void updateRadius(FFCell*);
+    void debankFF();
 
    private:
     string _name;  // Design Name
@@ -145,18 +146,17 @@ class Database {
     // Caching
     map<string, BaseCell *> CellType2Ptr;
     map<string, Module *> ModuleName2Ptr;
-
+    map<string, Pin *> IODesign;
+    
     // Caching the list for processing
     ModuleList _ffModules;
     NetList _clkNets;
-
-    // map<string, map<string, Pin *>> PinName2Ptr;
-    map<string, Pin *> IODesign;
-
-    map<string, Net *> Netname2Ptr;
+    
     
 
     void createPinforModule(Module *);
+
+    void updateRadiusRecur(FFCell*, Module*);
 };
 
 #endif  // DATABASE_H

@@ -3,6 +3,7 @@
 #include <limits>
 #include <vector>
 using namespace std;
+
 #define leafthresold 0.75  // TODO: can be changed
 void Placement::mainLoop(Database *database) {
     // find same clk path-> calculate diamond -> construct graph according to cost -> find MST -> merge FFs
@@ -51,6 +52,7 @@ void Placement::mainLoop(Database *database) {
     //     /* code */
     // }
 }
+
 void Placement::mergeFFinG() {
     while (_nodes.size() > 1) {
         // find a leaf
@@ -65,6 +67,7 @@ void Placement::mergeFFinG() {
     }
     return;
 }
+
 void Placement::merge2FF(unsigned idx1, unsigned idx2) {
     // erase to FF from graph(_nodes)/////////////////////////////////
     cout << "node1: " << _nodes[idx1]->getFFinNode()->name() << endl;
@@ -84,6 +87,7 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2) {
     // erase to FF from graph(_nodes)/////////////////////////////////
     return;
 }
+
 void Placement::setNodesize(unsigned size) {
     clearNode();
     for (size_t i = 0; i < size; i++) {
@@ -99,6 +103,7 @@ void Placement::clearNode() {
     _nodes.clear();
     return;
 }
+
 NodeList Placement::findMST() {
     // Testcase for MST//////////////////////////////////////////
     setNodesize(9);
@@ -289,6 +294,7 @@ NodeList Placement::findMST() {
     // }
     // print the heap//////////////////////////////////////////
 }
+
 void Placement::DecreaseKeyMST(vector<pair<Node *, pair<double, Node *>>> &heap, unsigned idx, double key) {  // idx is the index of the node to be decreased in the heap
     unsigned targetidx = idx;
     heap[idx].second.first = key;
@@ -298,6 +304,7 @@ void Placement::DecreaseKeyMST(vector<pair<Node *, pair<double, Node *>>> &heap,
     }
     return;
 }
+
 pair<Node *, pair<double, Node *>> Placement::extractMinMST(vector<pair<Node *, pair<double, Node *>>> &heap) {
     pair<Node *, pair<double, Node *>> n = heap[0];
     heap[0] = heap[heap.size() - 1];
@@ -331,6 +338,7 @@ pair<Node *, pair<double, Node *>> Placement::extractMinMST(vector<pair<Node *, 
 
     return n;
 }
+
 void Placement::swapNodeMST(vector<pair<Node *, pair<double, Node *>>> &heap, unsigned idx1, unsigned idx2) {
     pair<Node *, pair<double, Node *>> temp;
     heap[idx1].first->setNodeidxheap(idx2);

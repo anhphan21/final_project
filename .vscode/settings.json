@@ -20,6 +20,7 @@
         "*.tcc": "cpp",
         "deque": "cpp",
         "unordered_map": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "initializer_list": "cpp"
     }
 }
