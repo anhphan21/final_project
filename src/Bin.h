@@ -11,10 +11,6 @@ using namespace std;
 class Bin : public Rectangle {
    public:
     Bin() : Rectangle(), _overlapArea(0), _binArea(0) {
-<<<<<<< HEAD
-    }
-=======
->>>>>>> master
 
     }
 
