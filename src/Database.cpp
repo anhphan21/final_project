@@ -1,8 +1,9 @@
 #include "Database.h"
 
+#include <float.h>
+
 #include <fstream>
 #include <sstream>
-#include <float.h>
 
 #include "Pin.h"
 #include "Row.h"
@@ -43,7 +44,8 @@ void Database::parser(const string& filename) {
         istringstream iss(line);
         string keyword;
         iss >> keyword;
-        if (keyword == "Alpha" || keyword == "Beta" || keyword == "Gamma" || keyword == "Lambda") {
+        if (keyword == "Alpha" || keyword == "Beta" || keyword == "Gamma" ||
+            keyword == "Lambda") {
             double data;
             iss >> data;
             if (keyword == "Alpha") {
@@ -113,7 +115,8 @@ void Database::parser(const string& filename) {
             string id;
 
             iss >> bitCount >> id >> width >> height >> pinCount;
-            FFCell* FFcellptr = new FFCell(id, width, height, pinCount, bitCount);
+            FFCell* FFcellptr =
+                new FFCell(id, width, height, pinCount, bitCount);
 
             string _clkPin;
             double _clkX, _clkY;
@@ -127,9 +130,9 @@ void Database::parser(const string& filename) {
                 getline(file, line);
                 istringstream iss(line);
                 iss >> temp >> name >> x >> y;
-                
+
                 _check = (name[0] == 'Q') ? true : false;
-                
+
                 if (name.substr(0, 3) == "CLK") {
                     _clkPin = name;
                     _clkX = x;
@@ -139,7 +142,7 @@ void Database::parser(const string& filename) {
                 FFcellptr->setPin(name, make_pair(x, y), _check);
             }
             FFcellptr->setPin(_clkPin, make_pair(_clkX, _clkY), false);
-            FFcellptr->setClkPin(FFcellptr->getInNum()-1);
+            FFcellptr->setClkPin(FFcellptr->getInNum() - 1);
             CellType2Ptr[id] = FFcellptr;
         } else if (keyword == "Gate") {
             double width, height;
@@ -170,7 +173,8 @@ void Database::parser(const string& filename) {
                     _check = (name.substr(0, 3) == "Out") ? true : false;
                 bptr->setPin(name, make_pair(width, height), _check);
             }
-            // cout << "Gate" << " " << id << " " << width << " " << height << endl;
+            // cout << "Gate" << " " << id << " " << width << " " << height <<
+            // endl;
         } else if (keyword == "NumInstances") {
             // Handle Instances
             iss >> _numModules;
@@ -182,7 +186,9 @@ void Database::parser(const string& filename) {
             for (int i = 0; i < _numModules; ++i) {
                 getline(file, line);
                 istringstream instIss(line);
-                // Comment: You can put the variables temp, name, type to outside of the while that you can reuse them without re-declarate them -> save some runtime
+                // Comment: You can put the variables temp, name, type to
+                // outside of the while that you can reuse them without
+                // re-declarate them -> save some runtime
                 instIss >> temp >> name >> type >> x >> y;
                 // cout << "testhere" << name << endl;
                 // auto it = CellType2Ptr.find(type);
@@ -200,14 +206,14 @@ void Database::parser(const string& filename) {
                     currentM = new Module(name, _type, x, y);
                     ModuleName2Ptr[name] = currentM;
                     addModule(currentM);
-                    if (_type->isFF())
-                        addFF(currentM);
+                    if (_type->isFF()) addFF(currentM);
                     for (int i = 0; i < PinOfMnum; ++i) {
                         string PinName = _type->pinName(i);
                         Pin* pinptr = new Pin();
                         pinptr->setPosition(x, y);
                         pinptr->setPinName(PinName);
-                        pinptr->setOffset(_type->pinOffsetX(i), _type->pinOffsetY(i));
+                        pinptr->setOffset(_type->pinOffsetX(i),
+                                          _type->pinOffsetY(i));
                         pinptr->setModulePtr(currentM);
 
                         addPin(pinptr);
@@ -242,7 +248,8 @@ void Database::parser(const string& filename) {
                     piniss >> temp >> type;
                     auto pos = type.find("/");
                     if (pos == type.npos) {
-                        // 如果沒有'/'的Net pin角 代表會再IODesign  this is design pin
+                        // 如果沒有'/'的Net pin角 代表會再IODesign  this is
+                        // design pin
                         auto it = IODesign.find(type);
 
                         if (it == IODesign.end()) {
@@ -268,11 +275,13 @@ void Database::parser(const string& filename) {
                         } else {
                             // Found Pin
                             _type = it->second->cellType();
-                            if ((TargetPin.substr(0, 3) == "OUT") || (TargetPin[0] == 'Q')) {
+                            if ((TargetPin.substr(0, 3) == "OUT") ||
+                                (TargetPin[0] == 'Q')) {
                                 netptr->setOutputPins(j);
                             }
                             _tModule = it->second;
-                            _tPin = _tModule->pin(_type->getPinIdxFromName(TargetPin));
+                            _tPin = _tModule->pin(
+                                _type->getPinIdxFromName(TargetPin));
                             _tPin->setNetPtr(netptr);
                             netptr->addPin(_tPin);
                         }
@@ -286,10 +295,10 @@ void Database::parser(const string& filename) {
                 //     addClkNet(netptr);
                 // }
                 addNet(netptr);
-                if (Isclk)
-                    addClkNet(netptr);
+                if (Isclk) addClkNet(netptr);
             }
-        } else if (keyword == "BinWidth" || keyword == "BinHeight" || keyword == "BinMaxUtil") {
+        } else if (keyword == "BinWidth" || keyword == "BinHeight" ||
+                   keyword == "BinMaxUtil") {
             int data;
             iss >> data;
             if (keyword == "BinWidth") {
@@ -301,7 +310,8 @@ void Database::parser(const string& filename) {
             }
         } else if (keyword == "PlacementRows") {
             int startX, startY, siteSpacing, siteHeight, totalNumOfSites;
-            iss >> startX >> startY >> siteSpacing >> siteHeight >> totalNumOfSites;
+            iss >> startX >> startY >> siteSpacing >> siteHeight >>
+                totalNumOfSites;
             for (auto& rows : _rows) {
                 rows->setHeight(siteHeight);
                 rows->setSiteSpacing(siteSpacing);
@@ -325,7 +335,9 @@ void Database::parser(const string& filename) {
             iss >> name >> Dpin >> slack;
             Module* _tModule = ModuleName2Ptr[name];
             CellType* _type = _tModule->cellType();
-            _tModule->pin(_type->getPinIdxFromName(Dpin))->getSlackInfor().setSlack(slack);
+            _tModule->pin(_type->getPinIdxFromName(Dpin))
+                ->getSlackInfor()
+                .setSlack(slack);
         } else if (keyword == "GatePower") {
             string type;
             double power;
@@ -437,7 +449,7 @@ void Database::updateRadius(FFCell* _newType) {
     double _newQDelay = _newType->getQdelay();
     // Reset the Slack first
     unMarkedDPin();
-    //Require to update the slack first
+    // Require to update the slack first
     Module* _tModule;
     Pin* _tPin;
     Timing _tSlack;
@@ -453,9 +465,10 @@ void Database::updateRadius(FFCell* _newType) {
             _tPin = _tModule->InPin(j);
             _tSlack = _tPin->getSlackInfor();
             _dist2PreGate = Pin::calHPWL(*_tPin, *_tPin->net()->getOutputPin());
-            _nRadius = (_tSlack.slack() + _tSlack.oldQ()-_newQDelay+_dDelay*_dist2PreGate)/_dDelay;
-            if (_nRadius < _tRadius)
-                _tRadius = _nRadius;
+            _nRadius = (_tSlack.slack() + _tSlack.oldQ() - _newQDelay +
+                        _dDelay * _dist2PreGate) /
+                       _dDelay;
+            if (_nRadius < _tRadius) _tRadius = _nRadius;
         }
         _tModule->setRadius(_tRadius);
     }
