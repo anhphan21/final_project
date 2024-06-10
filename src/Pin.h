@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <string>
+#include <utility>
 
 #include "CellLibrary.h"
 #include "DatabaseDef.h"
@@ -32,7 +33,7 @@ class Pin {
     Net *net() const { return _net; }
     // unsigned pinId() const { return _pinId; }
     bool isIOdie() const { return (_module == nullptr); }
-    Timing getSlackInfor() const { return _slackInfo; }
+    Timing *getSlackInfor() { return &_slackInfo; }
     bool isVisited() const { return _marked; }
 
     void setPinName(string &name) { _name = name; }
@@ -52,7 +53,19 @@ class Pin {
     void setVisited(bool marked) { _marked = marked; }
 
     bool isMoved() const { return (_slackInfo.oldX() != _x) || (_slackInfo.oldY() != _y); }
-    
+
+    // For slack Information
+    void setSlack(double slack) { _slackInfo.setSlack(slack); }
+    void setPreFFPin(Pin *preFFPin) { _slackInfo.setPreFFPin(preFFPin); }
+    void setOldPos(double x, double y) { _slackInfo.setOldPos(x, y); }
+    void setOldQ(double oldQ) { _slackInfo.setOldQ(oldQ); }
+
+    double slack() const { return _slackInfo.slack(); }
+    Pin *preFFPin() const { return _slackInfo.preFFPin(); }
+    double oldX() const { return _slackInfo.oldX(); }
+    double oldY() const { return _slackInfo.oldY(); }
+    double oldQ() const { return _slackInfo.oldQ(); }
+
     /**
      * Check if D pin need to update slack ?
      */
@@ -61,7 +74,7 @@ class Pin {
     static double calHPWL(const Pin &pin0, const Pin &pin1) {
         return abs(pin0.x() - pin1.x()) + abs(pin0.y() - pin1.y());
     }
-    
+
    private:
     // variables from benchmark input
     string _name;

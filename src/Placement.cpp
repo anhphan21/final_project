@@ -3,6 +3,34 @@
 #include "Database.h"
 using namespace std;
 
+double cal_distance(pair<double, double> A, pair<double, double> B)
+{
+    return sqrt(pow(A.first - B.first, 2) + pow(A.second - B.second, 2));
+}
+
+bool overlap_ornot(Module *a, double a_r, Module *b, double b_r)
+{
+    pair<double, double> b_cor = {b->centerX(), b->centerY()};
+    pair<double, double> cor;
+
+    cor = {a->centerX() + a_r, a->centerY()};
+    if (cal_distance(cor, b_cor) <= b_r)
+        return true;
+
+    cor = {a->centerX() - a_r, a->centerY()};
+    if (cal_distance(cor, b_cor) <= b_r)
+        return true;
+
+    cor = {a->centerX(), a->centerY() + a_r};
+    if (cal_distance(cor, b_cor) <= b_r)
+        return true;
+
+    cor = {a->centerX(), a->centerY() - a_r};
+    if (cal_distance(cor, b_cor) <= b_r)
+        return true;
+
+    return false;
+}
 void Placement::constructGraph()
 {
     int num_node = _diamondINF.size();
@@ -39,32 +67,4 @@ void Placement::constructGraph()
             }
         }
     }
-}
-double cal_distance(pair<double, double> A, pair<double, double> B)
-{
-    return sqrt(pow(A.first - B.first, 2) + pow(A.second - B.second, 2));
-}
-
-bool overlap_ornot(Module *a, double a_r, Module *b, double b_r)
-{
-    pair<double, double> b_cor = {b->centerX(), b->centerY()};
-    pair<double, double> cor;
-
-    cor = {a->centerX() + a_r, a->centerY()};
-    if (cal_distance(cor, b_cor) <= b_r)
-        return true;
-
-    cor = {a->centerX() - a_r, a->centerY()};
-    if (cal_distance(cor, b_cor) <= b_r)
-        return true;
-
-    cor = {a->centerX(), a->centerY() + a_r};
-    if (cal_distance(cor, b_cor) <= b_r)
-        return true;
-
-    cor = {a->centerX(), a->centerY() - a_r};
-    if (cal_distance(cor, b_cor) <= b_r)
-        return true;
-
-    return false;
 }

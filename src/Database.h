@@ -101,7 +101,8 @@ class Database {
     void resetVisit();
 
     void unMarkedDPin();    //unmarked all clk pin of FF
-    
+    void updateRadius(FFCell*);
+    void debankFF();
 
    private:
     string _name;  // Design Name
@@ -158,6 +159,8 @@ class Database {
     
 
     void createPinforModule(Module *);
+
+    void updateRadiusRecur(FFCell*, Module*);
 };
 
 #endif  // DATABASE_H
