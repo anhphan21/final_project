@@ -288,13 +288,6 @@ void Database::parser(const string& filename) {
                         }
                     }
                 }
-
-                // 來保證每個 net 只被加入一次
-                // if (Isclk == 1) {
-                //     addNet(netptr);
-                // } else {
-                //     addClkNet(netptr);
-                // }
                 addNet(netptr);
                 if (Isclk) addClkNet(netptr);
             }
@@ -310,15 +303,11 @@ void Database::parser(const string& filename) {
                 setBinUtil(data);
             }
         } else if (keyword == "PlacementRows") {
-            int startX, startY, siteSpacing, siteHeight, totalNumOfSites;
-            iss >> startX >> startY >> siteSpacing >> siteHeight >>
+            double startX, startY, siteWidth, siteHeight, totalNumOfSites;
+            iss >> startX >> startY >> siteWidth >> siteHeight >>
                 totalNumOfSites;
-            for (auto& rows : _rows) {
-                rows->setHeight(siteHeight);
-                rows->setSiteSpacing(siteSpacing);
-                rows->setNumSites(totalNumOfSites);
-                rows->setPosition(startX, startY);
-            }
+            Row* _tRow = new Row(startX, startY, siteWidth, siteHeight, totalNumOfSites);
+            addRow(_tRow);
         } else if (keyword == "DisplacementDelay") {
             double delay;
             iss >> delay;
