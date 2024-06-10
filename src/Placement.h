@@ -14,7 +14,7 @@ public:
 	void mergeFF();
 	
 private:
-	Database _dataBase;
+	Database *_dataBase;
 	//construct graph
 	vector<Module *> _diamondINF;//Graph_input 
 	NodeList _nodes;

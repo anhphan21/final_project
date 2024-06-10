@@ -13,21 +13,21 @@ void Placement::constructGraph()
         _name2Node[n->getFFinNode()->name()]=n;
         _nodes.push_back(n);
     }
-    Module *test =_dataBase.getClkNets()[0]->pin(0).module();
-    for (int i = 0; i < _dataBase.getNumClkNets(); ++i)
+    // Module *test =_dataBase->getClkNets()[0]->pin(0).module();
+    for (int i = 0; i < _dataBase->getNumClkNets(); ++i)
     {
-        for (int j = 0; j < _dataBase.getClkNets()[i]->numPins(); ++j)
+        for (int j = 0; j < _dataBase->getClkNets()[i]->numPins(); ++j)
         {
-            if(_dataBase.getClkNets()[i]->pin(j).isIOdie()==1)  //IO pin doesn't map module
+            if(_dataBase->getClkNets()[i]->pin(j).isIOdie()==1)  //IO pin doesn't map module
                 continue;
-            if (_dataBase.getClkNets()[i]->pin(j).module()->isFF() == 0)   //we only can merge FF 
+            if (_dataBase->getClkNets()[i]->pin(j).module()->isFF() == 0)   //we only can merge FF 
                 continue;
             else
             {
-                Module *module_i_j=_dataBase.getClkNets()[i]->pin(j).module();
-                for (int k = j + 1; k < _dataBase.getClkNets()[i]->numPins(); ++k)
+                Module *module_i_j=_dataBase->getClkNets()[i]->pin(j).module();
+                for (int k = j + 1; k < _dataBase->getClkNets()[i]->numPins(); ++k)
                 {
-                    Module *module_i_k=_dataBase.getClkNets()[i]->pin(k).module();
+                    Module *module_i_k=_dataBase->getClkNets()[i]->pin(k).module();
                     if (module_i_k->isFF() == 0)
                         continue;
                     else if (overlap_ornot(module_i_j, module_i_j->radius(), module_i_k, module_i_k->radius()))
