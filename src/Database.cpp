@@ -508,7 +508,7 @@ void Database::updateSlack(Pin *ffpin)
     {
         double old_slack = ffpin->getSlackInfor().slack(); // SFFN
         Pin front_pin = ffpin->net()->getOutputPin();   // front pin isn't ff (maybe gate or IOpin)
-        Pin ff_old_pin;
+        Pin ff_old_pin;   // before merge
         ff_old_pin.setPosition(ffpin->getSlackInfor().oldX(), ffpin->getSlackInfor().oldY());
         Pin ff_curr_pin; // after merge
         ff_curr_pin.setPosition(ffpin->x(), ffpin->y());
@@ -526,9 +526,9 @@ void Database::updateSlack(Pin *ffpin)
             double new_QpinDelay = ffpin->module()->getQdelay();
 
             Pin front_pin = ffpin->net()->getOutputPin(); 
-            if (front_pin.module()->isFF() == 1)
+            if (front_pin.module()->isFF() == 1)    // front pin is ff
             {
-                Pin ff_old_pin;
+                Pin ff_old_pin;  // before merge
                 ff_old_pin.setPosition(ffpin->getSlackInfor().oldX(), ffpin->getSlackInfor().oldY());
                 Pin ff_curr_pin; // after merge
                 ff_curr_pin.setPosition(ffpin->x(), ffpin->y());
@@ -537,16 +537,24 @@ void Database::updateSlack(Pin *ffpin)
 
                 ffpin->getSlackInfor().setSlack(old_slack + (old_QpinDelay - new_QpinDelay) + DisplaceDelay * (WL_old - WL_curr));
             }
-            else    // front pin isn't ff (maybe gate or IOpin)
+            else    // front pin isn't ff (gate)
             {
-                Pin ff_old_pin;
+                Pin ff_old_pin; // before merge
                 ff_old_pin.setPosition(ffpin->getSlackInfor().oldX(), ffpin->getSlackInfor().oldY());
                 Pin ff_curr_pin; // after merge
                 ff_curr_pin.setPosition(ffpin->x(), ffpin->y());
                 double D_WL_old = ffpin->calHPWL(ff_old_pin, front_pin);
                 double D_WL_curr = ffpin->calHPWL(ff_curr_pin, front_pin);
-
                 Pin Q_pre_pin_out;
+                double farest_pin=0;
+                for(int i=0;i<ffpin->getSlackInfor().preFFPin()->net()->numPins();++i)
+                {
+                    if(ffpin->calHPWL(*ffpin->getSlackInfor().preFFPin(),ffpin->getSlackInfor().preFFPin()->net()->pin(i)) > farest_pin)
+                    {
+                        Q_pre_pin_out.setPosition(ffpin->getSlackInfor().preFFPin()->net()->pin(i).x(),ffpin->getSlackInfor().preFFPin()->net()->pin(i).y());
+                        farest_pin = ffpin->calHPWL(*ffpin->getSlackInfor().preFFPin(),ffpin->getSlackInfor().preFFPin()->net()->pin(i));
+                    }
+                }
                 Pin Q_ff_old_pin;
                 Q_ff_old_pin.setPosition(ffpin->getSlackInfor().preFFPin()->getSlackInfor().oldX(),ffpin->getSlackInfor().preFFPin()->getSlackInfor().oldY());
                 Pin Q_ff_curr_pin;
