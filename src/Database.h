@@ -97,7 +97,8 @@ class Database {
 
     // For slack update
     void sortClkNet();
-    void updateSlack();
+    void updateSlackAll();
+    void updateSlack(Pin*);
     void resetVisit();
 
     void unMarkedDPin();    //unmarked all clk pin of FF
