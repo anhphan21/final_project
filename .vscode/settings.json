@@ -21,6 +21,7 @@
         "deque": "cpp",
         "unordered_map": "cpp",
         "iostream": "cpp",
-        "initializer_list": "cpp"
+        "initializer_list": "cpp",
+        "numbers": "cpp"
     }
 }

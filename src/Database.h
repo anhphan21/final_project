@@ -12,6 +12,7 @@
 #include "Net.h"
 #include "Node.h"
 #include "Pin.h"
+#include "History.h"
 using namespace std;
 
 class Database {
