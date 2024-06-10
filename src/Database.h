@@ -153,10 +153,10 @@ class Database {
     ModuleList _ffModules;
     NetList _clkNets;
     
-    
+    //History for output
+    vector<History> _pinHistory;
 
     void createPinforModule(Module *);
-
     void updateRadiusRecur(FFCell*, Module*);
 };
 
