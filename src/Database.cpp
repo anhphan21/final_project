@@ -437,7 +437,7 @@ void Database::updateRadius(FFCell* _newType) {
     // For multibit FF, the smallest radius will be consider
     double _newQDelay = _newType->getQdelay();
     // Reset the Slack first
-    unMarkedDPin();
+    // unMarkedDPin();
     // Require to update the slack first
     Module* _tModule;
     Pin* _tPin;
@@ -454,10 +454,9 @@ void Database::updateRadius(FFCell* _newType) {
             _tPin = _tModule->InPin(j);
             _tSlack = _tPin->getSlackInfor();
             _dist2PreGate = Pin::calHPWL(*_tPin, *_tPin->net()->getOutputPin());
-            _nRadius = (_tSlack->slack() + _tSlack->oldQ() - _newQDelay +
-                        _dDelay * _dist2PreGate) /
-                       _dDelay;
-            if (_nRadius < _tRadius) _tRadius = _nRadius;
+            _nRadius = (_tSlack->slack() + _tSlack->oldQ() - _newQDelay + _dDelay * _dist2PreGate) / _dDelay;
+            if (_nRadius < _tRadius) 
+                _tRadius = _nRadius;
         }
         _tModule->setRadius(_tRadius);
     }
