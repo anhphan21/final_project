@@ -14,8 +14,9 @@
 #include "Pin.h"
 using namespace std;
 
-class Database {
-   public:
+class Database
+{
+public:
     Database();
     ~Database() = default;
 
@@ -34,7 +35,8 @@ class Database {
     void setBoundaryLeft(double boundaryLeft) { _boundaryLeft = boundaryLeft; }
     void setBoundaryBottom(double boundaryBottom) { _boundaryBottom = boundaryBottom; }
     void setBoundaryRight(double boundaryRight) { _boundaryRight = boundaryRight; }
-    void updateRectangle() {
+    void updateRectangle()
+    {
         _dieRectangle.setBounds(_boundaryLeft, _boundaryBottom, _boundaryRight, _boundaryTop);
     }
 
@@ -69,12 +71,14 @@ class Database {
     Row *row(unsigned rowId) { return _rows[rowId]; }
     Bin *bin(unsigned colIdx, unsigned rowIdx) { return _bins[colIdx][rowIdx]; }
 
-    Pin *input(unsigned inId) {
+    Pin *input(unsigned inId)
+    {
         assert(inId < _numInput);
         return _pins[inId];
     }
 
-    Pin *output(unsigned outId) {
+    Pin *output(unsigned outId)
+    {
         assert(outId < _numOutput);
         return _pins[_numInput + outId];
     }
@@ -93,14 +97,14 @@ class Database {
     double getGamma() const { return _gamma; }
     double getLambda() const { return _lambda; }
     double getDisplacementDelay() const { return _dDelay; }
-
+    FFCell *ffLib(unsigned bitNum, unsigned idx) { return _ffLib[bitNum][idx]; }
     // For slack update
     void sortClkNet();
     void updateSlack();
     void resetVisit();
 
-   private:
-    string _name;  // Design Name
+private:
+    string _name; // Design Name
 
     // Design Data
     unsigned _numModules;
@@ -129,8 +133,8 @@ class Database {
     double _binWidth;
     double _binHeight;
     double _binMaxUtil;
-    int _numBinCol;  // Like x index
-    int _numBinRow;  // Like y index
+    int _numBinCol; // Like x index
+    int _numBinRow; // Like y index
 
     // For FF merging
     double _dDelay;
@@ -151,9 +155,8 @@ class Database {
     map<string, Pin *> IODesign;
 
     map<string, Net *> Netname2Ptr;
-    
 
     void createPinforModule(Module *);
 };
 
-#endif  // DATABASE_H
+#endif // DATABASE_H

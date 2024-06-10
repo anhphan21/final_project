@@ -118,7 +118,17 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2)
     // TODO: need to know which FF should be chosed
     // ex: merge two 1 bit, which 2 bit FF should be chosed?
     // where to put the new FF?
-
+    // for testing////////////////////////////////////////////////////
+    double newX, newY;
+    unsigned newffidx;
+    /////////////////////////////////////////////////////=========================================================
+    Module *m1 = _nodes[idx1]->getFFinNode();
+    Module *m2 = _nodes[idx2]->getFFinNode();
+    string m3name = _dataBase->module(_dataBase->getNumModules() - 1)->name();
+    int num = std::stoi(m3name.substr(1));
+    num += 1;
+    m3name = "C" + std::to_string(num);
+    Module *m3 = new Module(m3name, _dataBase->ffLib(m1->cellType()->getnumBit(), newffidx), newX, newY);
     // clear FFs with no neighbor out of graph(_nodes)/////////////////////////////////
     for (auto it = _nodes.begin(); it != _nodes.end();)
     {
