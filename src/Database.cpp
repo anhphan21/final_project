@@ -455,9 +455,29 @@ void Database::updateRadius(FFCell* _newType) {
             _tSlack = _tPin->getSlackInfor();
             _dist2PreGate = Pin::calHPWL(*_tPin, *_tPin->net()->getOutputPin());
             _nRadius = (_tSlack->slack() + _tSlack->oldQ() - _newQDelay + _dDelay * _dist2PreGate) / _dDelay;
-            if (_nRadius < _tRadius) 
+            if (_nRadius < _tRadius)
                 _tRadius = _nRadius;
         }
         _tModule->setRadius(_tRadius);
+    }
+}
+
+void Database::printResult() {
+    string _tmp = _name + ".out";
+    fstream _outFile;
+    _outFile.open(_tmp);
+
+    if (!_outFile.is_open())
+        cout << "Cannot open output file !!!" << endl;
+
+    _outFile << "CellInst " << _numModules << endl;
+    Module* _tModule;
+    for (size_t i = 0; i < _numModules; ++i) {
+        _tModule = _modules[i];
+        _outFile << "Inst " << _tModule->name() << " " << _tModule->cellType()->getName() << " " << _tModule->x() << " " << _tModule->y() << endl;
+    }
+
+    for (size_t i = 0, endi = _pinHistory.size(); i < endi; ++i) {
+        _outFile << _pinHistory[i].oldModuleName() << "/" << _pinHistory[i].oldPinName() << " map " << _pinHistory[i].newPin()->module()->name() << "/" << _pinHistory[i].newPin()->name() << endl;
     }
 }

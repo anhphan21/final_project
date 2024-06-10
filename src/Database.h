@@ -104,6 +104,8 @@ class Database {
     void updateRadius(FFCell*);
     void debankFF();
 
+    void printResult();
+
    private:
     string _name;  // Design Name
 
