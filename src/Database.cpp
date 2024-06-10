@@ -263,6 +263,7 @@ void Database::parser(const string& filename) {
                             }
                             it->second->setNetPtr(netptr);
                             netptr->addPin(it->second);
+                            netptr->setOutputPins(j);
                         }
                     } else  // 有'/'切割的Net Pin
                     {
@@ -335,9 +336,8 @@ void Database::parser(const string& filename) {
             iss >> name >> Dpin >> slack;
             Module* _tModule = ModuleName2Ptr[name];
             CellType* _type = _tModule->cellType();
-            _tModule->pin(_type->getPinIdxFromName(Dpin))
-                ->getSlackInfor()
-                .setSlack(slack);
+            Pin* _tDPin = _tModule->pin(_type->getPinIdxFromName(Dpin));
+            _tDPin->setSlack(slack);
         } else if (keyword == "GatePower") {
             string type;
             double power;
@@ -452,7 +452,7 @@ void Database::updateRadius(FFCell* _newType) {
     // Require to update the slack first
     Module* _tModule;
     Pin* _tPin;
-    Timing _tSlack;
+    Timing* _tSlack;
     double _dist2PreGate;
     double _nRadius;
     double _tRadius;
@@ -465,7 +465,7 @@ void Database::updateRadius(FFCell* _newType) {
             _tPin = _tModule->InPin(j);
             _tSlack = _tPin->getSlackInfor();
             _dist2PreGate = Pin::calHPWL(*_tPin, *_tPin->net()->getOutputPin());
-            _nRadius = (_tSlack.slack() + _tSlack.oldQ() - _newQDelay +
+            _nRadius = (_tSlack->slack() + _tSlack->oldQ() - _newQDelay +
                         _dDelay * _dist2PreGate) /
                        _dDelay;
             if (_nRadius < _tRadius) _tRadius = _nRadius;
