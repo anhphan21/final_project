@@ -21,7 +21,7 @@ public:
     bool clkFlag() const { return _clkFlag; }
     unsigned pinNum() const { return _pPins.size(); }
     unsigned getOutIdx() const { return _outputIdx; }
-    Pin* OutputPin() { return _pPins[_outputIdx]; }
+    Pin *OutputPin() { return _pPins[_outputIdx]; }
 
     void setName(string& name) { _name = name; }
     void setNumPins(unsigned numPins) { _pPins.resize(numPins); }
@@ -29,6 +29,7 @@ public:
     void addPin(Pin* pPin) { _pPins.push_back(pPin); }
     void clearPins() { _pPins.clear(); }
     void setOutputPins(int outIdx) { _outputIdx = outIdx; }
+    void erasePin(unsigned index) { _pPins.erase(_pPins.begin() + index); }
 
 private:
     string _name;

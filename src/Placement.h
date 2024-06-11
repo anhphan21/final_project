@@ -9,7 +9,7 @@ class Placement {
         _nodes.resize(1);
         _nodes[0] = nullptr;
     };
-    void mainLoop(Database *database);
+    void mainLoop();
     void constructDiamond();
     void constructGraph();
     NodeList findMST();
@@ -25,9 +25,11 @@ class Placement {
     // func for MST //////////////
     // func for mergeFF////////////
     void mergeFFinG();
-    void merge2FF(unsigned idx1, unsigned idx2);
+    void merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx);
     // get design property
     Node *node(unsigned nodeId) { return _nodes[nodeId]; }
+    void setDatabase(Database *dataBase) { _dataBase = dataBase; }
+    Database *getDatabase() { return _dataBase; }
 
    private:
     Database *_dataBase;

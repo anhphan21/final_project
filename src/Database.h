@@ -8,15 +8,17 @@
 
 #include "Bin.h"
 #include "DatabaseDef.h"
-// #include "History.h"
+#include "History.h"
 #include "Module.h"
 #include "Net.h"
 #include "Node.h"
 #include "Pin.h"
+#include "Placement.h"
+#include "rhombus.h"
 using namespace std;
 
 class Database {
-public:
+   public:
     Database();
     ~Database() = default;
 
@@ -35,7 +37,8 @@ public:
     void setBoundaryLeft(double boundaryLeft) { _boundaryLeft = boundaryLeft; }
     void setBoundaryBottom(double boundaryBottom) { _boundaryBottom = boundaryBottom; }
     void setBoundaryRight(double boundaryRight) { _boundaryRight = boundaryRight; }
-    void updateRectangle() {
+    void updateRectangle()
+    {
         _dieRectangle.setBounds(_boundaryLeft, _boundaryBottom, _boundaryRight, _boundaryTop);
     }
 
@@ -49,14 +52,14 @@ public:
     void setDisplacementDelay(double delay) { _dDelay = delay; }
 
     // methods for design (hyper-graph) construction
-    void addModule(Module* module) { _modules.push_back(module); }
-    void addFF(Module* ff) { _ffModules.push_back(ff); }
-    void addNet(Net* net) { _nets.push_back(net); }
-    void addClkNet(Net* clk) { _clkNets.push_back(clk); }
-    void addPin(Pin* pin) { _pins.push_back(pin); }
-    void addRow(Row* row) { _rows.push_back(row); }
-    void addCellLib(CellType* cellLib) { _cellLib.push_back(cellLib); }
-    void addFFLib(FFCell* ffLib, unsigned bitNum) { _ffLib[bitNum].push_back(ffLib); }
+    void addModule(Module *module) { _modules.push_back(module); }
+    void addFF(Module *ff) { _ffModules.push_back(ff); }
+    void addNet(Net *net) { _nets.push_back(net); }
+    void addClkNet(Net *clk) { _clkNets.push_back(clk); }
+    void addPin(Pin *pin) { _pins.push_back(pin); }
+    void addRow(Row *row) { _rows.push_back(row); }
+    void addCellLib(CellType *cellLib) { _cellLib.push_back(cellLib); }
+    void addFFLib(FFCell *ffLib, unsigned bitNum) { _ffLib[bitNum].push_back(ffLib); }
 
     // Bin operation
     void initialBinArray();
@@ -64,18 +67,18 @@ public:
     void updateBinUtil();
 
     // get design property
-    Module* module(unsigned moduleId) { return _modules[moduleId]; }
-    Net* net(unsigned netId) { return _nets[netId]; }
-    Pin* pin(unsigned pinId) { return _pins[pinId]; }
-    Row* row(unsigned rowId) { return _rows[rowId]; }
-    Bin* bin(unsigned colIdx, unsigned rowIdx) { return _bins[colIdx][rowIdx]; }
+    Module *module(unsigned moduleId) { return _modules[moduleId]; }
+    Net *net(unsigned netId) { return _nets[netId]; }
+    Pin *pin(unsigned pinId) { return _pins[pinId]; }
+    Row *row(unsigned rowId) { return _rows[rowId]; }
+    Bin *bin(unsigned colIdx, unsigned rowIdx) { return _bins[colIdx][rowIdx]; }
 
-    Pin* input(unsigned inId) {
+    Pin *input(unsigned inId) {
         assert(inId < _numInput);
         return _pins[inId];
     }
 
-    Pin* output(unsigned outId) {
+    Pin *output(unsigned outId) {
         assert(outId < _numOutput);
         return _pins[_numInput + outId];
     }
@@ -97,6 +100,36 @@ public:
     unsigned getMaxBitFFLib() const { return _ffLib.end()->first; }
     NetList getClkNets() const { return _clkNets; }
 
+    double getBoundaryTop() const { return _boundaryTop; }
+    double getBoundaryLeft() const { return _boundaryLeft; }
+    double getBoundaryBottom() const { return _boundaryBottom; }
+    double getBoundaryRight() const { return _boundaryRight; }
+    FFCell *ffLib(unsigned bitNum, unsigned idx)
+    {
+        auto it = _ffLib.find(bitNum);
+        if (it != _ffLib.end())
+        {
+            return _ffLib[bitNum][idx];
+        }
+        else
+        {
+            cout << "Error: FF library not found!" << endl;
+            exit(1);
+        }
+    }
+    unsigned getNumfflibBit(unsigned bit)
+    {
+        auto it = _ffLib.find(bit);
+        if (it != _ffLib.end())
+        {
+            return _ffLib[bit].size();
+        }
+        else
+        {
+            cout << "Error: FF library not found!" << endl;
+            exit(1);
+        }
+    }
     // For slack update
     void sortClkNet();
     void updateSlackAll();
@@ -104,7 +137,7 @@ public:
     void resetVisit();
 
     void unMarkedDPin();  // unmarked all clk pin of FF
-    void updateRadius(FFCell*);
+    void updateRadius(FFCell *);
     void debankFF();
     Pin *FindPrePin(Pin *inputPin);
     void updateInitialSlackInfo();
@@ -114,7 +147,7 @@ public:
     unsigned getDen(double) const;
     double totalCost(double) const;
 
-private:
+   private:
     string _name;  // Design Name
 
     // Design Data
@@ -144,8 +177,8 @@ private:
     double _binWidth;
     double _binHeight;
     double _binMaxUtil;
-    int _numBinCol;  // Like x index
-    int _numBinRow;  // Like y index
+    int _numBinCol; // Like x index
+    int _numBinRow; // Like y index
 
     // For FF merging
     double _dDelay;
@@ -172,4 +205,4 @@ private:
     void updateInitialSlackInfo();
 };
 
-#endif  // DATABASE_H
+#endif // DATABASE_H

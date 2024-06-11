@@ -59,31 +59,37 @@ class Module {
         updatePinPositions();
     }
     void setIsFixed(bool isFixed) { _isFixed = isFixed; }
-    
-	// For construct the graph of timing
+
+    // For construct the graph of timing
     void setRadius(double rad) { _radius = rad; }
 
     /////////////////////////////////////////////
     // Pin information
     /////////////////////////////////////////////
-	unsigned totnumPins() const  { return _type->pinNum(); }
-	unsigned numOutPins() const { return _type->getOutNum(); }
-	unsigned numInPins() const {  return _type->getInNum(); }
+    unsigned totnumPins() const { return _type->pinNum(); }
+    unsigned numOutPins() const { return _type->getOutNum(); }
+    unsigned numInPins() const { return _type->getInNum(); }
     void addPin(Pin *pPin) { _pins.push_back(pPin); }
-	Pin* pin(unsigned idx) {
+	
+    Pin* pin(unsigned idx) {
 		assert(idx < _pins.size());
         return _pins[idx];
-	}
+    }
 
-	Pin* InPin(unsigned idx) {
-		return _pins[_type->inIdx(idx)];
-	}
+    Pin *InPin(unsigned idx) {
+        return _pins[_type->inIdx(idx)];
+    }
 
-	Pin* OutPin(unsigned idx) {
-		return _pins[_type->outIdx(idx)];
-	}
-
+    Pin *OutPin(unsigned idx) {
+        return _pins[_type->outIdx(idx)];
+    }
+    // CLK should be the last of input pins
     void clearPins() { _pins.clear(); }
+    // new method
+    void setPinsize(unsigned size) { _pins.resize(size); }
+    void setInPin(unsigned idx, Pin *pPin) { _pins[_type->inIdx(idx)] = pPin; }
+    void setOutPin(unsigned idx, Pin *pPin) { _pins[_type->outIdx(idx)] = pPin; }
+    void setCellType(CellType *type) { _type = type; }
 
    private:
     // variables from benchmark input
@@ -98,9 +104,9 @@ class Module {
 
   //  // update pin positions
     void updatePinPositions() {
-		Pin* _tPin;
+        Pin *_tPin;
         for (unsigned i = 0, endi = totnumPins(); i < endi; ++i) {
-			_tPin = _pins[i];
+            _tPin = _pins[i];
             _tPin->setPosition(x() + _tPin->xOffset(), y() + _tPin->yOffset());
         }
     }
