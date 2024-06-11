@@ -1,7 +1,6 @@
 build/*
 cmake-build-debug/
 .idea/
-.vscode/
 bin/*
 CMakeLists.txt
 src_lily/
