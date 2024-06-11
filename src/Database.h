@@ -155,6 +155,8 @@ public:
     unsigned getDen(double) const;
     double totalCost(double) const;
 
+    FFCell *getFFlib(int bit){return _ffLib[bit][0];}
+
 private:
     string _name; // Design Name
 
@@ -210,6 +212,7 @@ private:
     // void createPinforModule(Module *);
     // void updateRadiusRecur(FFCell*, Module*);
     Module *FindPrePin(Module *currentM);
+    
     // void updateInitialSlackInfo();
 };
 

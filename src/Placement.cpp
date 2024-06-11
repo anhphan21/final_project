@@ -31,8 +31,7 @@ void Placement::mainLoop() {
         _nodes.clear();
         _nodes = mst;
         mergeFFinG();
-    }
-    else  // greedy pick to merge
+    } else  // greedy pick to merge
     {
         for (size_t i = 0; i < mst.size(); i++) {
             free(mst[i]);
@@ -384,60 +383,96 @@ void Placement::swapNodeMST(vector<pair<Node *, pair<double, Node *>>> &heap, un
     heap[idx2] = temp;
     return;
 }
-
 double cal_distance(pair<double, double> A, pair<double, double> B) {
-    return sqrt(pow(A.first - B.first, 2) + pow(A.second - B.second, 2));
+    return (abs(A.first - B.first) + abs(A.second - B.second));
 }
 
-bool overlap_ornot(Module *a, double a_r, Module *b, double b_r) {
-    pair<double, double> b_cor = {b->centerX(), b->centerY()};
-    pair<double, double> cor;
+bool overlap_ornot(Rhombus _rohm0, Rhombus _rohm1) {
+    // Rotate 45 deg
+    _rohm0.RotatePeak(45);
+    _rohm1.RotatePeak(45);
+    double _leftBound = max(max(_rohm0.peak(0).x, _rohm1.peak(0).x), max(_rohm0.peak(3).x, _rohm1.peak(3).x));
+    double _rightBound = min(min(_rohm0.peak(1).x, _rohm1.peak(1).x), min(_rohm0.peak(2).x, _rohm1.peak(2).x));
+    double _botBound = max(max(_rohm0.peak(2).y, _rohm1.peak(2).y), max(_rohm0.peak(3).y, _rohm1.peak(3).y));
+    double _topBound = min(min(_rohm0.peak(0).y, _rohm1.peak(0).y), min(_rohm0.peak(1).y, _rohm1.peak(1).y));
 
-    cor = {a->centerX() + a_r, a->centerY()};
-    if (cal_distance(cor, b_cor) <= b_r)
-        return true;
-
-    cor = {a->centerX() - a_r, a->centerY()};
-    if (cal_distance(cor, b_cor) <= b_r)
-        return true;
-
-    cor = {a->centerX(), a->centerY() + a_r};
-    if (cal_distance(cor, b_cor) <= b_r)
-        return true;
-
-    cor = {a->centerX(), a->centerY() - a_r};
-    if (cal_distance(cor, b_cor) <= b_r)
-        return true;
-
-    return false;
+    // Check if 2 rhombus are overlap or not ?
+    if ((_leftBound > _rightBound) || (_botBound > _topBound)) {
+        return 0;
+    }
+    return 1;
 }
-
 void Placement::constructGraph() {
-    int num_node = _diamondINF.size();
+    int num_node = _dataBase->getNumFF();
+    // cout<<num_node<<endl;
+    int max_BitFF = _dataBase->getMaxBitFFLib();  // the max bit FF in FFlib
     for (int i = 0; i < num_node; ++i) {
         Node *n = new Node;
-        n->setFFinNode(_diamondINF[i]);
+        n->setFFinNode(_dataBase->ff(i));
         _name2Node[n->getFFinNode()->name()] = n;
         _nodes.push_back(n);
     }
-    // Module *test =_dataBase->getClkNets()[0]->pin(0).module();
+    // cout<<__LINE__<<endl;
     for (int i = 0; i < _dataBase->getNumClkNets(); ++i) {
         for (int j = 0; j < _dataBase->getClkNets()[i]->numPins(); ++j) {
-            if (_dataBase->getClkNets()[i]->pin(j)->isIOdie() == 1)  // IO pin doesn't map module
-                continue;
-            if (_dataBase->getClkNets()[i]->pin(j)->module()->isFF() == 0)  // we only can merge FF
-                continue;
-            else {
+            // if(_dataBase->getClkNets()[i]->pin(j)->isIOdie()==1)  //IO pin doesn't map module
+            //     continue;
+            // if (_dataBase->getClkNets()[i]->pin(j)->module()->isFF() == 0)   //we can only merge FF
+            //     continue;
+            // if(_dataBase->getClkNets()[i]->pin(j)->module()->cellType()->numBit()>=max_BitFF)    //ex: if the max bit FF in FFlib is 2, we can't merge 2 bits FF(numInPins()-1 == 2)
+            //     continue;
+            // else
+            if (_dataBase->getClkNets()[i]->pin(j)->module() != nullptr && _dataBase->getClkNets()[i]->pin(j)->module()->isFF() && _dataBase->getClkNets()[i]->pin(j)->module()->cellType()->numBit() < max_BitFF) {
                 Module *module_i_j = _dataBase->getClkNets()[i]->pin(j)->module();
                 for (int k = j + 1; k < _dataBase->getClkNets()[i]->numPins(); ++k) {
                     Module *module_i_k = _dataBase->getClkNets()[i]->pin(k)->module();
-                    if (module_i_k->isFF() == 0)
+                    Rhombus r_i_j(_dataBase->getClkNets()[i]->pin(j)->net()->OutputPin()->x(), _dataBase->getClkNets()[i]->pin(j)->net()->OutputPin()->y(), module_i_j->radius());
+                    Rhombus r_i_k(_dataBase->getClkNets()[i]->pin(k)->net()->OutputPin()->x(), _dataBase->getClkNets()[i]->pin(k)->net()->OutputPin()->y(), module_i_k->radius());
+                    // cout<<module_i_j->name()<<" "<<module_i_j->x()<<" "<<module_i_j->y()<<" "<<module_i_j->radius()<<endl;
+                    // cout<<module_i_k->name()<<" "<<module_i_k->x()<<" "<<module_i_k->y()<<" "<<module_i_j->radius()<<endl;
+                    // cout<<endl;
+                    if (module_i_k == nullptr || module_i_k->isFF() == 0 || module_i_k->cellType()->numBit() >= max_BitFF)
                         continue;
-                    else if (overlap_ornot(module_i_j, module_i_j->radius(), module_i_k, module_i_k->radius())) {  // they are overlapping and in the same clknet
-                        _name2Node[module_i_j->name()]->addNeighborPair({_name2Node[module_i_k->name()], 0});      // weight is 0(temporary)
+                    else if (overlap_ornot(r_i_j, r_i_k) && module_i_j->cellType()->numBit() == module_i_k->cellType()->numBit())  // they are overlapping ,in the same clknet,have the same bit FF and both of them are not larger than max_BitFF
+                    {
+                        cout << "name: " << module_i_j->name() << "、" << module_i_k->name() << " ,cost: " << cal_cost(module_i_j, module_i_k) << endl;
+
+                        _name2Node[module_i_j->name()]->addNeighborPair({_name2Node[module_i_k->name()], cal_cost(module_i_j, module_i_k)});  // weight is 0(temporary)
                     }
                 }
             }
         }
     }
+}
+
+double Placement::cal_cost(Module *ffN, Module *ff0)  // ffN is primary
+{
+    double TNS_cost = 0;
+    for (int i = 0; i < ffN->numInPins() - 1 /*the last Inpin is CLK*/; ++i)  // ffN and ff0 numInPins must be equal
+    {
+        double old_slack1 = ffN->InPin(i)->slack();
+        double old_slack2 = ff0->InPin(i)->slack();
+        Rhombus r1(ffN->InPin(i)->net()->OutputPin()->x(), ffN->InPin(i)->net()->OutputPin()->y(), ffN->radius());
+        Rhombus r2(ff0->InPin(i)->net()->OutputPin()->x(), ffN->InPin(i)->net()->OutputPin()->y(), ff0->radius());
+        pair<double, double> new_location = Rhombus::findCentroidIntersect(r1, r2);
+        ffN->setPosition(new_location.first, new_location.second);
+        ff0->setPosition(new_location.first, new_location.second);
+        _dataBase->updateSlack(ffN->InPin(i));
+        _dataBase->updateSlack(ff0->InPin(i));
+        if (ffN->InPin(i)->slack() < 0)
+            TNS_cost += ffN->InPin(i)->slack();
+
+        // turn back
+        ffN->setPosition(ffN->InPin(i)->oldX(), ffN->InPin(i)->oldY());
+        ff0->setPosition(ff0->InPin(i)->oldX(), ff0->InPin(i)->oldY());
+        ffN->InPin(i)->setSlack(old_slack1);
+        ff0->InPin(i)->setSlack(old_slack2);
+    }
+    int next_level_FF = 0;
+    next_level_FF = pow(2, log2(ffN->cellType()->numBit()) + 1);
+    double Power_cost = 0;
+    Power_cost = _dataBase->getBeta() * _dataBase->getFFlib(next_level_FF)->getPower();
+    double Area_cost = 0;
+    Area_cost = _dataBase->getGamma() * _dataBase->getFFlib(next_level_FF)->getArea();
+    return (TNS_cost + Power_cost + Area_cost);
 }
