@@ -15,6 +15,13 @@
         "system_error": "cpp",
         "tuple": "cpp",
         "type_traits": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "iosfwd": "cpp",
+        "*.tcc": "cpp",
+        "deque": "cpp",
+        "unordered_map": "cpp",
+        "iostream": "cpp",
+        "initializer_list": "cpp",
+        "numbers": "cpp"
     }
 }

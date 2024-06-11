@@ -1,8 +1,11 @@
 #include <iostream>
-#include "DatabaseDef.h"
-#include "Database.h"
-int main(int argc, char **argv)
-{
 
+#include "Database.h"
+#include "DatabaseDef.h"
+
+int main(int argc, char **argv) {
+    Database testDTB;
+    testDTB.parser(argv[1]);
+    cout << "Done parser!!!" << endl;
     return 0;
 }
