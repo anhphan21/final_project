@@ -166,7 +166,6 @@ class Database {
 
     // void createPinforModule(Module *);
     // void updateRadiusRecur(FFCell*, Module*);
-    Module *FindPrePin(Module *currentM);
     Pin* FindPrePin(Pin* inputPin);
     void updateInitialSlackInfo();
 };

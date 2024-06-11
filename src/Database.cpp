@@ -627,17 +627,19 @@ Pin* Database::FindPrePin(Pin* inputPin)
 
         currentPin = que.front();
         que.pop();
-        if (que.empty()) //如果找不到 可能接到IOdesign 將回傳Nullptr
+        if (que.empty()) 
         {
+            //If it cannot be found, it may be received by IOdesign and will return Nullptr
             return nullptr;
         }
-        while (currentPin->name() == "CLK" || currentPin->net()->getOutputPin()->module() == nullptr) //排除找到IOdesign Module會是nullptr
+        while (currentPin->name() == "CLK" || currentPin->net()->getOutputPin()->module() == nullptr) 
         {
+            //Exclude finding IOdesign Module will be nullptr
             currentPin = que.front();
             que.pop();
-            if (que.empty()) {  // 如果找不到 可能接到IOdesign 將回傳Nullptr
-            if (que.empty()) //如果找不到 可能接到IOdesign 將回傳Nullptr
+            if (que.empty())
             {
+                //If it cannot be found, it may be received by IOdesign and will return Nullptr
                 return nullptr;
             }
         }
@@ -659,60 +661,6 @@ Pin* Database::FindPrePin(Pin* inputPin)
         }
 
     }
-
-
-
-
-
-    //Net* currentnet = currentPin->net();
-    //bool confindPreFF = 1;
-    //Pin* NetInputPin = currentnet->getOutputPin();
-    //while (confindPreFF)
-    //{
-    //    if (NetInputPin->module() == nullptr)
-    //    {
-    //        cout << "Maybe is IODesign" << endl;
-    //        return nullptr;
-    //    }
-    //    if (NetInputPin->module()->isFF() == 1)
-    //    {
-    //        return NetInputPin;
-    //    }
-    //    else
-    //    {
-    //        currentPin = NetInputPin->module()->InPin(0);
-    //        cout << NetInputPin->module()->name() << endl;
-    //        currentnet = currentPin->net();
-    //        NetInputPin = currentnet->getOutputPin();
-    //    }
-    //}
-    //
-
-  /*  int Shortest = 0;
-    for (int i = 0; i < currentPin->module()->numInPins(); i++)
-    {
-        if (currentPin->module()->InPin(i)->name().find("CLK") != string::npos)
-        {
-            currentCLKnet = currentPin->module()->InPin(i)->net();
-        }
-    }
-    if (currentCLKnet == nullptr)
-    {
-        cout << "@@" << endl;
-    }
-    for (int i = 0; i < currentCLKnet->numPins(); i++)
-    {
-        Pin* pinptr = currentCLKnet->pin(i);
-        pinptr->module()->OutPin(0)->net()->get;
-
-
-
-        while ()
-        {
-           pinptr->module()->OutPin();
-        }
-    }*/
-
 
 }
 
