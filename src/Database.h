@@ -113,9 +113,14 @@ public:
     void updateInitialSlackInfo();
     void printResult();
 
-    double getTNS() const;
+    double getTNS() const; 
     unsigned getDen(double) const;
     double totalCost(double) const;
+
+    //FFlib
+    // int getMaxbit(){return _ffLib.size();}
+    FFCell *getFFlib(int bit){return _ffLib[bit][0];}
+    unsigned getMaxBitFFLib() const { return _ffLib.end()->first; }
 private:
     string _name; // Design Name
 

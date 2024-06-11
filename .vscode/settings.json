@@ -24,6 +24,7 @@
         "initializer_list": "cpp",
         "numbers": "cpp",
         "random": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "cmath": "cpp"
     }
 }

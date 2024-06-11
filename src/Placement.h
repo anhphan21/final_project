@@ -2,6 +2,7 @@
 #define PLACEMENT_H
 
 #include "Database.h"
+#include "rhombus.h"
 // We declare a Placement every time we are doing merge on a clk net
 class Placement
 {
@@ -13,7 +14,10 @@ public:
 	};
 	void mainLoop(Database *database);
 	void constructDiamond();
+	//graph
 	void constructGraph();
+	double cal_cost(Module *ff1,Module *ff2);
+	//
 	NodeList findMST();
 	// methods for design (hyper-graph) construction
 	void addNode(Node *node) { _nodes.push_back(node); }
