@@ -8,11 +8,11 @@
 
 #include "Bin.h"
 #include "DatabaseDef.h"
-#include "History.h"
 #include "Module.h"
 #include "Net.h"
 #include "Node.h"
 #include "Pin.h"
+#include "History.h"
 using namespace std;
 
 class Database
@@ -106,13 +106,16 @@ public:
     void updateSlack(Pin *);
     void resetVisit();
 
-    void unMarkedDPin();  // unmarked all clk pin of FF
+    void unMarkedDPin(); // unmarked all clk pin of FF
     void updateRadius(FFCell *);
     void debankFF();
     Pin* FindPrePin(Pin* inputPin);
+    void updateInitialSlackInfo();
     void printResult();
-    void plotPlacementResult(const string outfilename, bool isPrompt = false);
 
+    double getTNS() const;
+    unsigned getDen(double) const;
+    double totalCost(double) const;
 private:
     string _name; // Design Name
 
@@ -166,9 +169,7 @@ private:
     vector<History> _pinHistory;
 
     // void createPinforModule(Module *);
-    // void updateRadiusRecur(FFCell*, Module*);
-    Module *FindPrePin(Module *currentM);
-    void updateInitialSlackInfo();
+    // void updateRadiusRecur(FFCell *, Module *);
 };
 
 #endif // DATABASE_H

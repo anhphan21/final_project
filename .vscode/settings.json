@@ -23,6 +23,6 @@
         "iostream": "cpp",
         "initializer_list": "cpp",
         "numbers": "cpp",
-        "typeinfo": "cpp"
+        "random": "cpp"
     }
 }

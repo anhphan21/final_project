@@ -39,4 +39,4 @@ private:
 	map<string, Node *> _name2Node;
 };
 
-#endif // PLACEMENT_H
+#endif  // PLACEMENT_H
