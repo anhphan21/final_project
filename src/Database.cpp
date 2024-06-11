@@ -595,3 +595,88 @@ void Database::printResult() {
         _outFile << _pinHistory[i].oldModuleName() << "/" << _pinHistory[i].oldPinName() << " map " << _pinHistory[i].newPin()->module()->name() << "/" << _pinHistory[i].newPin()->name() << endl;
     }
 }
+Pin* Database::FindPrePin(Pin* inputPin)
+{
+    Module* currentM = inputPin->module();
+    string originFF = currentM->name();
+    queue<Pin*> que;
+    Net* OriginalCLKNet = nullptr;
+    Net* CurrentCLKNet = nullptr;
+    Net* currentnet = nullptr;
+    Pin* currentPin = nullptr;
+    if (currentM->isFF() == 0)
+    {
+        cout << "please put FF in the argumemt!!! bad guy" << endl;
+        return 0;
+    }
+    for (int i = 0; i < currentM->totnumPins(); i++)
+    {
+        if (currentM->pin(i)->name() == "CLK")
+        {
+            OriginalCLKNet = currentM->pin(i)->net();
+        }
+    }
+    while (1)
+    {
+
+        for (int i = 0; i < currentM->numInPins(); i++)
+        {
+            que.push(currentM->InPin(i));
+        }
+
+        currentPin = que.front();
+        que.pop();
+        if (que.empty()) 
+        {
+            //If it cannot be found, it may be received by IOdesign and will return Nullptr
+            return nullptr;
+        }
+        while (currentPin->name() == "CLK" || currentPin->net()->getOutputPin()->module() == nullptr) 
+        {
+            //Exclude finding IOdesign Module will be nullptr
+            currentPin = que.front();
+            que.pop();
+            if (que.empty())
+            {
+                //If it cannot be found, it may be received by IOdesign and will return Nullptr
+                return nullptr;
+            }
+        }
+        currentM = currentPin->net()->getOutputPin()->module();
+        for (int i = 0; i < currentM->totnumPins(); i++)
+        {
+            if (currentM->pin(i)->name() == "CLK")
+            {
+                CurrentCLKNet = currentM->pin(i)->net();
+            }
+        }
+        if (currentM->isFF() == 1 && CurrentCLKNet == OriginalCLKNet && originFF != currentM->name())//只要找FF並且同一clk 並排除找到自己的可能!
+        {
+            cout << endl << endl;
+            currentPin = currentPin->net()->getOutputPin();
+            cout << "PrePin: " << currentPin->module()->name() << "/" << currentPin->name() << endl;
+            cout << "PreModule " << currentM->name() << endl;
+            return currentPin;
+        }
+
+    }
+
+}
+
+void Database::updateInitialSlackInfo() {
+    Module* _tModule;
+    Pin* _tPin;
+    Pin* _test;
+    for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
+        _tModule = _ffModules[i];
+        for (size_t j = 0, endj = _tModule->numInPins(); j < endj; j++) {
+            _tModule->InPin(i);
+            if (_tPin->name().substr(0, 3) != "CLK") {
+                _tPin->setOldPos(_tPin->x(), _tPin->y());
+                _tPin->setOldQ(_tModule->cellType()->getQdelay());
+                // TODO: set pre Pin FF
+                _test = _tPin->setPreFFPin()
+            }
+        }
+    }
+}
