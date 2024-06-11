@@ -445,6 +445,7 @@ void Database::updateInitialSlackInfo() {
                 _tPin->setOldPos(_tPin->x(), _tPin->y());
                 _tPin->setOldQ(_tModule->cellType()->getQdelay());
                 // TODO: set pre Pin FF
+                _tPin->setPreFFPin(FindPrePin(_tPin));
             }
         }
     }
