@@ -30,14 +30,25 @@
 
 int main(/*int argc, char **argv*/) {
     Database testDTB;
-    string path = ("/home/users/thlin/final_project/testcase1.txt");
+    string path = ("/home/users/thlin/final_project/sampleCase");
     testDTB.parser(path);
-    Pin* ptr = testDTB.module(1)->InPin(0);
-    Module* ptrM = testDTB.module(59905);
-    cout << ptr->name() << endl;
-    cout << ptr->module()->name() << endl;
-    cout << ptr->net()->name() << endl;
-    cout << "Last: "<<ptrM->name()<<"  You find: "<<testDTB.FindPrePin(ptrM)->name() << endl;
+
+    Module * ptrM = testDTB.module(2);
+    Pin* currentPin = nullptr;
+    for (int i = 0; i < ptrM->numInPins(); i++)
+    {
+        if (ptrM->InPin(i)->name().find("D")!=string::npos)
+        {
+            currentPin = ptrM->InPin(i);
+        }
+        else
+        {
+            
+        }
+    }
+   
+    Pin* prePin = testDTB.FindPrePin(currentPin);
+    cout << "最後一次: "<<ptrM->name()<<"  找到了   "<< prePin->module()->name()<<"/"<< prePin->name() << endl;
     cout << "Done parser!!!" << endl;
     return 0;
 }

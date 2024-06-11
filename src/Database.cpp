@@ -614,8 +614,9 @@ void Database::printResult() {
     }
 }
 
-Module* Database::FindPrePin(Module* currentM)
+Pin* Database::FindPrePin(Pin* inputPin)
 {
+    Module* currentM = inputPin->module();
     string originFF = currentM->name();
     queue<Pin*> que;
     Net* OriginalCLKNet = nullptr;
@@ -648,7 +649,7 @@ Module* Database::FindPrePin(Module* currentM)
         {
             return nullptr;
         }
-        while (currentPin->name() == "CLK" || currentPin->net()->getOutPin()->module() ==nullptr) //排除找到IOdesign Module會是nullptr
+        while (currentPin->name() == "CLK" || currentPin->net()->getOutputPin()->module() ==nullptr) //排除找到IOdesign Module會是nullptr
         {
             currentPin = que.front();
             que.pop();
@@ -657,7 +658,7 @@ Module* Database::FindPrePin(Module* currentM)
                 return nullptr;
             }
         }
-        currentM = currentPin->net()->getOutPin()->module();
+        currentM = currentPin->net()->getOutputPin()->module();
         for (int i = 0; i < currentM->totnumPins(); i++)
         {
             if (currentM->pin(i)->name() == "CLK")
@@ -667,8 +668,11 @@ Module* Database::FindPrePin(Module* currentM)
         }
         if (currentM->isFF() == 1 && CurrentCLKNet == OriginalCLKNet && originFF!= currentM->name())//只要找FF並且同一clk 並排除找到自己的可能!
         {
-            // should go to currentM to find the pin
-            return currentM;
+            cout << endl << endl;
+            currentPin = currentPin->net()->getOutputPin();
+            cout << "PrePin: " << currentPin->module()->name()<<"/"<< currentPin->name() << endl;
+            cout << "PreModule " << currentM->name() << endl;
+            return currentPin;
         }
 
     }
@@ -711,7 +715,7 @@ Module* Database::FindPrePin(Module* currentM)
     }
     if (currentCLKnet == nullptr)
     {
-        cout << "開玩笑嗎" << endl;
+        cout << "@@" << endl;
     }
     for (int i = 0; i < currentCLKnet->numPins(); i++)
     {

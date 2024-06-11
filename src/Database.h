@@ -103,7 +103,7 @@ class Database {
 
     void unMarkedDPin();    //unmarked all clk pin of FF
     void updateRadius(FFCell*);
-    Module* FindPrePin(Module* currentM);
+    Pin* FindPrePin(Pin* inputPin);
     void debankFF();
 
     void printResult();
