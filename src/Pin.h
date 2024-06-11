@@ -12,16 +12,16 @@
 using namespace std;
 
 class Pin {
-   public:
+public:
     // Default
     Pin() : _x(-1), _y(-1), _xOffset(-1), _yOffset(-1), _module(nullptr), _net(nullptr) {
     }
     // For input, output Pin
-    Pin(string &name, double x, double y) : _name(name), _x(x), _y(y), _xOffset(0), _yOffset(0), _module(nullptr), _net(nullptr), _marked(0) {}
+    Pin(string& name, double x, double y) : _name(name), _x(x), _y(y), _xOffset(0), _yOffset(0), _module(nullptr), _net(nullptr), _marked(0) {}
     // For module pin
-    Pin(string name, Module *module, double x, double y, double xOffset, double yOffset) : _name(name), _x(x), _y(y), _xOffset(xOffset), _yOffset(yOffset), _module(module), _net(nullptr), _marked(false) {}
+    Pin(string name, Module* module, double x, double y, double xOffset, double yOffset) : _name(name), _x(x), _y(y), _xOffset(xOffset), _yOffset(yOffset), _module(module), _net(nullptr), _marked(false) {}
 
-    Pin(Net *net, Module *module, string &pinName, double xOffset, double yOffset) : _net(net), _module(module), _name(pinName), _xOffset(xOffset), _yOffset(yOffset), _x(0), _y(0) {
+    Pin(Net* net, Module* module, string& pinName, double xOffset, double yOffset) : _net(net), _module(module), _name(pinName), _xOffset(xOffset), _yOffset(yOffset), _x(0), _y(0) {
     }
 
     string name() const { return _name; }
@@ -29,14 +29,14 @@ class Pin {
     double y() const { return _y; }
     double xOffset() const { return _xOffset; }
     double yOffset() const { return _yOffset; }
-    Module *module() const { return _module; }
-    Net *net() const { return _net; }
+    Module* module() const { return _module; }
+    Net* net() const { return _net; }
     // unsigned pinId() const { return _pinId; }
     bool isIOdie() const { return (_module == nullptr); }
-    Timing *getSlackInfor() { return &_slackInfo; }
+    Timing* getSlackInfor() { return &_slackInfo; }
     bool isVisited() const { return _marked; }
 
-    void setPinName(string &name) { _name = name; }
+    void setPinName(string& name) { _name = name; }
 
     void setPosition(double x, double y) {
         _x = x;
@@ -47,8 +47,8 @@ class Pin {
         _yOffset = yOffset;
     }
 
-    void setModulePtr(Module *module) { _module = module; }
-    void setNetPtr(Net *net) { _net = net; }
+    void setModulePtr(Module* module) { _module = module; }
+    void setNetPtr(Net* net) { _net = net; }
     // void setPinId(unsigned pinId) { _pinId = pinId; }
     void setVisited(bool marked) { _marked = marked; }
 
@@ -56,12 +56,12 @@ class Pin {
 
     // For slack Information
     void setSlack(double slack) { _slackInfo.setSlack(slack); }
-    void setPreFFPin(Pin *preFFPin) { _slackInfo.setPreFFPin(preFFPin); }
+    void setPreFFPin(Pin* preFFPin) { _slackInfo.setPreFFPin(preFFPin); }
     void setOldPos(double x, double y) { _slackInfo.setOldPos(x, y); }
     void setOldQ(double oldQ) { _slackInfo.setOldQ(oldQ); }
 
     double slack() const { return _slackInfo.slack(); }
-    Pin *preFFPin() const { return _slackInfo.preFFPin(); }
+    Pin* preFFPin() const { return _slackInfo.preFFPin(); }
     double oldX() const { return _slackInfo.oldX(); }
     double oldY() const { return _slackInfo.oldY(); }
     double oldQ() const { return _slackInfo.oldQ(); }
@@ -81,20 +81,20 @@ class Pin {
         _slackInfo.setOldQ(qDelay);
     }
 
-    static double calHPWL(const Pin &pin0, const Pin &pin1) {
+    static double calHPWL(const Pin& pin0, const Pin& pin1) {
         return abs(pin0.x() - pin1.x()) + abs(pin0.y() - pin1.y());
     }
 
-   private:
+private:
     // variables from benchmark input
     string _name;
     double _x, _y;              // absolute x and y
     double _xOffset, _yOffset;  // offsets from the bottom-left of the module
-    Module *_module;            // ptr of the associated module
-    Net *_net;                  // ptr to the associated net
+    Module* _module;            // ptr of the associated module
+    Net* _net;                  // ptr to the associated net
 
     bool _marked;  // use for checking the flipflop timing
     Timing _slackInfo;
 };
 
-#endif  // PIN_H`
+#endif  // PIN_H

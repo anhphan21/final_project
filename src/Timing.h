@@ -16,8 +16,6 @@ class Timing {
     void setPreFFPin(Pin *preFFPin) { _preFFPin = preFFPin; }
     void setOldPos(double x, double y) { _oldPos = make_pair(x, y); }
     void setOldQ(double oldQ) { _oldQ = oldQ; }
-    void findPrePin(Pin* currentP);
-
 
     double slack() const { return _slack; }
     Pin *preFFPin() const { return _preFFPin; }
@@ -29,7 +27,9 @@ class Timing {
     double _slack;                 // Slack value
     Pin *_preFFPin;                // Location of the previous FF pin Q in the net
     pair<double, double> _oldPos;  // Old location of pin
-    double _oldQ;                  // Old Q delay corresponding to the pre FF in the net
+    double _oldQ;
+    Pin* FindSomething(Module* Moduleptr);
+    // Old Q delay corresponding to the pre FF in the net
 };
 
 #endif

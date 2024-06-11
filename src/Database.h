@@ -16,14 +16,14 @@
 using namespace std;
 
 class Database {
-   public:
+public:
     Database();
     ~Database() = default;
 
-    void parser(const string &filename);
+    void parser(const string& filename);
 
     // Design parameters
-    void setName(string &name) { _name = name; }
+    void setName(string& name) { _name = name; }
 
     void setAlpha(double alpha) { _alpha = alpha; }
     void setBeta(double beta) { _beta = beta; }
@@ -49,14 +49,14 @@ class Database {
     void setDisplacementDelay(double delay) { _dDelay = delay; }
 
     // methods for design (hyper-graph) construction
-    void addModule(Module *module) { _modules.push_back(module); }
-    void addFF(Module *ff) { _ffModules.push_back(ff); }
-    void addNet(Net *net) { _nets.push_back(net); }
-    void addClkNet(Net *clk) { _clkNets.push_back(clk); }
-    void addPin(Pin *pin) { _pins.push_back(pin); }
-    void addRow(Row *row) { _rows.push_back(row); }
-    void addCellLib(CellType *cellLib) { _cellLib.push_back(cellLib); }
-    void addFFLib(FFCell *ffLib, unsigned bitNum) { _ffLib[bitNum].push_back(ffLib); }
+    void addModule(Module* module) { _modules.push_back(module); }
+    void addFF(Module* ff) { _ffModules.push_back(ff); }
+    void addNet(Net* net) { _nets.push_back(net); }
+    void addClkNet(Net* clk) { _clkNets.push_back(clk); }
+    void addPin(Pin* pin) { _pins.push_back(pin); }
+    void addRow(Row* row) { _rows.push_back(row); }
+    void addCellLib(CellType* cellLib) { _cellLib.push_back(cellLib); }
+    void addFFLib(FFCell* ffLib, unsigned bitNum) { _ffLib[bitNum].push_back(ffLib); }
 
     // Bin operation
     void initialBinArray();
@@ -64,18 +64,18 @@ class Database {
     void updateBinUtil();
 
     // get design property
-    Module *module(unsigned moduleId) { return _modules[moduleId]; }
-    Net *net(unsigned netId) { return _nets[netId]; }
-    Pin *pin(unsigned pinId) { return _pins[pinId]; }
-    Row *row(unsigned rowId) { return _rows[rowId]; }
-    Bin *bin(unsigned colIdx, unsigned rowIdx) { return _bins[colIdx][rowIdx]; }
+    Module* module(unsigned moduleId) { return _modules[moduleId]; }
+    Net* net(unsigned netId) { return _nets[netId]; }
+    Pin* pin(unsigned pinId) { return _pins[pinId]; }
+    Row* row(unsigned rowId) { return _rows[rowId]; }
+    Bin* bin(unsigned colIdx, unsigned rowIdx) { return _bins[colIdx][rowIdx]; }
 
-    Pin *input(unsigned inId) {
+    Pin* input(unsigned inId) {
         assert(inId < _numInput);
         return _pins[inId];
     }
 
-    Pin *output(unsigned outId) {
+    Pin* output(unsigned outId) {
         assert(outId < _numOutput);
         return _pins[_numInput + outId];
     }
@@ -102,17 +102,17 @@ class Database {
     // For slack update
     void sortClkNet();
     void updateSlackAll();
-    void updateSlack(Pin *);
+    void updateSlack(Pin*);
     void resetVisit();
 
     void unMarkedDPin();  // unmarked all clk pin of FF
-    void updateRadius(FFCell *);
+    void updateRadius(FFCell*);
     void debankFF();
 
     void printResult();
     void plotPlacementResult(const string outfilename, bool isPrompt = false);
 
-   private:
+private:
     string _name;  // Design Name
 
     // Design Data
@@ -153,9 +153,9 @@ class Database {
     double _lambda;
 
     // Caching
-    map<string, BaseCell *> CellType2Ptr;
-    map<string, Module *> ModuleName2Ptr;
-    map<string, Pin *> IODesign;
+    map<string, BaseCell*> CellType2Ptr;
+    map<string, Module*> ModuleName2Ptr;
+    map<string, Pin*> IODesign;
 
     // Caching the list for processing
     ModuleList _ffModules;
@@ -164,8 +164,10 @@ class Database {
     // History for output
     vector<History> _pinHistory;
 
-    void createPinforModule(Module *);
-    void updateRadiusRecur(FFCell*, Module*);
+    // void createPinforModule(Module *);
+    // void updateRadiusRecur(FFCell*, Module*);
+    Pin* FindPrePin(Pin* inputPin);
+    void updateInitialSlackInfo();
 };
 
 #endif  // DATABASE_H
