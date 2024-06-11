@@ -402,6 +402,14 @@ void Database::parser(const string &filename)
     }
     initialBinArray();
     file.close();
+    for (size_t i = 0; i < _pins.size(); i++)
+    {
+        _pins[i]->setHistory(new History());
+        string name = _pins[i]->module()->name();
+        _pins[i]->history()->setOldModuleName(name);
+        name = _pins[i]->name();
+        _pins[i]->history()->setOldPinName(name);
+    }
 }
 
 void Database::initialBinArray()
@@ -668,23 +676,23 @@ void Database::updateRadius(FFCell *_newType)
 
 void Database::printResult()
 {
-    string _tmp = _name + ".out";
-    fstream _outFile;
-    _outFile.open(_tmp);
+    // string _tmp = _name + ".out";
+    // fstream _outFile;
+    // _outFile.open(_tmp);
 
-    if (!_outFile.is_open())
-        cout << "Cannot open output file !!!" << endl;
+    // if (!_outFile.is_open())
+    //     cout << "Cannot open output file !!!" << endl;
 
-    _outFile << "CellInst " << _numModules << endl;
-    Module *_tModule;
-    for (size_t i = 0; i < _numModules; ++i)
-    {
-        _tModule = _modules[i];
-        _outFile << "Inst " << _tModule->name() << " " << _tModule->cellType()->getName() << " " << _tModule->x() << " " << _tModule->y() << endl;
-    }
+    // _outFile << "CellInst " << _numModules << endl;
+    // Module *_tModule;
+    // for (size_t i = 0; i < _numModules; ++i)
+    // {
+    //     _tModule = _modules[i];
+    //     _outFile << "Inst " << _tModule->name() << " " << _tModule->cellType()->getName() << " " << _tModule->x() << " " << _tModule->y() << endl;
+    // }
 
-    for (size_t i = 0, endi = _pinHistory.size(); i < endi; ++i)
-    {
-        _outFile << _pinHistory[i].oldModuleName() << "/" << _pinHistory[i].oldPinName() << " map " << _pinHistory[i].newPin()->module()->name() << "/" << _pinHistory[i].newPin()->name() << endl;
-    }
+    // for (size_t i = 0, endi = _pinHistory.size(); i < endi; ++i)
+    // {
+    //     _outFile << _pinHistory[i].oldModuleName() << "/" << _pinHistory[i].oldPinName() << " map " << _pinHistory[i].newPin()->module()->name() << "/" << _pinHistory[i].newPin()->name() << endl;
+    // }
 }

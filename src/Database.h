@@ -13,6 +13,8 @@
 #include "Node.h"
 #include "Pin.h"
 #include "History.h"
+#include "Placement.h"
+#include "rhombus.h"
 using namespace std;
 
 class Database
@@ -59,6 +61,9 @@ public:
     void addRow(Row *row) { _rows.push_back(row); }
     void addCellLib(CellType *cellLib) { _cellLib.push_back(cellLib); }
     void addFFLib(FFCell *ffLib, unsigned bitNum) { _ffLib[bitNum].push_back(ffLib); }
+    void erasePin(unsigned pinId) { _pins.erase(_pins.begin() + pinId); }
+    void eraseModule(unsigned moduleId) { _modules.erase(_modules.begin() + moduleId); }
+    void eraseFF(unsigned ffId) { _ffModules.erase(_ffModules.begin() + ffId); }
 
     // Bin operation
     void initialBinArray();
@@ -67,6 +72,7 @@ public:
 
     // get design property
     Module *module(unsigned moduleId) { return _modules[moduleId]; }
+    Module *ff(unsigned ffId) { return _ffModules[ffId]; }
     Net *net(unsigned netId) { return _nets[netId]; }
     Pin *pin(unsigned pinId) { return _pins[pinId]; }
     Row *row(unsigned rowId) { return _rows[rowId]; }
@@ -98,7 +104,23 @@ public:
     double getGamma() const { return _gamma; }
     double getLambda() const { return _lambda; }
     double getDisplacementDelay() const { return _dDelay; }
-    FFCell *ffLib(unsigned bitNum, unsigned idx) { return _ffLib[bitNum][idx]; }
+    double getBoundaryTop() const { return _boundaryTop; }
+    double getBoundaryLeft() const { return _boundaryLeft; }
+    double getBoundaryBottom() const { return _boundaryBottom; }
+    double getBoundaryRight() const { return _boundaryRight; }
+    FFCell *ffLib(unsigned bitNum, unsigned idx)
+    {
+        auto it = _ffLib.find(bitNum);
+        if (it != _ffLib.end())
+        {
+            return _ffLib[bitNum][idx];
+        }
+        else
+        {
+            cout << "Error: FF library not found!" << endl;
+            exit(1);
+        }
+    }
     // For slack update
     void sortClkNet();
     void updateSlackAll();
@@ -161,7 +183,7 @@ private:
     NetList _clkNets;
 
     // History for output
-    vector<History> _pinHistory;
+    // vector<History> _pinHistory;
 
     void createPinforModule(Module *);
     void updateRadiusRecur(FFCell *, Module *);

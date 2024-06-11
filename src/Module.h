@@ -75,7 +75,7 @@ public:
     unsigned numOutPins() const { return _type->getOutNum(); }
     unsigned numInPins() const { return _type->getInNum(); }
     void addPin(Pin *pPin) { _pins.push_back(pPin); }
-
+    unsigned currentNumPins() const { return _pins.size(); }
     Pin *pin(unsigned idx)
     {
         assert(idx < _pins.size());
@@ -93,6 +93,11 @@ public:
     }
     // CLK should be the last of input pins
     void clearPins() { _pins.clear(); }
+    // new method
+    void setPinsize(unsigned size) { _pins.resize(size); }
+    void setInPin(unsigned idx, Pin *pPin) { _pins[_type->inIdx(idx)] = pPin; }
+    void setOutPin(unsigned idx, Pin *pPin) { _pins[_type->outIdx(idx)] = pPin; }
+    void setCellType(CellType *type) { _type = type; }
 
 private:
     // variables from benchmark input
