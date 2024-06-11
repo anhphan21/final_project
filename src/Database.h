@@ -8,7 +8,7 @@
 
 #include "Bin.h"
 #include "DatabaseDef.h"
-#include "History.h"
+// #include "History.h"
 #include "Module.h"
 #include "Net.h"
 #include "Node.h"
@@ -94,10 +94,8 @@ public:
     double getGamma() const { return _gamma; }
     double getLambda() const { return _lambda; }
     double getDisplacementDelay() const { return _dDelay; }
-    double boundaryLeft() const { return _boundaryLeft; }
-    double boundaryTop() const { return _boundaryTop; }
-    double boundaryRight() const { return _boundaryRight; }
-    double boundaryBot() const { return _boundaryBottom; }
+    unsigned getMaxBitFFLib() const { return _ffLib.end()->first; }
+    NetList getClkNets() const { return _clkNets; }
 
     // For slack update
     void sortClkNet();
@@ -108,9 +106,13 @@ public:
     void unMarkedDPin();  // unmarked all clk pin of FF
     void updateRadius(FFCell*);
     void debankFF();
-
+    Pin *FindPrePin(Pin *inputPin);
+    void updateInitialSlackInfo();
     void printResult();
-    void plotPlacementResult(const string outfilename, bool isPrompt = false);
+
+    double getTNS() const;
+    unsigned getDen(double) const;
+    double totalCost(double) const;
 
 private:
     string _name;  // Design Name
@@ -162,11 +164,11 @@ private:
     NetList _clkNets;
 
     // History for output
-    vector<History> _pinHistory;
+    // vector<History> _pinHistory;
 
     // void createPinforModule(Module *);
     // void updateRadiusRecur(FFCell*, Module*);
-    Pin* FindPrePin(Pin* inputPin);
+    Module *FindPrePin(Module *currentM);
     void updateInitialSlackInfo();
 };
 

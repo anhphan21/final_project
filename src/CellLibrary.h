@@ -1,6 +1,7 @@
 #ifndef CellLibrary_H
 #define CellLibrary_H
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -78,7 +79,7 @@ public:
         return -1;
     }
 
-private:
+   private:
     string _name;
     double _width;
     double _height;
@@ -108,6 +109,7 @@ public:
     double getPower() const { return _power; }
     double getQdelay() const { return _qDelay; }
     double clkPinIdx() const { return _clkPinIdx; }
+    unsigned numBit() const { return _numBit; }
 
 private:
     unsigned _clkPinIdx;

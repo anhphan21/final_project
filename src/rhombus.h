@@ -21,7 +21,7 @@ class Rhombus {
     ~Rhombus() {}
 
     void RotatePeak(double _deg) {
-        double cosine = cos(_deg / 180 * numbers::pi);
+        double cosine = cos(_deg / 180 * M_PI);
         double sine = sin(_deg / 180 * numbers::pi);
 
         Point2<double> _tempPeak;
