@@ -39,7 +39,7 @@ public:
     string pinName(unsigned idx) const { return _pinNameList[idx]; }
     double pinOffsetX(unsigned idx) const { return _pinOffset[idx].first; }
     double pinOffsetY(unsigned idx) const { return _pinOffset[idx].second; }
-    bool isOut(unsigned idx) const { return _outList[idx]; }
+    // bool isOut(unsigned idx) const { return _outList[idx]; }
     unsigned getOutNum() const { return _outList.size(); }
     unsigned getInNum() const { return _inList.size(); }
     unsigned outIdx(unsigned idx) const

@@ -1,5 +1,5 @@
 CC=g++
-LDFLAGS=-std=c++11 -O3 -lm -ggdb
+LDFLAGS=-std=c++17 -O3 -lm -ggdb
 SOURCES= src/*.cpp
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=fp

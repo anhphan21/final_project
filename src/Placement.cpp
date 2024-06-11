@@ -1,4 +1,6 @@
 #include "Placement.h"
+
+#include <limits>
 #include <vector>
 #include <limits>
 #include <cstdlib>
@@ -27,7 +29,6 @@ void Placement::mainLoop()
     cout << "leafsize: " << leafsize << endl;
     for (size_t i = 0; i < _nodes.size(); i++)
     {
-
         free(_nodes[i]);
     }
     _nodes.clear();
@@ -84,6 +85,7 @@ void Placement::mainLoop()
         merge2FF(target, neighbor[maxidx].first->getNodeidxheap(), 0);
     }
 }
+
 void Placement::mergeFFinG()
 {
     while (_nodes.size() > 1)
@@ -209,6 +211,7 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
     }
     return;
 }
+
 void Placement::setNodesize(unsigned size)
 {
     clearNode();
@@ -228,6 +231,7 @@ void Placement::clearNode()
     _nodes.clear();
     return;
 }
+
 NodeList Placement::findMST()
 {
     // Testcase for MST//////////////////////////////////////////
@@ -431,6 +435,7 @@ NodeList Placement::findMST()
     // }
     // print the heap//////////////////////////////////////////
 }
+
 void Placement::DecreaseKeyMST(vector<pair<Node *, pair<double, Node *>>> &heap, unsigned idx, double key)
 { // idx is the index of the node to be decreased in the heap
     unsigned targetidx = idx;
@@ -442,6 +447,7 @@ void Placement::DecreaseKeyMST(vector<pair<Node *, pair<double, Node *>>> &heap,
     }
     return;
 }
+
 pair<Node *, pair<double, Node *>> Placement::extractMinMST(vector<pair<Node *, pair<double, Node *>>> &heap)
 {
     pair<Node *, pair<double, Node *>> n = heap[0];
@@ -486,6 +492,7 @@ pair<Node *, pair<double, Node *>> Placement::extractMinMST(vector<pair<Node *, 
 
     return n;
 }
+
 void Placement::swapNodeMST(vector<pair<Node *, pair<double, Node *>>> &heap, unsigned idx1, unsigned idx2)
 {
     pair<Node *, pair<double, Node *>> temp;

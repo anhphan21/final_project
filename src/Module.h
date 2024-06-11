@@ -75,6 +75,7 @@ public:
     unsigned numOutPins() const { return _type->getOutNum(); }
     unsigned numInPins() const { return _type->getInNum(); }
     void addPin(Pin *pPin) { _pins.push_back(pPin); }
+
     Pin *pin(unsigned idx)
     {
         assert(idx < _pins.size());

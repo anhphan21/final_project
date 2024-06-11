@@ -12,6 +12,7 @@
 #include "Net.h"
 #include "Node.h"
 #include "Pin.h"
+#include "History.h"
 using namespace std;
 
 class Database
@@ -100,8 +101,15 @@ public:
     FFCell *ffLib(unsigned bitNum, unsigned idx) { return _ffLib[bitNum][idx]; }
     // For slack update
     void sortClkNet();
-    void updateSlack();
+    void updateSlackAll();
+    void updateSlack(Pin *);
     void resetVisit();
+
+    void unMarkedDPin(); // unmarked all clk pin of FF
+    void updateRadius(FFCell *);
+    void debankFF();
+
+    void printResult();
 
 private:
     string _name; // Design Name
@@ -146,17 +154,17 @@ private:
     // Caching
     map<string, BaseCell *> CellType2Ptr;
     map<string, Module *> ModuleName2Ptr;
+    map<string, Pin *> IODesign;
 
     // Caching the list for processing
     ModuleList _ffModules;
     NetList _clkNets;
 
-    // map<string, map<string, Pin *>> PinName2Ptr;
-    map<string, Pin *> IODesign;
-
-    map<string, Net *> Netname2Ptr;
+    // History for output
+    vector<History> _pinHistory;
 
     void createPinforModule(Module *);
+    void updateRadiusRecur(FFCell *, Module *);
 };
 
 #endif // DATABASE_H
