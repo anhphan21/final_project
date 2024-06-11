@@ -12,6 +12,7 @@
 #include "Net.h"
 #include "Node.h"
 #include "Pin.h"
+#include "History.h"
 using namespace std;
 
 class Database {
@@ -83,7 +84,6 @@ class Database {
     unsigned getNumFF() const { return _ffModules.size(); }
     unsigned getNumNets() const { return _nets.size(); }
     unsigned getNumClkNets() const { return _clkNets.size(); }
-    NetList getClkNets() const { return _clkNets; }
     unsigned getNumDataNets() const { return getNumNets() - getNumClkNets(); }
     unsigned getNumPins() const { return _pins.size(); }
     unsigned getNumInputs() const { return _numInput; }
@@ -97,12 +97,15 @@ class Database {
 
     // For slack update
     void sortClkNet();
-    void updateSlack(Pin *ffpin);
+    void updateSlackAll();
+    void updateSlack(Pin*);
     void resetVisit();
 
     void unMarkedDPin();    //unmarked all clk pin of FF
     void updateRadius(FFCell*);
     void debankFF();
+
+    void printResult();
 
    private:
     string _name;  // Design Name
@@ -147,19 +150,16 @@ class Database {
     // Caching
     map<string, BaseCell *> CellType2Ptr;
     map<string, Module *> ModuleName2Ptr;
-
+    map<string, Pin *> IODesign;
+    
     // Caching the list for processing
     ModuleList _ffModules;
     NetList _clkNets;
-
-    // map<string, map<string, Pin *>> PinName2Ptr;
-    map<string, Pin *> IODesign;
-
-    map<string, Net *> Netname2Ptr;
     
+    //History for output
+    vector<History> _pinHistory;
 
     void createPinforModule(Module *);
-
     void updateRadiusRecur(FFCell*, Module*);
 };
 

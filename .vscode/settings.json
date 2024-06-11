@@ -16,6 +16,12 @@
         "tuple": "cpp",
         "type_traits": "cpp",
         "utility": "cpp",
-        "cmath": "cpp"
+        "iosfwd": "cpp",
+        "*.tcc": "cpp",
+        "deque": "cpp",
+        "unordered_map": "cpp",
+        "iostream": "cpp",
+        "initializer_list": "cpp",
+        "numbers": "cpp"
     }
 }

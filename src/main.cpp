@@ -7,6 +7,7 @@ int main(int argc, char **argv) {
     Database testDTB;
     testDTB.parser(argv[1]);
     cout << "Done parser!!!" << endl;
+<<<<<<< HEAD
     for(int i=0;i<testDTB.getNumClkNets();++i)
     {
         for(int j=0;j<testDTB.getClkNets()[i]->numPins();++j)
@@ -49,5 +50,7 @@ int main(int argc, char **argv) {
     //         cout<<endl;
     //     }
     // }
+=======
+>>>>>>> master
     return 0;
 }

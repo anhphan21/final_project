@@ -37,7 +37,7 @@ class BaseCell {
     string pinName(unsigned idx) const { return _pinNameList[idx]; }
     double pinOffsetX(unsigned idx) const { return _pinOffset[idx].first; }
     double pinOffsetY(unsigned idx) const { return _pinOffset[idx].second; }
-    bool isOut(unsigned idx) const { return _outList[idx]; }
+    // bool isOut(unsigned idx) const { return _outList[idx]; }
     unsigned getOutNum() const { return _outList.size(); }
     unsigned getInNum() const { return _inList.size(); }
     unsigned outIdx(unsigned idx) const {
@@ -61,14 +61,17 @@ class BaseCell {
     virtual void setPower(double) { cout << "Not FF cell !!!" << endl; }
     virtual void setQdelay(double) { cout << "Not FF cell !!!" << endl; }
     virtual void setClkPin(unsigned) { cout << "Not FF cell !!!" << endl; }
+    
     virtual double clkPinIdx() const {
         cout << "Not FF cell !!!" << endl;
         return -1;
     }
+    
     virtual double getPower() const {
         cout << "Not FF cell !!!" << endl;
         return -1;
     }
+    
     virtual double getQdelay() const {
         cout << "Not FF cell !!!" << endl;
         return -1;
