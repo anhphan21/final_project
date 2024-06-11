@@ -560,14 +560,14 @@ void Database::printResult() {
         _outFile << "Inst " << _tModule->name() << " " << _tModule->cellType()->getName() << " " << _tModule->x() << " " << _tModule->y() << endl;
     }
 
-    //     History _tHistory;
+    History* _tHistory;
 
-    //     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
-    //         for (size_t j = 0, endj = _ffModules[i]->totnumPins(); j < endj; j++) {
-    //             _tHistory = _ffModules[i]->pin(j);
-    //             _outFile << _tHistory.oldModuleName() << "/" << _tHistory.oldPinName() << " map " << _ffModules[i]->name() << "/" << _ffModules[i]->pin(j)->name() << endl;
-    //         }
-    //     }
+    for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
+        for (size_t j = 0, endj = _ffModules[i]->totnumPins(); j < endj; j++) {
+            _tHistory = _ffModules[i]->pin(j)->history();
+            _outFile << _tHistory->oldModuleName() << "/" << _tHistory->oldPinName() << " map " << _ffModules[i]->name() << "/" << _ffModules[i]->pin(j)->name() << endl;
+        }
+    }
 }
 
 Pin *Database::FindPrePin(Pin *inputPin) {

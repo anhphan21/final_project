@@ -82,7 +82,7 @@ class BaseCell {
         cout << "Not FF cell !!!" << endl;
         return 0;
     }
-    
+
     virtual unsigned getnumBit() const {
         cout << "Not FF cell !!!" << endl;
         return -1;
