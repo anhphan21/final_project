@@ -77,6 +77,11 @@ class BaseCell {
         return -1;
     }
 
+    virtual unsigned numBit() const {
+        cout << "Not FF cell !!!" << endl;
+        return 0;
+    }
+
    private:
     string _name;
     double _width;
@@ -107,6 +112,7 @@ class FFCell : public BaseCell {
     double getPower() const { return _power; }
     double getQdelay() const { return _qDelay; }
     double clkPinIdx() const { return _clkPinIdx; }
+    unsigned numBit() const { return _numBit; }
 
    private:
     unsigned _clkPinIdx;

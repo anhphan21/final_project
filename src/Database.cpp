@@ -460,7 +460,6 @@ void Database::updateSlack(Pin* ffpin) {
                 updateSlack(_preFFPin->module()->InPin(idx));  // Input idx 0 is D pin
             }
             // Update slack of this D pin
-            // #TODO:
             // Calculate the preFF->comb displacement
             if (ffpin->net()->OutputPin() != _preFFPin) {
                 _preNet = _preFFPin->net();
@@ -546,16 +545,21 @@ void Database::printResult() {
     if (!_outFile.is_open())
         cout << "Cannot open output file !!!" << endl;
 
-    _outFile << "CellInst " << _numModules << endl;
+    _outFile << "CellInst " << _ffModules.size() << endl;
     Module* _tModule;
-    for (size_t i = 0; i < _numModules; ++i) {
-        _tModule = _modules[i];
+    for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
+        _tModule = _ffModules[i];
         _outFile << "Inst " << _tModule->name() << " " << _tModule->cellType()->getName() << " " << _tModule->x() << " " << _tModule->y() << endl;
     }
 
-    for (size_t i = 0, endi = _pinHistory.size(); i < endi; ++i) {
-        _outFile << _pinHistory[i].oldModuleName() << "/" << _pinHistory[i].oldPinName() << " map " << _pinHistory[i].newPin()->module()->name() << "/" << _pinHistory[i].newPin()->name() << endl;
-    }
+//     History _tHistory;
+
+//     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
+//         for (size_t j = 0, endj = _ffModules[i]->totnumPins(); j < endj; j++) {
+//             _tHistory = _ffModules[i]->pin(j);
+//             _outFile << _tHistory.oldModuleName() << "/" << _tHistory.oldPinName() << " map " << _ffModules[i]->name() << "/" << _ffModules[i]->pin(j)->name() << endl;
+//         }
+//     }
 }
 
 Pin* Database::FindPrePin(Pin* inputPin) {
@@ -680,7 +684,7 @@ unsigned Database::getDen(double threshold) const {
     for (size_t i = 0; i < _numBinCol; ++i) {
         for (size_t j = 0; j < _numBinRow; ++j) {
             if (_bins[i][j]->getDensity() > threshold)
-                _value ++;
+                _value++;
         }
     }
     return _value;
@@ -696,5 +700,5 @@ double Database::totalCost(double _denThrs) const {
         _areaCost += _ffModules[i]->area();
     }
 
-    return _alpha*_tnsCost + _beta* _powerCost + _gamma* _areaCost + _lambda *getDen(_denThrs);
+    return _alpha * _tnsCost + _beta * _powerCost + _gamma * _areaCost + _lambda * getDen(_denThrs);
 }

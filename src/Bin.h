@@ -11,14 +11,10 @@ using namespace std;
 class Bin : public Rectangle {
    public:
     Bin() : Rectangle(), _overlapArea(0), _binArea(0) {
-<<<<<<< HEAD
-
-=======
     }
 
     Bin(double left, double bottom, double right, double top, double binArea) : _overlapArea(0), _binArea(binArea) {
         setBounds(left, bottom, right, top);
->>>>>>> 9207b2bfaea47253ec70fe9869095b9a096dc522
     }
 
     void resetBin() {
