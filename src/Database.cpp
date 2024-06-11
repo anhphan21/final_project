@@ -3,7 +3,6 @@
 #include <float.h>
 
 #include <fstream>
-#include <queue>
 #include <sstream>
 
 #include "Pin.h"
@@ -337,7 +336,6 @@ void Database::parser(const string& filename) {
         }
     }
     initialBinArray();
-    updateInitialSlackInfo();
     file.close();
 }
 
@@ -517,28 +515,27 @@ void Database::updateSlack(Pin* ffpin) {
 
         if (ffpin->isMoved()) {  // If the FF is moved then update the new slack
             _tPin = ffpin->net()->OutputPin();
-            _displacement += abs(ffpin->oldX() - _tPin->x()) + abs(ffpin->oldY() - _tPin->y()) - abs(ffpin->x() - _tPin->x()) + abs(ffpin->y() - _tPin->y());
-            ;
+            _displacement += abs(ffpin->oldX() - _tPin->x()) + abs(ffpin->oldY() - _tPin->y()) - abs(ffpin->x() - _tPin->x()) + abs(ffpin->y() - _tPin->y());;
         }
-        ffpin->setSlack(ffpin->slack() + _displacement * _dDelay + (ffpin->oldQ() - ffpin->module()->cellType()->getQdelay()));
+        ffpin->setSlack(ffpin->slack()+_displacement*_dDelay+(ffpin->oldQ() - ffpin->module()->cellType()->getQdelay()));
     }
     ffpin->setVisited(true);
 }
 
 void Database::updateSlackAll() {
-    // Update slack first
+    //Update slack first
     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
-        for (size_t j = 0, endj = _ffModules[i]->numInPins() - 1; j < endj; ++j) {
+        for (size_t j = 0, endj = _ffModules[i]->numInPins()-1; j < endj; ++j) {
             updateSlack(_ffModules[i]->InPin(j));
         }
     }
-    // Update timing slack old
+    //Update timing slack old
     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
-        for (size_t j = 0, endj = _ffModules[i]->numInPins() - 1; j < endj; ++j) {
+        for (size_t j = 0, endj = _ffModules[i]->numInPins()-1; j < endj; ++j) {
             _ffModules[i]->InPin(j)->updateSlackInfo(_ffModules[i]->getQdelay());
         }
     }
-    // Unmarked all the FF
+    //Unmarked all the FF
     unMarkedDPin();
 }
 
