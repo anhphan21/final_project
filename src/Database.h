@@ -136,8 +136,9 @@ class Database {
     void updateSlack(Pin*);
     void resetVisit();
 
-    void unMarkedDPin();  // unmarked all clk pin of FF
-    void updateRadius(FFCell *);
+    void unMarkedDPin(); // unmarked all clk pin of FF
+    // void updateRadius(FFCell *);
+    void updateRadius();
     void debankFF();
     Pin *FindPrePin(Pin *inputPin);
     void updateInitialSlackInfo();
