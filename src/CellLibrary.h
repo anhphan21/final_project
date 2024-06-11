@@ -84,6 +84,11 @@ public:
         return 0;
     }
 
+    virtual unsigned getnumBit() const {
+        cout << "Not FF cell !!!" << endl;
+        return -1;
+    }
+
    private:
     string _name;
     double _width;
