@@ -3,11 +3,9 @@
 
 #include "Database.h"
 // We declare a Placement every time we are doing merge on a clk net
-class Placement
-{
-public:
-    Placement()
-    {
+class Placement {
+   public:
+    Placement() {
         _nodes.resize(1);
         _nodes[0] = nullptr;
     };
@@ -31,8 +29,12 @@ public:
     // get design property
     Node *node(unsigned nodeId) { return _nodes[nodeId]; }
 
-private:
+   private:
+    Database *_dataBase;
+    // construct graph
+    vector<Module *> _diamondINF;  // Graph_input
     NodeList _nodes;
+    map<string, Node *> _name2Node;
 };
 
-#endif // PLACEMENT_H
+#endif  // PLACEMENT_H
