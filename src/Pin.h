@@ -69,17 +69,7 @@ class Pin {
     /**
      * Check if D pin need to update slack ?
      */
-    bool needUpdate() const {
-        if (_slackInfo.preFFPin())
-            return isMoved();
-        else
-            return isMoved() || _slackInfo.preFFPin()->isMoved();
-    }
-
-    void updateSlackInfo(double qDelay) {
-        _slackInfo.setOldPos(_x, _y);
-        _slackInfo.setOldQ(qDelay);
-    }
+    bool isUpdated() const { return isMoved() || _slackInfo.preFFPin()->isMoved(); }
 
     static double calHPWL(const Pin &pin0, const Pin &pin1) {
         return abs(pin0.x() - pin1.x()) + abs(pin0.y() - pin1.y());
