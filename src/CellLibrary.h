@@ -1,6 +1,7 @@
 #ifndef CellLibrary_H
 #define CellLibrary_H
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -61,17 +62,17 @@ class BaseCell {
     virtual void setPower(double) { cout << "Not FF cell !!!" << endl; }
     virtual void setQdelay(double) { cout << "Not FF cell !!!" << endl; }
     virtual void setClkPin(unsigned) { cout << "Not FF cell !!!" << endl; }
-    
+
     virtual double clkPinIdx() const {
         cout << "Not FF cell !!!" << endl;
         return -1;
     }
-    
+
     virtual double getPower() const {
         cout << "Not FF cell !!!" << endl;
         return -1;
     }
-    
+
     virtual double getQdelay() const {
         cout << "Not FF cell !!!" << endl;
         return -1;

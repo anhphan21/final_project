@@ -8,7 +8,7 @@
 
 #include "Bin.h"
 #include "DatabaseDef.h"
-#include "History.h"
+// #include "History.h"
 #include "Module.h"
 #include "Net.h"
 #include "Node.h"
@@ -164,7 +164,7 @@ class Database {
     NetList _clkNets;
 
     // History for output
-    vector<History> _pinHistory;
+    // vector<History> _pinHistory;
 
     // void createPinforModule(Module *);
     // void updateRadiusRecur(FFCell *, Module *);

@@ -28,7 +28,7 @@ class Timing {
     Pin *_preFFPin;                // Location of the previous FF pin Q in the net
     pair<double, double> _oldPos;  // Old location of pin
     double _oldQ;                  // Old Q delay corresponding to the pre FF in the net
-    History _pinHistory;
+    // History _pinHistory;
 };
 
 #endif

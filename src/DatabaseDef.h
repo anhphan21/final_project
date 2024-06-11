@@ -17,6 +17,7 @@ class FFCell;
 class Module;
 class FFModule;
 class Node;
+class History;
 
 class Database;
 
