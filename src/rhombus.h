@@ -9,12 +9,10 @@
 #include "Point.h"
 using namespace std;
 
-class Rhombus
-{
-public:
+class Rhombus {
+   public:
     Rhombus() {}
-    Rhombus(double _x, double _y, double _rad)
-    {
+    Rhombus(double _x, double _y, double _rad) {
         _peak[0] = Point2<double>(_x, _y + _rad / 2);
         _peak[1] = Point2<double>(_x + _rad / 2, _y);
         _peak[2] = Point2<double>(_x, _y - _rad / 2);
@@ -22,14 +20,12 @@ public:
     }
     ~Rhombus() {}
 
-    void RotatePeak(double _deg)
-    {
+    void RotatePeak(double _deg) {
         double cosine = cos(_deg / 180 * M_PI);
         double sine = sin(_deg / 180 * M_PI);
 
         Point2<double> _tempPeak;
-        for (size_t i = 0; i < 4; ++i)
-        {
+        for (size_t i = 0; i < 4; ++i) {
             _tempPeak = _peak[i];
             _peak[i].x = _tempPeak.x * cosine - _tempPeak.y * sine;
             _peak[i].y = _tempPeak.x * sine + _tempPeak.y * cosine;
@@ -39,8 +35,7 @@ public:
     Point2<double> &peak(unsigned idx) { return _peak[idx]; }
 
     static pair<double, double> findCentroidIntersect(Rhombus _rohm0,
-                                                      Rhombus _rohm1)
-    {
+                                                      Rhombus _rohm1) {
         // Rotate 45 deg
         _rohm0.RotatePeak(45);
         _rohm1.RotatePeak(45);
@@ -53,8 +48,7 @@ public:
         double _topBound = min(min(_rohm0.peak(0).y, _rohm1.peak(0).y), min(_rohm0.peak(1).y, _rohm1.peak(1).y));
 
         // Check if 2 rhombus are overlap or not ?
-        if ((_leftBound > _rightBound) || (_botBound > _topBound))
-        {
+        if ((_leftBound > _rightBound) || (_botBound > _topBound)) {
             cout << "Not overlap !!!" << endl;
         }
 
@@ -73,7 +67,7 @@ public:
         return make_pair(_x, _y);
     }
 
-private:
+   private:
     Point2<double> _peak[4];
     // Before rotate:
     //  0: top, 1: right, 2: bot, 3: left

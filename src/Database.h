@@ -8,18 +8,17 @@
 
 #include "Bin.h"
 #include "DatabaseDef.h"
+#include "History.h"
 #include "Module.h"
 #include "Net.h"
 #include "Node.h"
 #include "Pin.h"
-#include "History.h"
 #include "Placement.h"
 #include "rhombus.h"
 using namespace std;
 
-class Database
-{
-public:
+class Database {
+   public:
     Database();
     ~Database() = default;
 
@@ -38,8 +37,7 @@ public:
     void setBoundaryLeft(double boundaryLeft) { _boundaryLeft = boundaryLeft; }
     void setBoundaryBottom(double boundaryBottom) { _boundaryBottom = boundaryBottom; }
     void setBoundaryRight(double boundaryRight) { _boundaryRight = boundaryRight; }
-    void updateRectangle()
-    {
+    void updateRectangle() {
         _dieRectangle.setBounds(_boundaryLeft, _boundaryBottom, _boundaryRight, _boundaryTop);
     }
 
@@ -78,14 +76,12 @@ public:
     Row *row(unsigned rowId) { return _rows[rowId]; }
     Bin *bin(unsigned colIdx, unsigned rowIdx) { return _bins[colIdx][rowIdx]; }
 
-    Pin *input(unsigned inId)
-    {
+    Pin *input(unsigned inId) {
         assert(inId < _numInput);
         return _pins[inId];
     }
 
-    Pin *output(unsigned outId)
-    {
+    Pin *output(unsigned outId) {
         assert(outId < _numOutput);
         return _pins[_numInput + outId];
     }
@@ -108,15 +104,11 @@ public:
     double getBoundaryLeft() const { return _boundaryLeft; }
     double getBoundaryBottom() const { return _boundaryBottom; }
     double getBoundaryRight() const { return _boundaryRight; }
-    FFCell *ffLib(unsigned bitNum, unsigned idx)
-    {
+    FFCell *ffLib(unsigned bitNum, unsigned idx) {
         auto it = _ffLib.find(bitNum);
-        if (it != _ffLib.end())
-        {
+        if (it != _ffLib.end()) {
             return _ffLib[bitNum][idx];
-        }
-        else
-        {
+        } else {
             cout << "Error: FF library not found!" << endl;
             exit(1);
         }
@@ -127,14 +119,14 @@ public:
     void updateSlack(Pin *);
     void resetVisit();
 
-    void unMarkedDPin(); // unmarked all clk pin of FF
+    void unMarkedDPin();  // unmarked all clk pin of FF
     void updateRadius(FFCell *);
     void debankFF();
 
     void printResult();
 
-private:
-    string _name; // Design Name
+   private:
+    string _name;  // Design Name
 
     // Design Data
     unsigned _numModules;
@@ -163,8 +155,8 @@ private:
     double _binWidth;
     double _binHeight;
     double _binMaxUtil;
-    int _numBinCol; // Like x index
-    int _numBinRow; // Like y index
+    int _numBinCol;  // Like x index
+    int _numBinRow;  // Like y index
 
     // For FF merging
     double _dDelay;
@@ -189,4 +181,4 @@ private:
     void updateRadiusRecur(FFCell *, Module *);
 };
 
-#endif // DATABASE_H
+#endif  // DATABASE_H

@@ -1,8 +1,8 @@
 #ifndef DATABASEDEF_H
 #define DATABASEDEF_H
 
-#include <vector>
 #include <map>
+#include <vector>
 using namespace std;
 
 // struct Point2;
@@ -33,4 +33,4 @@ typedef vector<Row *> RowList;
 typedef vector<vector<Bin *>> BinList;
 typedef vector<Node *> NodeList;
 
-#endif // DATABASEDEF_H
+#endif  // DATABASEDEF_H
