@@ -339,12 +339,17 @@ void Database::parser(const string &filename) {
     }
     initialBinArray();
     file.close();
+    vector<History *> _his;
+    _his.resize(_pins.size());
     for (size_t i = 0; i < _pins.size(); i++) {
-        _pins[i]->setHistory(new History());
-        string name = _pins[i]->module()->name();
-        _pins[i]->history()->setOldModuleName(name);
-        name = _pins[i]->name();
-        _pins[i]->history()->setOldPinName(name);
+        if (_pins[i]->module() != nullptr) {
+            _his[i] = new History();
+            _pins[i]->setHistory(_his[i]);
+            string name = _pins[i]->module()->name();
+            _pins[i]->history()->setOldModuleName(name);
+            name = _pins[i]->name();
+            _pins[i]->history()->setOldPinName(name);
+        }
     }
 }
 
@@ -445,7 +450,6 @@ void Database::updateInitialSlackInfo() {
                 _tPin->setOldPos(_tPin->x(), _tPin->y());
                 _tPin->setOldQ(_tModule->cellType()->getQdelay());
                 // TODO: set pre Pin FF
-                _tPin->setPreFFPin(FindPrePin(_tPin));
             }
         }
     }
@@ -560,7 +564,7 @@ void Database::printResult() {
         _outFile << "Inst " << _tModule->name() << " " << _tModule->cellType()->getName() << " " << _tModule->x() << " " << _tModule->y() << endl;
     }
 
-    History* _tHistory;
+    History *_tHistory;
 
     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
         for (size_t j = 0, endj = _ffModules[i]->totnumPins(); j < endj; j++) {
