@@ -18,7 +18,7 @@
 
 int main(/*int argc, char **argv*/) {
     Database testDTB;
-    string path = (/home/users/thlin/final_project/sampleCase);
+    string path = ("/home/users/thlin/final_project/sampleCase");
     testDTB.parser(path);
 
 
@@ -37,7 +37,7 @@ int main(/*int argc, char **argv*/) {
     //}
    
     //Pin* prePin = testDTB.FindPrePin(currentPin);
-    //cout << "�̫�@��: "<<ptrM->name()<<"  ���F   "<< prePin->module()->name()<<"/"<< prePin->name() << endl;
+    //cout << "Last: "<<ptrM->name()<<"  find:   "<< prePin->module()->name()<<"/"<< prePin->name() << endl;
     //cout << "Done parser!!!" << endl;
     //return 0;
 }

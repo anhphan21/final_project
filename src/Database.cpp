@@ -688,7 +688,6 @@ Pin* Database::FindPrePin(Pin* inputPin)
 void Database::updateInitialSlackInfo() {
     Module* _tModule;
     Pin* _tPin;
-    Pin* _test;
     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
         _tModule = _ffModules[i];
         for (size_t j = 0, endj = _tModule->numInPins(); j < endj; j++) {
