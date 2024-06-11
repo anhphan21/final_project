@@ -97,13 +97,16 @@ class Database {
 
     // For slack update
     void sortClkNet();
-    void updateSlack();
+    void updateSlackAll();
+    void updateSlack(Pin*);
     void resetVisit();
 
     void unMarkedDPin();    //unmarked all clk pin of FF
     void updateRadius(FFCell*);
     Module* FindPrePin(Module* currentM);
     void debankFF();
+
+    void printResult();
 
    private:
     string _name;  // Design Name
@@ -154,10 +157,10 @@ class Database {
     ModuleList _ffModules;
     NetList _clkNets;
     
-    
+    //History for output
+    vector<History> _pinHistory;
 
     void createPinforModule(Module *);
-
     void updateRadiusRecur(FFCell*, Module*);
 };
 
