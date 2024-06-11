@@ -381,6 +381,7 @@ bool overlap_ornot(Module *a, double a_r, Module *b, double b_r)
 void Placement::constructGraph()
 {
     int num_node = _diamondINF.size();
+    int max_BitFF=_dataBase->getMaxbit();   //the max bit FF in FFlib
     for(int i=0;i<num_node;++i)
     {
         Node *n=new Node;
@@ -388,14 +389,15 @@ void Placement::constructGraph()
         _name2Node[n->getFFinNode()->name()]=n;
         _nodes.push_back(n);
     }
-    // Module *test =_dataBase->getClkNets()[0]->pin(0).module();
     for (int i = 0; i < _dataBase->getNumClkNets(); ++i)
     {
         for (int j = 0; j < _dataBase->getClkNets()[i]->numPins(); ++j)
         {
             if(_dataBase->getClkNets()[i]->pin(j)->isIOdie()==1)  //IO pin doesn't map module
                 continue;
-            if (_dataBase->getClkNets()[i]->pin(j)->module()->isFF() == 0)   //we only can merge FF 
+            if (_dataBase->getClkNets()[i]->pin(j)->module()->isFF() == 0)   //we can only merge FF 
+                continue;
+            if(_dataBase->getClkNets()[i]->pin(j)->module()->numInPins()>=max_BitFF)    //ex: if the max bit FF in FFlib is 2, we can't merge 2 bits FF
                 continue;
             else
             {
@@ -403,12 +405,11 @@ void Placement::constructGraph()
                 for (int k = j + 1; k < _dataBase->getClkNets()[i]->numPins(); ++k)
                 {
                     Module *module_i_k=_dataBase->getClkNets()[i]->pin(k)->module();
-                    if (module_i_k->isFF() == 0)
+                    if (module_i_k == nullptr || module_i_k->isFF() == 0 || module_i_k->numInPins()>=max_BitFF)
                         continue;
-                    else if (overlap_ornot(module_i_j, module_i_j->radius(), module_i_k, module_i_k->radius()))
-                    { // they are overlapping and in the same clknet
+                    else if (overlap_ornot(module_i_j, module_i_j->radius(), module_i_k, module_i_k->radius()) && module_i_j->numInPins()==module_i_k->numInPins())
+                    { // they are overlapping ,in the same clknet,have the same bit FF and both of them are not larger than max_BitFF
                         _name2Node[module_i_j->name()]->addNeighborPair({_name2Node[module_i_k->name()],0}); //weight is 0(temporary)
-                        
                     }
                 }
             }
