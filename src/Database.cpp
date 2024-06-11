@@ -31,7 +31,7 @@ Database::Database()
       _gamma(-1),
       _lambda(-1) {}
 
-void Database::parser(const string& filename) {
+void Database::parser(const string &filename) {
     ifstream file(filename);
     string line;
 
@@ -75,7 +75,7 @@ void Database::parser(const string& filename) {
                 string temp, type;
                 double x, y;
                 iss >> temp >> type >> x >> y;
-                Pin* pinptr = new Pin();
+                Pin *pinptr = new Pin();
                 // input(num)->name(type);
                 // input(num)->setPosition(x, y);
 
@@ -99,7 +99,7 @@ void Database::parser(const string& filename) {
                 string temp, type;
                 double x, y;
                 iss >> temp >> type >> x >> y;
-                Pin* pinptr = new Pin();
+                Pin *pinptr = new Pin();
                 // output(num)->name(type);
                 // output(num)->setPosition(x, y);
                 IODesign.insert({type, pinptr});
@@ -116,7 +116,7 @@ void Database::parser(const string& filename) {
             string id;
 
             iss >> bitCount >> id >> width >> height >> pinCount;
-            FFCell* FFcellptr =
+            FFCell *FFcellptr =
                 new FFCell(id, width, height, pinCount, bitCount);
 
             string _clkPin;
@@ -151,7 +151,7 @@ void Database::parser(const string& filename) {
             string id;
 
             iss >> id >> width >> height >> pinCount;
-            BaseCell* bptr = new BaseCell(id, width, height, pinCount);
+            BaseCell *bptr = new BaseCell(id, width, height, pinCount);
             addCellLib(bptr);
             CellType2Ptr.insert({id, bptr});
             string temp, name;
@@ -181,9 +181,9 @@ void Database::parser(const string& filename) {
             iss >> _numModules;
             string temp, name, type;
             double x, y;
-            CellType* _type;
+            CellType *_type;
             int PinOfMnum;
-            Module* currentM;
+            Module *currentM;
             for (int i = 0; i < _numModules; ++i) {
                 getline(file, line);
                 istringstream instIss(line);
@@ -196,7 +196,7 @@ void Database::parser(const string& filename) {
                 // if (type.find("G") != string::npos) {
                 // cout << "this is Gate type" << endl;
                 auto it = CellType2Ptr.find(type);
-                map<string, Pin*> PinOfM;
+                map<string, Pin *> PinOfM;
                 if (it == CellType2Ptr.end()) {
                     // can't find Standard Cell
                     // Comment: Nice idea for checking error of input file
@@ -207,10 +207,11 @@ void Database::parser(const string& filename) {
                     currentM = new Module(name, _type, x, y);
                     ModuleName2Ptr[name] = currentM;
                     addModule(currentM);
-                    if (_type->isFF()) addFF(currentM);
+                    if (_type->isFF())
+                        addFF(currentM);
                     for (int i = 0; i < PinOfMnum; ++i) {
                         string PinName = _type->pinName(i);
-                        Pin* pinptr = new Pin();
+                        Pin *pinptr = new Pin();
                         pinptr->setPosition(x, y);
                         pinptr->setPinName(PinName);
                         pinptr->setOffset(_type->pinOffsetX(i),
@@ -228,10 +229,10 @@ void Database::parser(const string& filename) {
             iss >> _numNet;
 
             string type, FFname, TargetPin;
-            Module* _tModule;
-            CellType* _type;
-            Pin* _tPin;
-            Net* netptr;
+            Module *_tModule;
+            CellType *_type;
+            Pin *_tPin;
+            Net *netptr;
             bool Isclk;
 
             for (int i = 0; i < _numNet; i++) {
@@ -290,7 +291,8 @@ void Database::parser(const string& filename) {
                     }
                 }
                 addNet(netptr);
-                if (Isclk) addClkNet(netptr);
+                if (Isclk)
+                    addClkNet(netptr);
             }
         } else if (keyword == "BinWidth" || keyword == "BinHeight" ||
                    keyword == "BinMaxUtil") {
@@ -307,37 +309,43 @@ void Database::parser(const string& filename) {
             double startX, startY, siteWidth, siteHeight, totalNumOfSites;
             iss >> startX >> startY >> siteWidth >> siteHeight >>
                 totalNumOfSites;
-            Row* _tRow = new Row(startX, startY, siteWidth, siteHeight, totalNumOfSites);
+            Row *_tRow = new Row(startX, startY, siteWidth, siteHeight, totalNumOfSites);
             addRow(_tRow);
         } else if (keyword == "DisplacementDelay") {
             double delay;
             iss >> delay;
             setDisplacementDelay(delay);
-
         } else if (keyword == "QpinDelay") {
             string type;
             double delay;
             iss >> type >> delay;
-            CellType* _type = CellType2Ptr[type];
+            CellType *_type = CellType2Ptr[type];
             _type->setQdelay(delay);
         } else if (keyword == "TimingSlack") {
             string name, Dpin;
             double slack;
             iss >> name >> Dpin >> slack;
-            Module* _tModule = ModuleName2Ptr[name];
-            CellType* _type = _tModule->cellType();
-            Pin* _tDPin = _tModule->pin(_type->getPinIdxFromName(Dpin));
+            Module *_tModule = ModuleName2Ptr[name];
+            CellType *_type = _tModule->cellType();
+            Pin *_tDPin = _tModule->pin(_type->getPinIdxFromName(Dpin));
             _tDPin->setSlack(slack);
         } else if (keyword == "GatePower") {
             string type;
             double power;
             iss >> type >> power;
-            BaseCell* _type = CellType2Ptr[type];
+            BaseCell *_type = CellType2Ptr[type];
             _type->setQdelay(power);
         }
     }
     initialBinArray();
     file.close();
+    for (size_t i = 0; i < _pins.size(); i++) {
+        _pins[i]->setHistory(new History());
+        string name = _pins[i]->module()->name();
+        _pins[i]->history()->setOldModuleName(name);
+        name = _pins[i]->name();
+        _pins[i]->history()->setOldPinName(name);
+    }
 }
 
 void Database::initialBinArray() {
@@ -378,7 +386,7 @@ void Database::resetBin() {
 }
 
 void Database::updateBinUtil() {
-    Module* _tmpModule;
+    Module *_tmpModule;
     double _tmpCenterX, _tmpCenterY;
     int _lbinIdx, _bbinIdx, _rbinIdx, _tbinIdx;
     // Reset bin util to 0
@@ -412,7 +420,7 @@ void Database::updateBinUtil() {
  * Unmark the D pin of FF to update the slack
  */
 void Database::unMarkedDPin() {
-    Module* _tModule;
+    Module *_tModule;
 
     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
         _tModule = _ffModules[i];
@@ -488,17 +496,22 @@ void Database::updateSlack(Pin* ffpin) {
 
 void Database::updateSlackAll() {
     // Update slack first
+    // Update slack first
     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
+        for (size_t j = 0, endj = _ffModules[i]->numInPins() - 1; j < endj; ++j) {
         for (size_t j = 0, endj = _ffModules[i]->numInPins() - 1; j < endj; ++j) {
             updateSlack(_ffModules[i]->InPin(j));
         }
     }
     // Update timing slack old
+    // Update timing slack old
     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
+        for (size_t j = 0, endj = _ffModules[i]->numInPins() - 1; j < endj; ++j) {
         for (size_t j = 0, endj = _ffModules[i]->numInPins() - 1; j < endj; ++j) {
             _ffModules[i]->InPin(j)->updateSlackInfo(_ffModules[i]->getQdelay());
         }
     }
+    // Unmarked all the FF
     // Unmarked all the FF
     unMarkedDPin();
 }
@@ -506,7 +519,7 @@ void Database::updateSlackAll() {
 /**
  * Update radius value of Module
  */
-void Database::updateRadius(FFCell* _newType) {
+void Database::updateRadius(FFCell *_newType) {
     // Note: Only merge with the single 2bit FF
     // Assume the previous FF's D pin is fixed
     // For multibit FF, the smallest radius will be consider
@@ -514,9 +527,9 @@ void Database::updateRadius(FFCell* _newType) {
     // Reset the Slack first
     // unMarkedDPin();
     // Require to update the slack first
-    Module* _tModule;
-    Pin* _tPin;
-    Timing* _tSlack;
+    Module *_tModule;
+    Pin *_tPin;
+    Timing *_tSlack;
     double _dist2PreGate;
     double _nRadius;
     double _tRadius;
@@ -538,12 +551,12 @@ void Database::updateRadius(FFCell* _newType) {
 }
 
 void Database::printResult() {
-    string _tmp = _name + ".out";
-    fstream _outFile;
-    _outFile.open(_tmp);
+    // string _tmp = _name + ".out";
+    // fstream _outFile;
+    // _outFile.open(_tmp);
 
-    if (!_outFile.is_open())
-        cout << "Cannot open output file !!!" << endl;
+    // if (!_outFile.is_open())
+    //     cout << "Cannot open output file !!!" << endl;
 
     _outFile << "CellInst " << _ffModules.size() << endl;
     Module* _tModule;

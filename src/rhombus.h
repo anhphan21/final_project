@@ -22,7 +22,7 @@ class Rhombus {
 
     void RotatePeak(double _deg) {
         double cosine = cos(_deg / 180 * M_PI);
-        double sine = sin(_deg / 180 * numbers::pi);
+        double sine = sin(_deg / 180 * M_PI);
 
         Point2<double> _tempPeak;
         for (size_t i = 0; i < 4; ++i) {
@@ -32,7 +32,7 @@ class Rhombus {
         }
     }
 
-    Point2<double>& peak(unsigned idx) { return _peak[idx]; }
+    Point2<double> &peak(unsigned idx) { return _peak[idx]; }
 
     static pair<double, double> findCentroidIntersect(Rhombus _rohm0,
                                                       Rhombus _rohm1) {
@@ -58,8 +58,8 @@ class Rhombus {
         double _x = (_leftBound + _rightBound) / 2;
         double _y = (_botBound + _topBound) / 2;
 
-        double cosine = cos(-45 / 180 * numbers::pi);
-        double sine = sin(-45 / 180 * numbers::pi);
+        double cosine = cos(-45 / 180 * M_PI);
+        double sine = sin(-45 / 180 * M_PI);
 
         _x = _x * cosine - _y * sine;
         _y = _x * sine + _y * cosine;

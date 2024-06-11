@@ -32,6 +32,7 @@ class Pin {
     double yOffset() const { return _yOffset; }
     Module *module() const { return _module; }
     Net *net() const { return _net; }
+    History *history() const { return _history; }
     // unsigned pinId() const { return _pinId; }
     bool isIOdie() const { return (_module == nullptr); }
     Timing *getSlackInfor() { return &_slackInfo; }
@@ -48,6 +49,7 @@ class Pin {
         _yOffset = yOffset;
     }
 
+    void setHistory(History *history) { _history = history; }
     void setModulePtr(Module *module) { _module = module; }
     void setNetPtr(Net *net) { _net = net; }
     // void setPinId(unsigned pinId) { _pinId = pinId; }
@@ -96,6 +98,8 @@ class Pin {
 
     bool _marked;  // use for checking the flipflop timing
     Timing _slackInfo;
+
+    History *_history;
 };
 
 #endif  // PIN_H`

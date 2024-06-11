@@ -1,13 +1,15 @@
 #include "Placement.h"
 
+#include <cctype>
+#include <cmath>
+#include <cstdlib>
 #include <limits>
 #include <vector>
 using namespace std;
-
 #define leafthresold 0.75  // TODO: can be changed
-void Placement::mainLoop(Database *database) {
+void Placement::mainLoop() {
     // find same clk path-> calculate diamond -> construct graph according to cost -> find MST -> merge FFs
-    // TODO:find same clk path , and loop it
+    // TODO:how to find same clk path , and loop it
     NodeList mst = findMST();
     int leafsize = 0;
     for (size_t i = 0; i < mst.size(); i++) {
@@ -18,13 +20,15 @@ void Placement::mainLoop(Database *database) {
             mst[i]->setisleaf(false);
         }
     }
+    // TODO:test /////////////////////////////////////
     cout << "leafsize: " << leafsize << endl;
     for (size_t i = 0; i < _nodes.size(); i++) {
         free(_nodes[i]);
     }
     _nodes.clear();
     _nodes = mst;
-    merge2FF(0, 1);
+    merge2FF(0, 1, 0);
+    // test /////////////////////////////////////
     // print MST///////////////////////////////////////////////
     for (size_t i = 0; i < _nodes.size(); i++) {
         cout << "Node " << _nodes[i]->getFFinNode()->name() << " has neighbor: ";
@@ -35,22 +39,35 @@ void Placement::mainLoop(Database *database) {
         }
         cout << endl;
     }
+    cout << _nodes.size() << endl;
     // print MST///////////////////////////////////////////////
-    // if (static_cast<double>(leafsize) / static_cast<double>(_nodes.size()) < leafthresold)
-    // { // do merge & store mst into _nodes
-    //     for (size_t i = 0; i < _nodes.size(); i++)
-    //     {
-
-    //         free(_nodes[i]);
-    //     }
-    //     _nodes.clear();
-    //     _nodes = mst;
-    //     mergeFFinG();
-    // }
-    // else // do nothing because leafsize is too large
-    // {
-    //     /* code */
-    // }
+    if (static_cast<double>(leafsize) / static_cast<double>(_nodes.size()) < leafthresold) {  // do merge & store mst into _nodes
+        for (size_t i = 0; i < _nodes.size(); i++) {
+            free(_nodes[i]);
+        }
+        _nodes.clear();
+        _nodes = mst;
+        mergeFFinG();
+    } else  // greedy pick to merge
+    {
+        for (size_t i = 0; i < mst.size(); i++) {
+            free(mst[i]);
+        }
+        mst.clear();
+        unsigned target = rand() % _nodes.size();
+        while (_nodes[target]->getNeighborsize() < 1) {
+            target = rand() % _nodes.size();
+        }
+        map<string, pair<Node *, double>> neighbor = _nodes[target]->getneighbormap();
+        string maxidx = neighbor.begin()->first;
+        for (const auto &pair : neighbor) {
+            if (pair.second.second > neighbor[maxidx].second) {
+                maxidx = pair.first;
+            }
+        }
+        // TODO: maybe randomly pick which FF to merge to ??
+        merge2FF(target, neighbor[maxidx].first->getNodeidxheap(), 0);
+    }
 }
 
 void Placement::mergeFFinG() {
@@ -62,29 +79,206 @@ void Placement::mergeFFinG() {
         }
         auto mymap = *_nodes[idx]->getneighbormap().begin();
         unsigned idx2 = mymap.second.first->getNodeidxheap();
-        merge2FF(idx, idx2);
-        break;  // TODO: temp
+        merge2FF(idx, idx2, 0);
+        break;  // TODO: temp break
     }
     return;
 }
+void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx) {
+    // TODO: need to know which FF should be chosed
+    // ex: merge two 1 bit, which 2 bit FF should be chosed?
+    // erase to FF from graph(_nodes)/////////////////////////////////
+    // map<string, pair<Node *, double>> neighbor = _nodes[idx1]->getneighbormap();
+    // for (const auto &pair : neighbor)
+    // {
+    //     pair.second.first->eraseNeighbor(_nodes[idx1]->getFFinNode()->name());
+    // }
+    // neighbor = _nodes[idx2]->getneighbormap();
+    // for (const auto &pair : neighbor)
+    // {
+    //     pair.second.first->eraseNeighbor(_nodes[idx1]->getFFinNode()->name());
+    // }
+    // _nodes[idx1]->clearNeighbor();
+    // _nodes[idx2]->clearNeighbor();
+    // erase to FF from graph(_nodes)/////////////////////////////////
+    cout << _dataBase->getNumModules() << endl;
+    for (size_t i = 0; i < _dataBase->getNumModules(); i++) {
+        cout << "module name " << _dataBase->module(i)->name() << endl;
+        cout << "pos : " << _dataBase->module(i)->centerX() << " " << _dataBase->module(i)->centerY() << endl;
+        cout << "rad : " << _dataBase->module(i)->radius() << endl;
+    }
+    // Module *m1 = _nodes[idx1]->getFFinNode();
+    // Module *m2 = _nodes[idx2]->getFFinNode();
+    // temp ====================================
+    Module *m1 = _dataBase->module(idx1);
+    Module *m2 = _dataBase->module(idx2);
+    // temp ====================================
+    // cal position///////////////////////////////////////////////
+    double m1x, m1y, m2x, m2y;
+    double newX, newY;
+    m1x = m1->centerX();
+    m1y = m1->centerY();
+    m2x = m2->centerX();
+    m2y = m2->centerY();
+    m1->setRadius(3000);
+    m2->setRadius(3000);
+    Rhombus *r1 = new Rhombus(m1x, m1y, m1->radius());
+    Rhombus *r2 = new Rhombus(m2x, m2y, m2->radius());
+    pair<double, double> newloc = r1->findCentroidIntersect(*r1, *r2);
+    newX = newloc.first;
+    newY = newloc.second;
+    cout << newX << " " << newY << endl;
+    // cal position///////////////////////////////////////////////
+    string m3name = _dataBase->module(_dataBase->getNumModules() - 1)->name();
+    string letters;
+    string numbers;
+    for (char c : m3name) {
+        if (std::isdigit(c)) {
+            numbers += c;
+        } else {
+            letters += c;
+        }
+    }
+    int num = stoi(numbers);
+    m3name = letters + to_string(num + 1);
+    Module *m3 = new Module(m3name, _dataBase->ffLib((m1->cellType()->getnumBit()) * 2, newffidx), newX, newY);
+    cout << "num bit " << m3->cellType()->getnumBit() << endl;
+    m3->clearPins();
+    m3->setPinsize(m3->cellType()->getnumBit() * 2 + 1);
+    int pinid = 0;
+    for (size_t i = 0; i < m1->numInPins(); i++) {
+        if (m1->InPin(i)->name() != "CLK" && m1->OutPin(i)->name() != "clk") {
+            string str = "D";
+            str = str + to_string(pinid);
+            m1->InPin(i)->setPinName(str);
+            pinid++;
+        }
+    }
+    for (size_t i = 0; i < m2->numInPins(); i++) {
+        if (m2->InPin(i)->name() != "CLK" && m2->OutPin(i)->name() != "clk") {
+            string str = "D";
+            str = str + to_string(pinid);
+            m2->InPin(i)->setPinName(str);
+            pinid++;
+        }
+    }
+    pinid = 0;
+    for (size_t i = 0; i < m1->numOutPins(); i++) {
+        if (m1->OutPin(i)->name() != "CLK" && m1->OutPin(i)->name() != "clk") {
+            string str = "Q";
+            str = str + to_string(pinid);
+            m1->OutPin(i)->setPinName(str);
+            pinid++;
+        }
+    }
+    for (size_t i = 0; i < m2->numOutPins(); i++) {
+        if (m2->OutPin(i)->name() != "CLK" && m2->OutPin(i)->name() != "clk") {
+            string str = "Q";
+            str = str + to_string(pinid);
+            m2->OutPin(i)->setPinName(str);
+            pinid++;
+        }
+    }
+    for (size_t i = 0; i < m3->cellType()->getnumBit() / 2; i++) {
+        m3->setInPin(i, m1->InPin(i));
+        m3->InPin(i)->setModulePtr(m3);
+    }
+    for (size_t i = m3->cellType()->getnumBit() / 2; i < m3->cellType()->getnumBit(); i++) {
+        m3->setInPin(i, m2->InPin(i - m3->cellType()->getnumBit() / 2));
+        m3->InPin(i)->setModulePtr(m3);
+    }
+    for (size_t i = 0; i < m3->cellType()->getnumBit() / 2; i++) {
+        m3->setOutPin(i, m1->OutPin(i));
+        m3->OutPin(i)->setModulePtr(m3);
+    }
+    for (size_t i = m3->cellType()->getnumBit() / 2; i < m3->cellType()->getnumBit(); i++) {
+        m3->setOutPin(i, m2->OutPin(i - m3->cellType()->getnumBit() / 2));
+        m3->OutPin(i)->setModulePtr(m3);
+    }
+    m3->setInPin(m3->cellType()->clkPinIdx(), m1->InPin(m1->cellType()->clkPinIdx()));
+    m3->InPin(m3->cellType()->clkPinIdx())->setModulePtr(m3);
+    // TODO: this is erase extra clk pin , but May need to add index to lower the runtime)
+    // update Module in Pin
+    // update x,y offset
+    for (size_t i = 0; i < m3->totnumPins(); i++) {
+        m3->pin(i)->setOffset(m3->cellType()->pinOffsetX(i), m3->cellType()->pinOffsetY(i));
+        m3->pin(i)->setPosition(m3->x() + m3->pin(i)->xOffset(), m3->y() + m3->pin(i)->yOffset());
+    }
+    //  so D0~Dbits/2 is m1's old pin , and we keep m1's CLK pin
+    for (size_t i = 0; i < m2->InPin(m2->cellType()->clkPinIdx())->net()->numPins(); i++) {
+        if (m2->InPin(m2->cellType()->clkPinIdx())->net()->pin(i) == m2->InPin(m2->cellType()->clkPinIdx())) {
+            m2->InPin(m2->cellType()->clkPinIdx())->net()->erasePin(i);
+            break;
+        }
+    }
+    for (size_t i = 0; i < _dataBase->getNumPins(); i++) {
+        if (m2->InPin(m2->cellType()->clkPinIdx()) == _dataBase->pin(i)) {
+            _dataBase->erasePin(i);
+            break;
+        }
+    }
+    Pin *p = m2->InPin(m2->cellType()->clkPinIdx());
+    free(p->history());
+    free(p);
+    // TODO: update History and Timing slack info
+    //  clear FFs with no neighbor out of graph(_nodes)/////////////////////////////////
+    // free m1 and m2
+    for (size_t i = 0; i < _dataBase->getNumModules(); i++) {
+        if (_dataBase->module(i) == m1) {
+            _dataBase->eraseModule(i);
+            break;
+        }
+    }
+    for (size_t i = 0; i < _dataBase->getNumModules(); i++) {
+        if (_dataBase->module(i) == m2) {
+            _dataBase->eraseModule(i);
+            break;
+        }
+    }
+    for (size_t i = 0; i < _dataBase->getNumFF(); i++) {
+        if (_dataBase->ff(i) == m1) {
+            _dataBase->eraseFF(i);
+            break;
+        }
+    }
+    for (size_t i = 0; i < _dataBase->getNumFF(); i++) {
+        if (_dataBase->ff(i) == m2) {
+            _dataBase->eraseFF(i);
+            break;
+        }
+    }
 
-void Placement::merge2FF(unsigned idx1, unsigned idx2) {
-    // erase to FF from graph(_nodes)/////////////////////////////////
-    cout << "node1: " << _nodes[idx1]->getFFinNode()->name() << endl;
-    cout << "node2: " << _nodes[idx2]->getFFinNode()->name() << endl;
-    map<string, pair<Node *, double>> neighbor = _nodes[idx1]->getneighbormap();
-    for (const auto &pair : neighbor) {
-        cout << pair.second.first->getFFinNode()->name() << " " << endl;
-        pair.second.first->eraseNeighbor(_nodes[idx1]->getFFinNode()->name());
+    free(m1);
+    free(m2);
+    _dataBase->addModule(m3);
+    _dataBase->addFF(m3);
+    for (size_t i = 0; i < _dataBase->getNumModules(); i++) {
+        cout << _dataBase->module(i)->name() << endl;
     }
-    neighbor = _nodes[idx2]->getneighbormap();
-    for (const auto &pair : neighbor) {
-        cout << pair.second.first->getFFinNode()->name() << " " << endl;
-        pair.second.first->eraseNeighbor(_nodes[idx1]->getFFinNode()->name());
+    m3->setCenterPosition(newX, newY);
+    // check boundary
+    if (m3->x() < _dataBase->getBoundaryLeft()) {
+        m3->setPosition(_dataBase->getBoundaryLeft(), m3->y());
     }
-    _nodes[idx1]->clearNeighbor();
-    _nodes[idx2]->clearNeighbor();
-    // erase to FF from graph(_nodes)/////////////////////////////////
+    if (m3->y() < _dataBase->getBoundaryBottom()) {
+        m3->setPosition(m3->x(), _dataBase->getBoundaryBottom());
+    }
+    if (m3->x() + m3->width() > _dataBase->getBoundaryRight()) {
+        m3->setPosition(_dataBase->getBoundaryRight() - m3->width(), m3->y());
+    }
+    if (m3->y() + m3->height() > _dataBase->getBoundaryTop()) {
+        m3->setPosition(m3->x(), _dataBase->getBoundaryTop() - m3->height());
+    }
+    // temp
+    for (auto it = _nodes.begin(); it != _nodes.end();) {
+        if ((*it)->getNeighborsize() == 0) {
+            delete *it;
+            it = _nodes.erase(it);
+        } else {
+            (*it)->setNodeidxheap(it - _nodes.begin());
+            ++it;
+        }
+    }
     return;
 }
 

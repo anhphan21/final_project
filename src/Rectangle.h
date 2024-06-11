@@ -2,18 +2,17 @@
 #define RECTANGLE_H
 
 #include <algorithm>
+
 #include "DatabaseDef.h"
 using namespace std;
 
 class Rectangle {
-public:
+   public:
     Rectangle() : _left(0), _bottom(0), _right(0), _top(0) {
-
     }
 
     Rectangle(double left, double bottom, double right, double top)
-            : _left(left), _bottom(bottom), _right(right), _top(top) {
-
+        : _left(left), _bottom(bottom), _right(right), _top(top) {
     }
 
     /////////////////////////////////////////////
@@ -49,12 +48,11 @@ public:
         return overlapH * overlapV;
     }
 
-private:
+   private:
     double _left;
     double _bottom;
     double _right;
     double _top;
 };
 
-
-#endif //RECTANGLE_H
+#endif  // RECTANGLE_H
