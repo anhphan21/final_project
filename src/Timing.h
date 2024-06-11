@@ -22,7 +22,7 @@ class Timing {
     double oldX() const { return _oldPos.first; }
     double oldY() const { return _oldPos.second; }
     double oldQ() const { return _oldQ; }
-
+    
    private:
     double _slack;                 // Slack value
     Pin *_preFFPin;                // Location of the previous FF pin Q in the net

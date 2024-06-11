@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <queue>
 
 #include "Pin.h"
 #include "Row.h"
@@ -425,77 +426,15 @@ void Database::unMarkedDPin() {
  * Update slack value of single D pins
  */
 void Database::updateSlack(Pin* ffpin) {
-    // double DisplaceDelay = getDisplacementDelay();
-
-    // if (ffpin->preFFPin() == nullptr) {
-    //     double old_slack = ffpin->slack();              // SFFN
-    //     Pin* front_pin = ffpin->net()->getOutputPin();  // front pin isn't ff (maybe gate or IOpin)
-
-    //     Pin ff_old_pin;  // before merge
-    //     ff_old_pin.setPosition(ffpin->getSlackInfor()->oldX(), ffpin->getSlackInfor()->oldY());
-
-    //     Pin ff_curr_pin;  // after merge
-    //     ff_curr_pin.setPosition(ffpin->x(), ffpin->y());
-
-    //     double WL_old = Pin::calHPWL(ff_old_pin, front_pin);
-    //     double WL_curr = Pin::calHPWL(ff_curr_pin, front_pin);
-
-    //     ffpin->getSlackInfor()->setSlack(old_slack + DisplaceDelay * (WL_old - WL_curr));
-    // }
-    // else {
-    //     if (ffpin->getSlackInfor()->preFFPin()->isVisited() == 1) {
-    //         double old_slack = ffpin->getSlackInfor()->slack();  // SFFN
-    //         double old_QpinDelay = ffpin->getSlackInfor()->oldQ();
-    //         double new_QpinDelay = ffpin->module()->getQdelay();
-
-    //         Pin front_pin = ffpin->net()->getOutputPin();
-
-    //         if (front_pin.module()->isFF() == 1)  // front pin is ff
-    //         {
-    //             Pin ff_old_pin;  // before merge
-    //             ff_old_pin.setPosition(ffpin->getSlackInfor()->oldX(), ffpin->getSlackInfor()->oldY());
-    //             Pin ff_curr_pin;  // after merge
-    //             ff_curr_pin.setPosition(ffpin->x(), ffpin->y());
-    //             double WL_old = Pin::calHPWL(ff_old_pin, front_pin);
-    //             double WL_curr = Pin::calHPWL(ff_curr_pin, front_pin);
-
-    //             ffpin->getSlackInfor()->setSlack(old_slack + (old_QpinDelay - new_QpinDelay) + DisplaceDelay * (WL_old - WL_curr));
-    //         } else  // front pin isn't ff (gate)
-    //         {
-    //             Pin ff_old_pin;  // before merge
-    //             ff_old_pin.setPosition(ffpin->getSlackInfor()->oldX(), ffpin->getSlackInfor()->oldY());
-    //             Pin ff_curr_pin;  // after merge
-    //             ff_curr_pin.setPosition(ffpin->x(), ffpin->y());
-    //             double D_WL_old = Pin::calHPWL(ff_old_pin, front_pin);
-    //             double D_WL_curr = Pin::calHPWL(ff_curr_pin, front_pin);
-    //             Pin Q_pre_pin_out;
-    //             double farest_pin = 0;
-    //             for (int i = 0; i < ffpin->getSlackInfor()->preFFPin()->net()->numPins(); ++i) {
-    //                 if (Pin::calHPWL(*ffpin->getSlackInfor()->preFFPin(), ffpin->getSlackInfor()->preFFPin()->net()->pin(i)) > farest_pin) {
-    //                     Q_pre_pin_out.setPosition(ffpin->getSlackInfor()->preFFPin()->net()->pin(i).x(), ffpin->getSlackInfor()->preFFPin()->net()->pin(i).y());
-    //                     farest_pin = Pin::calHPWL(*ffpin->getSlackInfor()->preFFPin(), ffpin->getSlackInfor()->preFFPin()->net()->pin(i));
-    //                 }
-    //             }
-    //             Pin Q_ff_old_pin;
-    //             Q_ff_old_pin.setPosition(ffpin->getSlackInfor()->preFFPin()->getSlackInfor()->oldX(), ffpin->getSlackInfor()->preFFPin()->getSlackInfor()->oldY());
-    //             Pin Q_ff_curr_pin;
-    //             Q_ff_curr_pin.setPosition(ffpin->getSlackInfor()->preFFPin()->x(), ffpin->getSlackInfor()->preFFPin()->y());
-    //             double Q_WL_old = Pin::calHPWL(Q_ff_old_pin, Q_pre_pin_out);
-    //             double Q_WL_curr = Pin::calHPWL(Q_ff_curr_pin, Q_pre_pin_out);
-    //             ffpin->getSlackInfor()->setSlack(old_slack + (old_QpinDelay - new_QpinDelay) + DisplaceDelay * (Q_WL_old - Q_WL_curr) + DisplaceDelay * (D_WL_old - D_WL_old));
-    //         }
-    //     } else {
-    //         updateSlack(ffpin->getSlackInfor()->preFFPin());
-    //     }
-    // }
     Pin* _preFFPin;
 
     if (!ffpin->isVisited()) {  // Check if we need to update or not ?
         double _displacement = 0;
         Pin* _tPin;
         Net* _preNet;
-        _preFFPin = ffpin->preFFPin();
-
+        // _preFFPin = FindPrePin(ffpin);
+        ffpin->setPreFFPin(FindPrePin(ffpin));
+        _preFFPin=ffpin->getSlackInfor()->preFFPin();
         if (_preFFPin != nullptr) {       // If the previous pin != null -> there is a FF before the current FF
             if (!_preFFPin->isVisited())  // If the pre ff pin didn't update slack, then update it before update this FF
                 updateSlack(_preFFPin);
@@ -517,7 +456,12 @@ void Database::updateSlack(Pin* ffpin) {
             _tPin = ffpin->net()->OutputPin();
             _displacement += abs(ffpin->oldX() - _tPin->x()) + abs(ffpin->oldY() - _tPin->y()) - abs(ffpin->x() - _tPin->x()) + abs(ffpin->y() - _tPin->y());;
         }
+        cout<<"before: "<<ffpin->slack()<<endl;
         ffpin->setSlack(ffpin->slack()+_displacement*_dDelay+(ffpin->oldQ() - ffpin->module()->cellType()->getQdelay()));
+        
+        cout<<ffpin->module()->name()<<"/"<<ffpin->name()<<endl;
+        cout<<"before: "<<ffpin->slack()<<endl;
+        cout<<endl;
     }
     ffpin->setVisited(true);
 }
@@ -591,4 +535,123 @@ void Database::printResult() {
     for (size_t i = 0, endi = _pinHistory.size(); i < endi; ++i) {
         _outFile << _pinHistory[i].oldModuleName() << "/" << _pinHistory[i].oldPinName() << " map " << _pinHistory[i].newPin()->module()->name() << "/" << _pinHistory[i].newPin()->name() << endl;
     }
+}
+
+Pin* Database::FindPrePin(Pin* inputPin)
+{
+    Module* currentM = inputPin->module();
+    string originFF = currentM->name();
+    queue<Pin*> que;
+    Net* OriginalCLKNet = nullptr;
+    Net* CurrentCLKNet = nullptr;
+    Net * currentnet = nullptr;
+    Pin* currentPin = nullptr;
+    if (currentM->isFF() == 0)
+    {
+        cout << "please put FF in the argumemt!!! bad guy" << endl;
+        return 0;
+    }
+    for (int i = 0; i < currentM->totnumPins(); i++)
+    {
+        if (currentM->pin(i)->name() == "CLK")
+        {
+            OriginalCLKNet = currentM->pin(i)->net();
+        }
+    }
+    while (1)
+    {
+
+        for (int i = 0; i < currentM->numInPins(); i++)
+        {
+            que.push(currentM->InPin(i));
+        }
+
+        currentPin = que.front();
+        que.pop();
+        if (que.empty()) //如果找不到 可能接到IOdesign 將回傳Nullptr
+        {
+            return nullptr;
+        }
+        while (currentPin->name() == "CLK" || currentPin->net()->getOutputPin()->module() ==nullptr) //排除找到IOdesign Module會是nullptr
+        {
+            currentPin = que.front();
+            que.pop();
+            if (que.empty()) //如果找不到 可能接到IOdesign 將回傳Nullptr
+            {
+                return nullptr;
+            }
+        }
+        currentM = currentPin->net()->getOutputPin()->module();
+        for (int i = 0; i < currentM->totnumPins(); i++)
+        {
+            if (currentM->pin(i)->name() == "CLK")
+            {
+                CurrentCLKNet = currentM->pin(i)->net();
+            }
+        }
+        if (currentM->isFF() == 1 && CurrentCLKNet == OriginalCLKNet && originFF!= currentM->name())//只要找FF並且同一clk 並排除找到自己的可能!
+        {
+            // cout << endl << endl;
+            currentPin = currentPin->net()->getOutputPin();
+            // cout << "PrePin: " << currentPin->module()->name()<<"/"<< currentPin->name() << endl;
+            // cout << "PreModule " << currentM->name() << endl;
+            return currentPin;
+        }
+
+    }
+
+
+
+
+
+    //Net* currentnet = currentPin->net();
+    //bool confindPreFF = 1;
+    //Pin* NetInputPin = currentnet->getOutputPin();
+    //while (confindPreFF)
+    //{
+    //    if (NetInputPin->module() == nullptr)
+    //    {
+    //        cout << "Maybe is IODesign" << endl;
+    //        return nullptr;
+    //    }
+    //    if (NetInputPin->module()->isFF() == 1)
+    //    {
+    //        return NetInputPin;
+    //    }
+    //    else
+    //    {
+    //        currentPin = NetInputPin->module()->InPin(0);
+    //        cout << NetInputPin->module()->name() << endl;
+    //        currentnet = currentPin->net();
+    //        NetInputPin = currentnet->getOutputPin();
+    //    }
+    //}
+    //
+
+  /*  int Shortest = 0;
+    for (int i = 0; i < currentPin->module()->numInPins(); i++)
+    {
+        if (currentPin->module()->InPin(i)->name().find("CLK") != string::npos)
+        {
+            currentCLKnet = currentPin->module()->InPin(i)->net();
+        }
+    }
+    if (currentCLKnet == nullptr)
+    {
+        cout << "@@" << endl;
+    }
+    for (int i = 0; i < currentCLKnet->numPins(); i++)
+    {
+        Pin* pinptr = currentCLKnet->pin(i);
+        pinptr->module()->OutPin(0)->net()->get;
+
+
+
+        while ()
+        {
+           pinptr->module()->OutPin(); 
+        }
+    }*/
+
+    
 }

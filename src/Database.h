@@ -15,8 +15,9 @@
 #include "History.h"
 using namespace std;
 
-class Database {
-   public:
+class Database
+{
+public:
     Database();
     ~Database() = default;
 
@@ -35,7 +36,8 @@ class Database {
     void setBoundaryLeft(double boundaryLeft) { _boundaryLeft = boundaryLeft; }
     void setBoundaryBottom(double boundaryBottom) { _boundaryBottom = boundaryBottom; }
     void setBoundaryRight(double boundaryRight) { _boundaryRight = boundaryRight; }
-    void updateRectangle() {
+    void updateRectangle()
+    {
         _dieRectangle.setBounds(_boundaryLeft, _boundaryBottom, _boundaryRight, _boundaryTop);
     }
 
@@ -70,12 +72,14 @@ class Database {
     Row *row(unsigned rowId) { return _rows[rowId]; }
     Bin *bin(unsigned colIdx, unsigned rowIdx) { return _bins[colIdx][rowIdx]; }
 
-    Pin *input(unsigned inId) {
+    Pin *input(unsigned inId)
+    {
         assert(inId < _numInput);
         return _pins[inId];
     }
 
-    Pin *output(unsigned outId) {
+    Pin *output(unsigned outId)
+    {
         assert(outId < _numOutput);
         return _pins[_numInput + outId];
     }
@@ -94,21 +98,22 @@ class Database {
     double getGamma() const { return _gamma; }
     double getLambda() const { return _lambda; }
     double getDisplacementDelay() const { return _dDelay; }
+    NetList getClkNets() const { return _clkNets; }
 
     // For slack update
     void sortClkNet();
     void updateSlackAll();
-    void updateSlack(Pin*);
+    void updateSlack(Pin *);
     void resetVisit();
 
-    void unMarkedDPin();    //unmarked all clk pin of FF
-    void updateRadius(FFCell*);
+    void unMarkedDPin(); // unmarked all clk pin of FF
+    void updateRadius(FFCell *);
     void debankFF();
-
+    Pin* FindPrePin(Pin* inputPin);
     void printResult();
 
-   private:
-    string _name;  // Design Name
+private:
+    string _name; // Design Name
 
     // Design Data
     unsigned _numModules;
@@ -137,8 +142,8 @@ class Database {
     double _binWidth;
     double _binHeight;
     double _binMaxUtil;
-    int _numBinCol;  // Like x index
-    int _numBinRow;  // Like y index
+    int _numBinCol; // Like x index
+    int _numBinRow; // Like y index
 
     // For FF merging
     double _dDelay;
@@ -151,16 +156,16 @@ class Database {
     map<string, BaseCell *> CellType2Ptr;
     map<string, Module *> ModuleName2Ptr;
     map<string, Pin *> IODesign;
-    
+
     // Caching the list for processing
     ModuleList _ffModules;
     NetList _clkNets;
-    
-    //History for output
+
+    // History for output
     vector<History> _pinHistory;
 
     void createPinforModule(Module *);
-    void updateRadiusRecur(FFCell*, Module*);
+    void updateRadiusRecur(FFCell *, Module *);
 };
 
-#endif  // DATABASE_H
+#endif // DATABASE_H
