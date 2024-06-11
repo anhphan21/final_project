@@ -21,7 +21,7 @@ class Net {
     bool clkFlag() const { return _clkFlag; }
     unsigned pinNum() const { return _pPins.size(); }
     unsigned getOutIdx() const { return _outputIdx; }
-    Pin* getOutPin() { return _pPins[_outputIdx]; }
+    Pin* OutputPin() { return _pPins[_outputIdx]; }
 
     void setName(string &name) { _name = name; }
     void setNumPins(unsigned numPins) { _pPins.resize(numPins); }
