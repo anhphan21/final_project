@@ -470,6 +470,41 @@ void Database::updateRadius(FFCell* _newType) {
 /**
  * Update slack value of D pins
  */
+void Database::updateSlack(Pin* ffpin) { 
+   Pin* _preFFPin;
+
+    if (!ffpin->isVisited()) {  // Check if we need to update or not ?
+        double _displacement = 0;
+        Pin* _tPin;
+        Net* _preNet;
+        _preFFPin = ffpin->preFFPin();
+
+        if (_preFFPin != nullptr) {       // If the previous pin != null -> there is a FF before the current FF
+            if (!_preFFPin->isVisited())  // If the pre ff pin didn't update slack, then update it before update this FF
+                updateSlack(_preFFPin);
+            // Update slack of this D pin
+            // #TODO:
+            // Calculate the preFF->comb displacement
+            _preNet = _preFFPin->net();
+            double _max = 0;
+            // Find the farest pin to cal the displacement
+            for (size_t i = 0, endi = _preNet->numPins(); i < endi; i++) {
+                if (Pin::calHPWL(*_preFFPin, *_preNet->pin(i)) > _max) {
+                    _tPin = _preNet->pin(i);
+                }
+            }
+            _displacement += abs(_preFFPin->oldX() - _tPin->x()) + abs(_preFFPin->oldY() - _tPin->y()) - abs(_preFFPin->x() - _tPin->x()) + abs(_preFFPin->y() - _tPin->y());
+        }
+
+        if (ffpin->isMoved()) {  // If the FF is moved then update the new slack
+            _tPin = ffpin->net()->OutputPin();
+            _displacement += abs(ffpin->oldX() - _tPin->x()) + abs(ffpin->oldY() - _tPin->y()) - abs(ffpin->x() - _tPin->x()) + abs(ffpin->y() - _tPin->y());;
+        }
+        ffpin->setSlack(ffpin->slack()+_displacement*_dDelay+(ffpin->oldQ() - ffpin->module()->cellType()->getQdelay()));
+    }
+    ffpin->setVisited(true);
+}
+
 void Database::updateSlack(Pin *ffpin)
 {
     double DisplaceDelay = getDisplacementDelay();

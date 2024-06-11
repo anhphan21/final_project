@@ -19,6 +19,7 @@ int main(int argc, char **argv) {
             cout<<testDTB.getClkNets()[i]->pin(j).getSlackInfor()->slack()<<"  ";
             cout<<testDTB.getClkNets()[i]->pin(j).oldX()<<",";
             cout<<testDTB.getClkNets()[i]->pin(j).oldY()<<"  ";
+            cout<<testDTB.getClkNets()[i]->pin(j)<<"  ";
             cout<<endl;
         }
     }
@@ -33,20 +34,20 @@ int main(int argc, char **argv) {
             testDTB.updateSlack(testDTB.module(i)->pin(j));
         }
     }
-    for(int i=0;i<testDTB.getNumClkNets();++i)
-    {
-        for(int j=0;j<testDTB.getClkNets()[i]->numPins();++j)
-        {
-            if(testDTB.getClkNets()[i]->pin(j).module()==nullptr)
-                continue;
-            cout<<testDTB.getClkNets()[i]->pin(j).module()->name()<<" : ";
-            cout<<testDTB.getClkNets()[i]->pin(j).x()<<",";
-            cout<<testDTB.getClkNets()[i]->pin(j).y()<<"  ";
-            cout<<testDTB.getClkNets()[i]->pin(j).getSlackInfor()->slack()<<"  ";
-            cout<<testDTB.getClkNets()[i]->pin(j).oldX()<<",";
-            cout<<testDTB.getClkNets()[i]->pin(j).oldY()<<"  ";
-            cout<<endl;
-        }
-    }
+    // for(int i=0;i<testDTB.getNumClkNets();++i)
+    // {
+    //     for(int j=0;j<testDTB.getClkNets()[i]->numPins();++j)
+    //     {
+    //         if(testDTB.getClkNets()[i]->pin(j).module()==nullptr)
+    //             continue;
+    //         cout<<testDTB.getClkNets()[i]->pin(j).module()->name()<<" : ";
+    //         cout<<testDTB.getClkNets()[i]->pin(j).x()<<",";
+    //         cout<<testDTB.getClkNets()[i]->pin(j).y()<<"  ";
+    //         cout<<testDTB.getClkNets()[i]->pin(j).getSlackInfor()->slack()<<"  ";
+    //         cout<<testDTB.getClkNets()[i]->pin(j).oldX()<<",";
+    //         cout<<testDTB.getClkNets()[i]->pin(j).oldY()<<"  ";
+    //         cout<<endl;
+    //     }
+    // }
     return 0;
 }
