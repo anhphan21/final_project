@@ -635,6 +635,7 @@ Pin* Database::FindPrePin(Pin* inputPin)
         {
             currentPin = que.front();
             que.pop();
+            if (que.empty()) {  // 如果找不到 可能接到IOdesign 將回傳Nullptr
             if (que.empty()) //如果找不到 可能接到IOdesign 將回傳Nullptr
             {
                 return nullptr;
@@ -717,16 +718,48 @@ Pin* Database::FindPrePin(Pin* inputPin)
 
 void Database::updateInitialSlackInfo() {
     Module* _tModule;
-    Pin * _tPin;
+    Pin* _tPin;
     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
         _tModule = _ffModules[i];
         for (size_t j = 0, endj = _tModule->numInPins(); j < endj; j++) {
             _tModule->InPin(i);
-            if (_tPin->name().substr(0,3) != "CLK") {
+            if (_tPin->name().substr(0, 3) != "CLK") {
                 _tPin->setOldPos(_tPin->x(), _tPin->y());
                 _tPin->setOldQ(_tModule->cellType()->getQdelay());
-                //TODO: set pre Pin FF
+                // TODO: set pre Pin FF
             }
         }
     }
+}
+
+void Database::plotPlacementResult(string _outfileName, bool isPrompt) {
+    // ofstream outfile(_outfileName.c_str(), ios::out);
+    // outfile << " " << endl;
+    // outfile << "set title \"design name: " << _name << "\"" << endl;
+    // outfile << "set size ratio 1" << endl;
+    // outfile << "set nokey" << endl
+    //         << endl;
+    // outfile << "plot[:][:] '-' w l lt 3 lw 2, '-' w l lt 1" << endl
+    //         << endl;
+    // outfile << "# bounding box" << endl;
+    // plotBoxPLT(outfile, boundaryLeft(), boundaryBot(), boundaryRight(), boundaryTop());
+    // outfile << "EOF" << endl;
+    // outfile << "# modules" << endl
+    //         << "0.00, 0.00" << endl
+    //         << endl;
+    // for (size_t i = 0; i < _numModules; ++i) {
+    //     Module& module = module(i);
+    //     plotBoxPLT(outfile, module.x(), module.y(), module.x() + module.width(), module.y() + module.height());
+    // }
+    // outfile << "EOF" << endl;
+    // outfile << "pause -1 'Press any key to close.'" << endl;
+    // outfile.close();
+
+    // if (isPrompt) {
+    //     char cmd[200];
+    //     sprintf(cmd, "gnuplot %s", outfilename.c_str());
+    //     if (!system(cmd)) {
+    //         cout << "Fail to execute: \"" << cmd << "\"." << endl;
+    //     }
+    // }
 }
