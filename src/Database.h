@@ -164,10 +164,8 @@ class Database {
     // History for output
     vector<History> _pinHistory;
 
-    // void createPinforModule(Module *);
-    // void updateRadiusRecur(FFCell*, Module*);
-    Pin *FindPrePin(Pin* inputPin);
-    void updateInitialSlackInfo();
+    void createPinforModule(Module *);
+    void updateRadiusRecur(FFCell*, Module*);
 };
 
 #endif  // DATABASE_H
