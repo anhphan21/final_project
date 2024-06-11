@@ -434,8 +434,8 @@ void Database::unMarkedDPin() {
  * Update slack value of single D pins
  */
 void Database::updateInitialSlackInfo() {
-    Module* _tModule;
-    Pin* _tPin;
+    Module *_tModule;
+    Pin *_tPin;
 
     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
         _tModule = _ffModules[i];
@@ -450,13 +450,13 @@ void Database::updateInitialSlackInfo() {
     }
 }
 
-void Database::updateSlack(Pin* ffpin) {
-    Pin* _preFFPin;
+void Database::updateSlack(Pin *ffpin) {
+    Pin *_preFFPin;
 
     if (!ffpin->isVisited()) {  // Check if we need to update or not ?
         double _displacement = 0;
-        Pin* _tPin;
-        Net* _preNet;
+        Pin *_tPin;
+        Net *_preNet;
 
         _preFFPin = FindPrePin(ffpin);
         ffpin->setPreFFPin(_preFFPin);
@@ -496,26 +496,20 @@ void Database::updateSlack(Pin* ffpin) {
 
 void Database::updateSlackAll() {
     // Update slack first
-    // Update slack first
     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
-        for (size_t j = 0, endj = _ffModules[i]->numInPins() - 1; j < endj; ++j) {
         for (size_t j = 0, endj = _ffModules[i]->numInPins() - 1; j < endj; ++j) {
             updateSlack(_ffModules[i]->InPin(j));
         }
     }
     // Update timing slack old
-    // Update timing slack old
     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
-        for (size_t j = 0, endj = _ffModules[i]->numInPins() - 1; j < endj; ++j) {
         for (size_t j = 0, endj = _ffModules[i]->numInPins() - 1; j < endj; ++j) {
             _ffModules[i]->InPin(j)->updateSlackInfo(_ffModules[i]->getQdelay());
         }
     }
     // Unmarked all the FF
-    // Unmarked all the FF
     unMarkedDPin();
 }
-
 /**
  * Update radius value of Module
  */
@@ -551,38 +545,38 @@ void Database::updateRadius(FFCell *_newType) {
 }
 
 void Database::printResult() {
-    // string _tmp = _name + ".out";
-    // fstream _outFile;
-    // _outFile.open(_tmp);
+    string _tmp = _name + ".out";
+    fstream _outFile;
+    _outFile.open(_tmp);
 
     // if (!_outFile.is_open())
     //     cout << "Cannot open output file !!!" << endl;
 
     _outFile << "CellInst " << _ffModules.size() << endl;
-    Module* _tModule;
+    Module *_tModule;
     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
         _tModule = _ffModules[i];
         _outFile << "Inst " << _tModule->name() << " " << _tModule->cellType()->getName() << " " << _tModule->x() << " " << _tModule->y() << endl;
     }
 
-//     History _tHistory;
+    //     History _tHistory;
 
-//     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
-//         for (size_t j = 0, endj = _ffModules[i]->totnumPins(); j < endj; j++) {
-//             _tHistory = _ffModules[i]->pin(j);
-//             _outFile << _tHistory.oldModuleName() << "/" << _tHistory.oldPinName() << " map " << _ffModules[i]->name() << "/" << _ffModules[i]->pin(j)->name() << endl;
-//         }
-//     }
+    //     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
+    //         for (size_t j = 0, endj = _ffModules[i]->totnumPins(); j < endj; j++) {
+    //             _tHistory = _ffModules[i]->pin(j);
+    //             _outFile << _tHistory.oldModuleName() << "/" << _tHistory.oldPinName() << " map " << _ffModules[i]->name() << "/" << _ffModules[i]->pin(j)->name() << endl;
+    //         }
+    //     }
 }
 
-Pin* Database::FindPrePin(Pin* inputPin) {
-    Module* currentM = inputPin->module();
+Pin *Database::FindPrePin(Pin *inputPin) {
+    Module *currentM = inputPin->module();
     string originFF = currentM->name();
-    queue<Pin*> que;
-    Net* OriginalCLKNet = nullptr;
-    Net* CurrentCLKNet = nullptr;
-    Net* currentnet = nullptr;
-    Pin* currentPin = nullptr;
+    queue<Pin *> que;
+    Net *OriginalCLKNet = nullptr;
+    Net *CurrentCLKNet = nullptr;
+    Net *currentnet = nullptr;
+    Pin *currentPin = nullptr;
     if (currentM->isFF() == 0) {
         cout << "please put FF in the argumemt!!! bad guy" << endl;
         return 0;
@@ -680,7 +674,7 @@ Pin* Database::FindPrePin(Pin* inputPin) {
 
 double Database::getTNS() const {
     double _tns = 0;
-    Pin* _tPin;
+    Pin *_tPin;
     for (size_t i = 0, endi = _ffModules.size(); i < endi; i++) {
         for (size_t j = 0, endj = _ffModules[i]->numInPins(); j < endj; j++) {
             _tPin = _ffModules[i]->InPin(j);

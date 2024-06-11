@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "Pin.h"
+#include "DatabaseDef.h" 
 using namespace std;
 
 class History {

@@ -7,9 +7,9 @@
 
 #include "CellLibrary.h"
 #include "DatabaseDef.h"
+#include "History.h"
 #include "Module.h"
 #include "Timing.h"
-// #include "History.h"
 using namespace std;
 
 class Pin {
