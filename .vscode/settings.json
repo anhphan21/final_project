@@ -64,6 +64,8 @@
         "streambuf": "cpp",
         "thread": "cpp",
         "typeinfo": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "typeinfo": "cpp",
+        "cmath": "cpp"
     }
 }

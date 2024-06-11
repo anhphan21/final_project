@@ -492,10 +492,10 @@ void Database::updateSlack(Pin *ffpin) {
             _tPin = ffpin->net()->OutputPin();
             _displacement += abs(ffpin->oldX() - _tPin->x()) + abs(ffpin->oldY() - _tPin->y()) - abs(ffpin->x() - _tPin->x()) + abs(ffpin->y() - _tPin->y());
         }
-        cout << "before: " << ffpin->slack() << endl;
+        // cout << "before: " << ffpin->slack() << endl;
         ffpin->setSlack(ffpin->slack() + _displacement * _dDelay + (ffpin->oldQ() - ffpin->module()->cellType()->getQdelay()));
-        cout << ffpin->module()->name() << "/" << ffpin->name() << endl;
-        cout << "after: " << ffpin->slack() << endl;
+        // cout << ffpin->module()->name() << "/" << ffpin->name() << endl;
+        // cout << "after: " << ffpin->slack() << endl;
     }
     ffpin->setVisited(true);
 }
@@ -525,6 +525,7 @@ void Database::updateRadius() {
     // Assume the previous FF's D pin is fixed
     // For multibit FF, the smallest radius will be consider
     // double _newQDelay = _newType->getQdelay();
+    // double _newQDelay = _newType->getQdelay();
     // Reset the Slack first
     // unMarkedDPin();
     // Require to update the slack first
@@ -544,13 +545,13 @@ void Database::updateRadius() {
             _tSlack = _tPin->getSlackInfor();
             _dist2PreGate = Pin::calHPWL(*_tPin, *_tPin->net()->getOutputPin());
             _nRadius = (_tSlack->slack() + _dDelay * _dist2PreGate) / _dDelay;
+            _nRadius = (_tSlack->slack() + _dDelay * _dist2PreGate) / _dDelay;
             if (_nRadius < _tRadius)
                 _tRadius = _nRadius;
         }
         _tModule->setRadius(_tRadius);
     }
 }
-
 void Database::printResult() {
     string _tmp = _name + ".out";
     fstream _outFile;
