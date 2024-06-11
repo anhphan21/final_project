@@ -339,13 +339,13 @@ void Database::parser(const string &filename) {
     }
     initialBinArray();
     file.close();
-    for (size_t i = 0; i < _pins.size(); i++) {
-        _pins[i]->setHistory(new History());
-        string name = _pins[i]->module()->name();
-        _pins[i]->history()->setOldModuleName(name);
-        name = _pins[i]->name();
-        _pins[i]->history()->setOldPinName(name);
-    }
+    // for (size_t i = 0; i < _pins.size(); i++) {
+    //     _pins[i]->setHistory(new History());
+    //     string name = _pins[i]->module()->name();
+    //     _pins[i]->history()->setOldModuleName(name);
+    //     name = _pins[i]->name();
+    //     _pins[i]->history()->setOldPinName(name);
+    // }
 }
 
 void Database::initialBinArray() {
@@ -486,10 +486,10 @@ void Database::updateSlack(Pin *ffpin) {
             _tPin = ffpin->net()->OutputPin();
             _displacement += abs(ffpin->oldX() - _tPin->x()) + abs(ffpin->oldY() - _tPin->y()) - abs(ffpin->x() - _tPin->x()) + abs(ffpin->y() - _tPin->y());
         }
-        cout << "before: " << ffpin->slack() << endl;
+        // cout << "before: " << ffpin->slack() << endl;
         ffpin->setSlack(ffpin->slack() + _displacement * _dDelay + (ffpin->oldQ() - ffpin->module()->cellType()->getQdelay()));
-        cout << ffpin->module()->name() << "/" << ffpin->name() << endl;
-        cout << "after: " << ffpin->slack() << endl;
+        // cout << ffpin->module()->name() << "/" << ffpin->name() << endl;
+        // cout << "after: " << ffpin->slack() << endl;
     }
     ffpin->setVisited(true);
 }
@@ -513,11 +513,11 @@ void Database::updateSlackAll() {
 /**
  * Update radius value of Module
  */
-void Database::updateRadius(FFCell *_newType) {
+void Database::updateRadius() {
     // Note: Only merge with the single 2bit FF
     // Assume the previous FF's D pin is fixed
     // For multibit FF, the smallest radius will be consider
-    double _newQDelay = _newType->getQdelay();
+    // double _newQDelay = _newType->getQdelay();
     // Reset the Slack first
     // unMarkedDPin();
     // Require to update the slack first
@@ -536,14 +536,13 @@ void Database::updateRadius(FFCell *_newType) {
             _tPin = _tModule->InPin(j);
             _tSlack = _tPin->getSlackInfor();
             _dist2PreGate = Pin::calHPWL(*_tPin, *_tPin->net()->getOutputPin());
-            _nRadius = (_tSlack->slack() + _tSlack->oldQ() - _newQDelay + _dDelay * _dist2PreGate) / _dDelay;
+            _nRadius = (_tSlack->slack() + _dDelay * _dist2PreGate) / _dDelay;
             if (_nRadius < _tRadius)
                 _tRadius = _nRadius;
         }
         _tModule->setRadius(_tRadius);
     }
 }
-
 void Database::printResult() {
     string _tmp = _name + ".out";
     fstream _outFile;

@@ -3,7 +3,6 @@
 
 #include <cmath>
 #include <iostream>
-#include <numbers>
 #include <utility>
 
 #include "Point.h"
@@ -49,7 +48,7 @@ class Rhombus {
 
         // Check if 2 rhombus are overlap or not ?
         if ((_leftBound > _rightBound) || (_botBound > _topBound)) {
-            cout << "Not overlap !!!" << endl;
+            // cout << "Not overlap !!!" << endl;
         }
 
         _rohm0.RotatePeak(-45);
