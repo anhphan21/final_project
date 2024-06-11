@@ -1,6 +1,7 @@
 #ifndef CellLibrary_H
 #define CellLibrary_H
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -8,9 +9,8 @@
 
 using namespace std;
 
-class BaseCell
-{
-public:
+class BaseCell {
+   public:
     BaseCell() : _width(0), _height(0), _isFF(false), _pinNum(-1) {}
     BaseCell(string &name, double width, double height, int pinNum) : _name(name), _width(width), _height(height), _isFF(false), _pinNum(pinNum) {}
     BaseCell(string &name, double width, double height, int pinNum, bool isFF) : _name(name), _width(width), _height(height), _pinNum(pinNum), _isFF(isFF) {}
@@ -20,8 +20,7 @@ public:
     void setHeight(double height) { _height = height; }
     void setFF(bool isFF) { _isFF = isFF; }
     void setNumPin(int numPin) { _pinNum = numPin; }
-    void setPin(string &pinName, pair<double, double> offset, bool isOut)
-    {
+    void setPin(string &pinName, pair<double, double> offset, bool isOut) {
         _pinNameList.push_back(pinName);
         _pinOffset.push_back(offset);
         if (isOut)
@@ -42,21 +41,17 @@ public:
     // bool isOut(unsigned idx) const { return _outList[idx]; }
     unsigned getOutNum() const { return _outList.size(); }
     unsigned getInNum() const { return _inList.size(); }
-    unsigned outIdx(unsigned idx) const
-    {
+    unsigned outIdx(unsigned idx) const {
         assert(idx < getOutNum());
         return _outList[idx];
     }
-    unsigned inIdx(unsigned idx) const
-    {
+    unsigned inIdx(unsigned idx) const {
         assert(idx < getInNum());
         return _inList[idx];
     }
 
-    int getPinIdxFromName(string &pinName) const
-    {
-        for (size_t i = 0; i < _pinNum; ++i)
-        {
+    int getPinIdxFromName(string &pinName) const {
+        for (size_t i = 0; i < _pinNum; ++i) {
             if (pinName == _pinNameList[i])
                 return i;
         }
@@ -67,31 +62,33 @@ public:
     virtual void setPower(double) { cout << "Not FF cell !!!" << endl; }
     virtual void setQdelay(double) { cout << "Not FF cell !!!" << endl; }
     virtual void setClkPin(unsigned) { cout << "Not FF cell !!!" << endl; }
-
-    virtual double clkPinIdx() const
-    {
+    virtual void setnumBit(unsigned) { cout << "Not FF cell !!!" << endl; }
+    virtual double clkPinIdx() const {
         cout << "Not FF cell !!!" << endl;
         return -1;
     }
 
-    virtual double getPower() const
-    {
+    virtual double getPower() const {
         cout << "Not FF cell !!!" << endl;
         return -1;
     }
 
-    virtual double getQdelay() const
-    {
+    virtual double getQdelay() const {
         cout << "Not FF cell !!!" << endl;
         return -1;
     }
+
     virtual unsigned numBit() const {
         cout << "Not FF cell !!!" << endl;
         return 0;
     }
+    
+    virtual unsigned getnumBit() const {
+        cout << "Not FF cell !!!" << endl;
+        return -1;
+    }
 
-
-private:
+   private:
     string _name;
     double _width;
     double _height;
@@ -104,9 +101,8 @@ private:
     vector<pair<double, double>> _pinOffset;
 };
 
-class FFCell : public BaseCell
-{
-public:
+class FFCell : public BaseCell {
+   public:
     FFCell() : BaseCell(), _qDelay(0), _power(0), _numBit(0) {}
     FFCell(string &name, double width, double height, unsigned pinNum, unsigned numBit) : BaseCell(name, width, height, pinNum, true),
                                                                                           _numBit(numBit),
@@ -118,13 +114,15 @@ public:
     void setPower(double p) { _power = p; }
     void setQdelay(double q) { _qDelay = q; }
     void setClkPin(unsigned idx) { _clkPinIdx = idx; }
+    void setnumBit(unsigned numBit) { _numBit = numBit; }
     // get
     double getPower() const { return _power; }
     double getQdelay() const { return _qDelay; }
     double clkPinIdx() const { return _clkPinIdx; }
     unsigned numBit() const { return _numBit; }
+    unsigned getnumBit() const { return _numBit; }
 
-private:
+   private:
     unsigned _clkPinIdx;
     unsigned _numBit;
     double _qDelay;

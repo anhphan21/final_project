@@ -3,7 +3,7 @@
 
 #include <cmath>
 #include <iostream>
-// #include <numbers>
+#include <numbers>
 #include <utility>
 
 #include "Point.h"
@@ -32,7 +32,7 @@ class Rhombus {
         }
     }
 
-    Point2<double>& peak(unsigned idx) { return _peak[idx]; }
+    Point2<double> &peak(unsigned idx) { return _peak[idx]; }
 
     static pair<double, double> findCentroidIntersect(Rhombus _rohm0,
                                                       Rhombus _rohm1) {
