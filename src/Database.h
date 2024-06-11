@@ -209,7 +209,7 @@ private:
     // void createPinforModule(Module *);
     // void updateRadiusRecur(FFCell*, Module*);
     Module *FindPrePin(Module *currentM);
-    void updateInitialSlackInfo();
+    // void updateInitialSlackInfo();
 };
 
 #endif // DATABASE_H
