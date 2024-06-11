@@ -533,6 +533,7 @@ void Database::updateInitialSlackInfo()
                 _tPin->setOldPos(_tPin->x(), _tPin->y());
                 _tPin->setOldQ(_tModule->cellType()->getQdelay());
                 // TODO: set pre Pin FF
+                _tPin->setPreFFPin(FindPrePin(_tPin));
             }
         }
     }
@@ -614,12 +615,13 @@ void Database::updateSlackAll()
 /**
  * Update radius value of Module
  */
-void Database::updateRadius(FFCell *_newType)
+// void Database::updateRadius(FFCell *_newType) {
+void Database::updateRadius()
 {
     // Note: Only merge with the single 2bit FF
     // Assume the previous FF's D pin is fixed
     // For multibit FF, the smallest radius will be consider
-    double _newQDelay = _newType->getQdelay();
+    // double _newQDelay = _newType->getQdelay();
     // Reset the Slack first
     // unMarkedDPin();
     // Require to update the slack first
@@ -640,7 +642,7 @@ void Database::updateRadius(FFCell *_newType)
             _tPin = _tModule->InPin(j);
             _tSlack = _tPin->getSlackInfor();
             _dist2PreGate = Pin::calHPWL(*_tPin, *_tPin->net()->getOutputPin());
-            _nRadius = (_tSlack->slack() + _tSlack->oldQ() - _newQDelay + _dDelay * _dist2PreGate) / _dDelay;
+            _nRadius = (_tSlack->slack() + _dDelay * _dist2PreGate) / _dDelay;
             if (_nRadius < _tRadius)
                 _tRadius = _nRadius;
         }
@@ -665,14 +667,16 @@ void Database::printResult()
         _outFile << "Inst " << _tModule->name() << " " << _tModule->cellType()->getName() << " " << _tModule->x() << " " << _tModule->y() << endl;
     }
 
-    //     History _tHistory;
+    History *_tHistory;
 
-    //     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i) {
-    //         for (size_t j = 0, endj = _ffModules[i]->totnumPins(); j < endj; j++) {
-    //             _tHistory = _ffModules[i]->pin(j);
-    //             _outFile << _tHistory.oldModuleName() << "/" << _tHistory.oldPinName() << " map " << _ffModules[i]->name() << "/" << _ffModules[i]->pin(j)->name() << endl;
-    //         }
-    //     }
+    for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i)
+    {
+        for (size_t j = 0, endj = _ffModules[i]->totnumPins(); j < endj; j++)
+        {
+            _tHistory = _ffModules[i]->pin(j)->history();
+            _outFile << _tHistory->oldModuleName() << "/" << _tHistory->oldPinName() << " map " << _ffModules[i]->name() << "/" << _ffModules[i]->pin(j)->name() << endl;
+        }
+    }
 }
 
 Pin *Database::FindPrePin(Pin *inputPin)
@@ -705,16 +709,19 @@ Pin *Database::FindPrePin(Pin *inputPin)
 
         currentPin = que.front();
         que.pop();
-        if (que.empty()) // 如果找不到 可能接到IOdesign 將回傳Nullptr
+        if (que.empty())
         {
+            // If it cannot be found, it may be received by IOdesign and will return Nullptr
             return nullptr;
         }
-        while (currentPin->name() == "CLK" || currentPin->net()->getOutputPin()->module() == nullptr) // 排除找到IOdesign Module會是nullptr
+        while (currentPin->name() == "CLK" || currentPin->net()->getOutputPin()->module() == nullptr)
         {
+            // Exclude finding IOdesign Module will be nullptr
             currentPin = que.front();
             que.pop();
-            if (que.empty()) // 如果找不到 可能接到IOdesign 將回傳Nullptr
+            if (que.empty())
             {
+                // If it cannot be found, it may be received by IOdesign and will return Nullptr
                 return nullptr;
             }
         }

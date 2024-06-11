@@ -144,7 +144,8 @@ public:
     void resetVisit();
 
     void unMarkedDPin(); // unmarked all clk pin of FF
-    void updateRadius(FFCell *);
+    // void updateRadius(FFCell *);
+    void updateRadius();
     void debankFF();
     Pin *FindPrePin(Pin *inputPin);
     void updateInitialSlackInfo();
@@ -153,6 +154,8 @@ public:
     double getTNS() const;
     unsigned getDen(double) const;
     double totalCost(double) const;
+
+    FFCell *getFFlib(int bit){return _ffLib[bit][0];}
 
 private:
     string _name; // Design Name
@@ -207,7 +210,10 @@ private:
     // vector<History> _pinHistory;
 
     // void createPinforModule(Module *);
-    // void updateRadiusRecur(FFCell *, Module *);
+    // void updateRadiusRecur(FFCell*, Module*);
+    Module *FindPrePin(Module *currentM);
+    
+    // void updateInitialSlackInfo();
 };
 
 #endif // DATABASE_H
