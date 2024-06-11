@@ -1,6 +1,7 @@
 #ifndef CellLibrary_H
 #define CellLibrary_H
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -61,18 +62,28 @@ class BaseCell {
     virtual void setPower(double) { cout << "Not FF cell !!!" << endl; }
     virtual void setQdelay(double) { cout << "Not FF cell !!!" << endl; }
     virtual void setClkPin(unsigned) { cout << "Not FF cell !!!" << endl; }
-    
+    virtual void setnumBit(unsigned) { cout << "Not FF cell !!!" << endl; }
     virtual double clkPinIdx() const {
         cout << "Not FF cell !!!" << endl;
         return -1;
     }
-    
+
     virtual double getPower() const {
         cout << "Not FF cell !!!" << endl;
         return -1;
     }
-    
+
     virtual double getQdelay() const {
+        cout << "Not FF cell !!!" << endl;
+        return -1;
+    }
+
+    virtual unsigned numBit() const {
+        cout << "Not FF cell !!!" << endl;
+        return 0;
+    }
+    
+    virtual unsigned getnumBit() const {
         cout << "Not FF cell !!!" << endl;
         return -1;
     }
@@ -103,10 +114,13 @@ class FFCell : public BaseCell {
     void setPower(double p) { _power = p; }
     void setQdelay(double q) { _qDelay = q; }
     void setClkPin(unsigned idx) { _clkPinIdx = idx; }
+    void setnumBit(unsigned numBit) { _numBit = numBit; }
     // get
     double getPower() const { return _power; }
     double getQdelay() const { return _qDelay; }
     double clkPinIdx() const { return _clkPinIdx; }
+    unsigned numBit() const { return _numBit; }
+    unsigned getnumBit() const { return _numBit; }
 
    private:
     unsigned _clkPinIdx;

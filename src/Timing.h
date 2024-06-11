@@ -22,12 +22,13 @@ class Timing {
     double oldX() const { return _oldPos.first; }
     double oldY() const { return _oldPos.second; }
     double oldQ() const { return _oldQ; }
-
+    
    private:
     double _slack;                 // Slack value
     Pin *_preFFPin;                // Location of the previous FF pin Q in the net
     pair<double, double> _oldPos;  // Old location of pin
     double _oldQ;                  // Old Q delay corresponding to the pre FF in the net
+    // History _pinHistory;
 };
 
 #endif
