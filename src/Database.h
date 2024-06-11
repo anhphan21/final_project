@@ -113,6 +113,9 @@ public:
     void updateInitialSlackInfo();
     void printResult();
 
+    double getTNS() const;
+    unsigned getDen(double) const;
+    double totalCost(double) const;
 private:
     string _name; // Design Name
 
