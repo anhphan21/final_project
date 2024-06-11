@@ -1,5 +1,7 @@
 #include "Database.h"
 
+#include <float.h>
+#include <queue>
 #include <fstream>
 #include <sstream>
 
@@ -8,7 +10,6 @@
 
 using namespace std;
 
-
 Database::Database()
     : _name(),
       _boundaryTop(-1),
@@ -16,7 +17,7 @@ Database::Database()
       _boundaryLeft(-1),
       _boundaryRight(-1),
       _numModules(0),
-      _numNets(0),
+      _numNet(0),
       _numInput(-1),
       _numOutput(-1),
       _numBinCol(0),
@@ -28,7 +29,6 @@ Database::Database()
       _beta(-1),
       _gamma(-1),
       _lambda(-1) {}
-
 void Database::parser(const string& filename) {
     ifstream file(filename);
     string line;
@@ -43,21 +43,24 @@ void Database::parser(const string& filename) {
         istringstream iss(line);
         string keyword;
         iss >> keyword;
-        if (keyword == "Alpha" || keyword == "Beta" || keyword == "Gamma" || keyword == "Lambda") {
+        if (keyword == "Alpha" || keyword == "Beta" || keyword == "Gamma" ||
+            keyword == "Lambda") {
             double data;
             iss >> data;
             if (keyword == "Alpha") {
                 setAlpha(data);
-            } else if (keyword == "Beta") {
+            }
+            else if (keyword == "Beta") {
                 setBeta(data);
-            } else if (keyword == "Gamma") {
+            }
+            else if (keyword == "Gamma") {
                 setGamma(data);
-            } else if (keyword == "Lambda") {
+            }
+            else if (keyword == "Lambda") {
                 setLambda(data);
             }
         }
-        else if (keyword == "DieSize") 
-        {
+        else if (keyword == "DieSize") {
             int left, bottom, right, top;
             iss >> left >> bottom >> right >> top;
             setBoundaryLeft(left);
@@ -65,7 +68,8 @@ void Database::parser(const string& filename) {
             setBoundaryRight(right);
             setBoundaryTop(top);
             updateRectangle();
-        } else if (keyword == "NumInput") {
+        }
+        else if (keyword == "NumInput") {
             iss >> _numInput;
             // map<string, Pin*> IODesignPin;
             for (int i = 0; i < _numInput; ++i) {
@@ -85,11 +89,13 @@ void Database::parser(const string& filename) {
                 if (type == "clk" || type.find("C") != string::npos) {
                     type = "CLK";
                 }
-                IODesign.insert({type, pinptr});
+                IODesign.insert({ type, pinptr });
+
                 // IODesignPin.insert({type, pinptr});
             }
             // PinName2Ptr.insert({"IODesignIn", IODesignPin});
-        } else if (keyword == "NumOutput") {
+        }
+        else if (keyword == "NumOutput") {
             iss >> _numOutput;
             // map<string, Pin*> IODesignPin;
             for (int i = 0; i < _numOutput; i++) {
@@ -101,16 +107,17 @@ void Database::parser(const string& filename) {
                 Pin* pinptr = new Pin();
                 // output(num)->name(type);
                 // output(num)->setPosition(x, y);
-                IODesign.insert({type, pinptr});
+                IODesign.insert({ type, pinptr });
                 pinptr->setPinName(type);
                 pinptr->setPosition(x, y);
                 pinptr->setModulePtr(nullptr);
                 _pins.push_back(pinptr);
                 // IODesignPin.insert({type, pinptr});
-                IODesign.insert({type, pinptr});
+                IODesign.insert({ type, pinptr });
             }
             // PinName2Ptr.insert({"IODesignOut", IODesignPin});
-        } else if (keyword == "FlipFlop") {
+        }
+        else if (keyword == "FlipFlop") {
             double bitCount, width, height, pinCount;
             string id;
 
@@ -122,20 +129,17 @@ void Database::parser(const string& filename) {
             double _clkX, _clkY;
 
             // ensure the size of _ffLib
-            if (_ffLib.size() <= bitCount) {
-                _ffLib.resize(bitCount + 1);
-            }
-            this->_ffLib[bitCount].push_back(FFcellptr);
-            this->CellType2Ptr.insert({ id,FFcellptr });
-            cout << "F PinNum" << FFcellptr->getPinNum() << endl;
-            for (int i = 0; i < pinCount; i++) 
-            {
+            addFFLib(FFcellptr, bitCount);
+            string temp, name;
+            double x, y;
+            bool _check;
+            for (int i = 0; i < pinCount; ++i) {
                 getline(file, line);
                 istringstream iss(line);
                 iss >> temp >> name >> x >> y;
-                
+
                 _check = (name[0] == 'Q') ? true : false;
-                
+
                 if (name.substr(0, 3) == "CLK") {
                     _clkPin = name;
                     _clkX = x;
@@ -145,9 +149,10 @@ void Database::parser(const string& filename) {
                 FFcellptr->setPin(name, make_pair(x, y), _check);
             }
             FFcellptr->setPin(_clkPin, make_pair(_clkX, _clkY), false);
-            FFcellptr->setClkPin(FFcellptr->getInNum()-1);
+            FFcellptr->setClkPin(FFcellptr->getInNum() - 1);
             CellType2Ptr[id] = FFcellptr;
-        } else if (keyword == "Gate") {
+        }
+        else if (keyword == "Gate") {
             double width, height;
             int pinCount = 0;
             string id;
@@ -155,10 +160,10 @@ void Database::parser(const string& filename) {
             iss >> id >> width >> height >> pinCount;
             BaseCell* bptr = new BaseCell(id, width, height, pinCount);
             addCellLib(bptr);
-            CellType2Ptr.insert({id, bptr});
+            CellType2Ptr.insert({ id, bptr });
             string temp, name;
             double x, y;
-            bool _check;
+            bool _check=0;
             for (int i = 0; i < pinCount; i++) {
                 getline(file, line);
                 istringstream iss(line);
@@ -178,7 +183,8 @@ void Database::parser(const string& filename) {
             }
             // cout << "Gate" << " " << id << " " << width << " " << height <<
             // endl;
-        } else if (keyword == "NumInstances") {
+        }
+        else if (keyword == "NumInstances") {
             // Handle Instances
             iss >> _numModules;
             string temp, name, type;
@@ -203,20 +209,21 @@ void Database::parser(const string& filename) {
                     // can't find Standard Cell
                     // Comment: Nice idea for checking error of input file
                     // cout << "Test error" << type << endl;
-                } else {
+                }
+                else {
                     _type = CellType2Ptr[type];
                     PinOfMnum = _type->pinNum();
                     currentM = new Module(name, _type, x, y);
                     ModuleName2Ptr[name] = currentM;
                     addModule(currentM);
-                    if (_type->isFF())
-                        addFF(currentM);
+                    if (_type->isFF()) addFF(currentM);
                     for (int i = 0; i < PinOfMnum; ++i) {
                         string PinName = _type->pinName(i);
                         Pin* pinptr = new Pin();
                         pinptr->setPosition(x, y);
                         pinptr->setPinName(PinName);
-                        pinptr->setOffset(_type->pinOffsetX(i), _type->pinOffsetY(i));
+                        pinptr->setOffset(_type->pinOffsetX(i),
+                            _type->pinOffsetY(i));
                         pinptr->setModulePtr(currentM);
 
                         addPin(pinptr);
@@ -224,7 +231,8 @@ void Database::parser(const string& filename) {
                     }
                 }
             }
-        } else if (keyword == "NumNets") {
+        }
+        else if (keyword == "NumNets") {
             int PinNum;
             string temp, Netname;
             iss >> _numNet;
@@ -254,36 +262,23 @@ void Database::parser(const string& filename) {
                         // 如果沒有'/'的Net pin角 代表會再IODesign  this is
                         // design pin
                         auto it = IODesign.find(type);
-                        
-                        if (it == IODesign.end()) //IODesignPin腳 處理跟FF不一樣
-                        {
-                           //cout << "nothing" << endl; 
+
+                        if (it == IODesign.end()) {
+                            // IODesignPin腳 處理跟FF不一樣
+                            cout << "No match pin!!" << endl;
                         }
-                        else if (type.find("CLK") != string::npos) //找到clk
-                        {
-                            Isclk = 1;
-                            netptr->setclkFlag(1);
-                            auto it = this->IODesign.find(type);
-                            it->second->setNetPtr(netptr);
-                            netptr->addPin(it->second);;
-                        }
-                        /*else if (type == "out" || type.find("O") != string::npos)
-                        {
-                            cout << "對應output" << endl;
-                           auto it = this->IODesign.find(type);
-            
-                           it->second->setNetPtr(netptr);
-                           netptr->addPin(it->second);
-                        }*/
-                        else
-                        {
-                            //cout << "對應input" << endl;
-                            auto it = this->IODesign.find(type);
+                        else {
+                            if (type.find("CLK") != string::npos) {
+                                // 找到clk
+                                Isclk = true;
+                                netptr->setclkFlag(true);
+                            }
                             it->second->setNetPtr(netptr);
                             netptr->addPin(it->second);
                             netptr->setOutputPins(j);
                         }
-                    } else  // 有'/'切割的Net Pin
+                    }
+                    else  // 有'/'切割的Net Pin
                     {
                         // cout << "有'/'切割的Net Pin" << endl;
                         FFname = type.substr(0, pos);
@@ -291,7 +286,8 @@ void Database::parser(const string& filename) {
                         auto it = ModuleName2Ptr.find(FFname);
                         if (it == ModuleName2Ptr.end()) {
                             cout << "can't find correspoding module" << endl;
-                        } else {
+                        }
+                        else {
                             // Found Pin
                             _type = it->second->cellType();
                             if ((TargetPin.substr(0, 3) == "OUT") ||
@@ -309,37 +305,42 @@ void Database::parser(const string& filename) {
                 addNet(netptr);
                 if (Isclk) addClkNet(netptr);
             }
-        } else if (keyword == "BinWidth" || keyword == "BinHeight" ||
-                   keyword == "BinMaxUtil") {
+        }
+        else if (keyword == "BinWidth" || keyword == "BinHeight" ||
+            keyword == "BinMaxUtil") {
             int data;
             iss >> data;
             if (keyword == "BinWidth") {
                 setBinWidth(data);
-            } else if (keyword == "BinHeight") {
+            }
+            else if (keyword == "BinHeight") {
                 setBinHeight(data);
             }
-            else if(keyword == "BinMaxUtil")
-            {
+            else if (keyword == "BinMaxUtil") {
                 setBinUtil(data);
             }
-        } else if (keyword == "PlacementRows") {
+        }
+        else if (keyword == "PlacementRows") {
             double startX, startY, siteWidth, siteHeight, totalNumOfSites;
             iss >> startX >> startY >> siteWidth >> siteHeight >>
                 totalNumOfSites;
             Row* _tRow = new Row(startX, startY, siteWidth, siteHeight, totalNumOfSites);
             addRow(_tRow);
-        } else if (keyword == "DisplacementDelay") {
+        }
+        else if (keyword == "DisplacementDelay") {
             double delay;
             iss >> delay;
             setDisplacementDelay(delay);
 
-        } else if (keyword == "QpinDelay") {
+        }
+        else if (keyword == "QpinDelay") {
             string type;
             double delay;
             iss >> type >> delay;
             CellType* _type = CellType2Ptr[type];
             _type->setQdelay(delay);
-        } else if (keyword == "TimingSlack") {
+        }
+        else if (keyword == "TimingSlack") {
             string name, Dpin;
             double slack;
             iss >> name >> Dpin >> slack;
@@ -347,7 +348,8 @@ void Database::parser(const string& filename) {
             CellType* _type = _tModule->cellType();
             Pin* _tDPin = _tModule->pin(_type->getPinIdxFromName(Dpin));
             _tDPin->setSlack(slack);
-        } else if (keyword == "GatePower") {
+        }
+        else if (keyword == "GatePower") {
             string type;
             double power;
             iss >> type >> power;
@@ -355,73 +357,60 @@ void Database::parser(const string& filename) {
             _type->setQdelay(power);
         }
     }
-    initialBinArray();
+   /* initialBinArray();*/
     file.close();
 }
+
 void Database::initialBinArray() {
-	//Initial Die Boundary
-	assert((_boundaryRight != -1) || (_boundaryLeft != -1) || (_boundaryTop != -1) || (_boundaryBottom != -1));
-	//Initial Bin information
-	assert((_binWidth != -1) || (_binHeight != -1) || (_binMaxUtil != -1));
+    // Initial Die Boundary
+    assert((_boundaryRight != -1) || (_boundaryLeft != -1) ||
+        (_boundaryTop != -1) || (_boundaryBottom != -1));
+    // Initial Bin information
+    assert((_binWidth != -1) || (_binHeight != -1) || (_binMaxUtil != -1));
 
-	_numBinRow = _dieRectangle.height() / _binHeight;
-	_numBinCol = _dieRectangle.width() / _binWidth;
+    _numBinRow = _dieRectangle.height() / _binHeight;
+    _numBinCol = _dieRectangle.width() / _binWidth;
 
-	double _binArea = _binHeight * _binWidth;
+    double _binArea = _binHeight * _binWidth;
 
-	double _xPos = _dieRectangle.left();
-	double _yPos = _dieRectangle.bottom();
+    double _xPos = _dieRectangle.left();
+    double _yPos = _dieRectangle.bottom();
 
-	// Create bin array
-	double _tempLeft, _tempBottom;
-	_bins.resize(_numBinCol);
-	for (int i = 0; i < _numBinCol; ++i) {
-		_bins[i].resize(_numBinRow);
-		_tempLeft = _xPos + _binWidth * i;
-		for (int j = 0; j < _numBinRow; ++j) {
-			_tempBottom = _yPos + _binHeight * j;
-			_bins[i][j] = new Bin(_tempLeft, _tempBottom, _tempLeft + _binWidth, _tempBottom + _binHeight, _binArea);
-		}
-	}
-}
-void Timing::findPrePin(Pin* currentP) {
-    Pin* outputptr = currentP->net()->getOutputPin();
-    _preFFPin = outputptr;
-    //bool finish = 0;
-    //
-    //while (outputptr->module()->cellType()->getName().find("G") = string::npos)
-    //{
-    //    cout << "HI" << endl;
-    //    outputptr->module()->InPin().
-    //}
-
+    // Create bin array
+    double _tempLeft, _tempBottom;
+    _bins.resize(_numBinCol);
+    for (int i = 0; i < _numBinCol; ++i) {
+        _bins[i].resize(_numBinRow);
+        _tempLeft = _xPos + _binWidth * i;
+        for (int j = 0; j < _numBinRow; ++j) {
+            _tempBottom = _yPos + _binHeight * j;
+            _bins[i][j] = new Bin(_tempLeft, _tempBottom, _tempLeft + _binWidth,
+                _tempBottom + _binHeight, _binArea);
+        }
+    }
 }
 void Database::resetBin() {
-	for (size_t i = 0; i < _numBinCol; ++i) {
-		for (size_t j = 0; j < _numBinRow; ++j) {
-			_bins[i][j]->resetBin();
-		}
-	}
+    for (size_t i = 0; i < _numBinCol; ++i) {
+        for (size_t j = 0; j < _numBinRow; ++j) {
+            _bins[i][j]->resetBin();
+        }
+    }
 }
 
 void Database::updateBinUtil() {
     Module* _tmpModule;
     double _tmpCenterX, _tmpCenterY;
-    int _rowIdx, _colIdx;
     int _lbinIdx, _bbinIdx, _rbinIdx, _tbinIdx;
-    double _cellArea;
-    double _Ox, _Oy;
-    double _cogDistX, _cogDistY;
     // Reset bin util to 0
     resetBin();
     // Update bin util
     for (size_t i = 0; i < _numModules; ++i) {
         _tmpModule = module(i);
-        _tmpCenterX = _tmpModule->centerX();
-        _tmpCenterY = _tmpModule->centerY();
 
-        _colIdx = (_tmpCenterX - _dieRectangle.left()) / _binWidth;
-        _rowIdx = (_tmpCenterY - _dieRectangle.bottom()) / _binHeight;
+        _lbinIdx = _tmpModule->x() / _binWidth;
+        _bbinIdx = _tmpModule->y() / _binHeight;
+        _rbinIdx = (_tmpModule->x() + _tmpModule->width()) / _binWidth;
+        _tbinIdx = (_tmpModule->y() + _tmpModule->height()) / _binHeight;
 
         _rbinIdx = ((_rbinIdx + 1) >= _numBinCol) ? _numBinCol : (_rbinIdx + 1);
         _tbinIdx = ((_tbinIdx + 1) >= _numBinRow) ? _numBinRow : (_tbinIdx + 1);
@@ -456,9 +445,75 @@ void Database::unMarkedDPin() {
 /**
  * Update slack value of D pins
  */
-void Database::updateSlack() {
-    // For each FF
-}
+// void Database::updateSlack(Pin* ffpin)
+// {
+    //double DisplaceDelay = getDisplacementDelay();
+    //if (ffpin->getSlackInfor()->preFFPin() == nullptr)
+    //{
+    //    double old_slack = ffpin->getSlackInfor()->slack(); // SFFN
+    //    Pin front_pin = ffpin->net()->getOutputPin();   // front pin isn't ff (maybe gate or IOpin)
+    //    Pin ff_old_pin;   // before merge
+    //    ff_old_pin.setPosition(ffpin->getSlackInfor()->oldX(), ffpin->getSlackInfor()->oldY());
+    //    Pin ff_curr_pin; // after merge
+    //    ff_curr_pin.setPosition(ffpin->x(), ffpin->y());
+    //    double WL_old = Pin::calHPWL(ff_old_pin, front_pin);
+    //    double WL_curr = Pin::calHPWL(ff_curr_pin, front_pin);
+
+    //    ffpin->getSlackInfor()->setSlack(old_slack + DisplaceDelay * (WL_old - WL_curr));
+    //}
+    //else
+    //{
+    //    if (ffpin->getSlackInfor()->preFFPin()->isVisited() == 1)
+    //    {
+    //        double old_slack = ffpin->getSlackInfor()->slack(); // SFFN
+    //        double old_QpinDelay = ffpin->getSlackInfor()->oldQ();
+    //        double new_QpinDelay = ffpin->module()->getQdelay();
+
+    //        Pin front_pin = ffpin->net()->getOutputPin();
+    //        if (front_pin.module()->isFF() == 1)    // front pin is ff
+    //        {
+    //            Pin ff_old_pin;  // before merge
+    //            ff_old_pin.setPosition(ffpin->getSlackInfor()->oldX(), ffpin->getSlackInfor()->oldY());
+    //            Pin ff_curr_pin; // after merge
+    //            ff_curr_pin.setPosition(ffpin->x(), ffpin->y());
+    //            double WL_old = Pin::calHPWL(ff_old_pin, front_pin);
+    //            double WL_curr = Pin::calHPWL(ff_curr_pin, front_pin);
+
+    //            ffpin->getSlackInfor()->setSlack(old_slack + (old_QpinDelay - new_QpinDelay) + DisplaceDelay * (WL_old - WL_curr));
+    //        }
+    //        else    // front pin isn't ff (gate)
+    //        {
+    //            Pin ff_old_pin; // before merge
+    //            ff_old_pin.setPosition(ffpin->getSlackInfor()->oldX(), ffpin->getSlackInfor()->oldY());
+    //            Pin ff_curr_pin; // after merge
+    //            ff_curr_pin.setPosition(ffpin->x(), ffpin->y());
+    //            double D_WL_old = Pin::calHPWL(ff_old_pin, front_pin);
+    //            double D_WL_curr = Pin::calHPWL(ff_curr_pin, front_pin);
+    //            Pin Q_pre_pin_out;
+    //            double farest_pin = 0;
+    //            for (int i = 0; i < ffpin->getSlackInfor()->preFFPin()->net()->numPins(); ++i)
+    //            {
+    //                if (Pin::calHPWL(*ffpin->getSlackInfor()->preFFPin(), ffpin->getSlackInfor()->preFFPin()->net()->pin(i)) > farest_pin)
+    //                {
+    //                    Q_pre_pin_out.setPosition(ffpin->getSlackInfor()->preFFPin()->net()->pin(i).x(), ffpin->getSlackInfor()->preFFPin()->net()->pin(i).y());
+    //                    farest_pin = Pin::calHPWL(*ffpin->getSlackInfor()->preFFPin(), ffpin->getSlackInfor()->preFFPin()->net()->pin(i));
+    //                }
+    //            }
+    //            Pin Q_ff_old_pin;
+    //            Q_ff_old_pin.setPosition(ffpin->getSlackInfor()->preFFPin()->getSlackInfor()->oldX(), ffpin->getSlackInfor()->preFFPin()->getSlackInfor()->oldY());
+    //            Pin Q_ff_curr_pin;
+    //            Q_ff_curr_pin.setPosition(ffpin->getSlackInfor()->preFFPin()->x(), ffpin->getSlackInfor()->preFFPin()->y());
+    //            double Q_WL_old = Pin::calHPWL(Q_ff_old_pin, Q_pre_pin_out);
+    //            double Q_WL_curr = Pin::calHPWL(Q_ff_curr_pin, Q_pre_pin_out);
+    //            ffpin->getSlackInfor()->setSlack(old_slack + (old_QpinDelay - new_QpinDelay) + DisplaceDelay * (Q_WL_old - Q_WL_curr) + DisplaceDelay * (D_WL_old - D_WL_old));
+    //        }
+    //    }
+    //    else
+    //    {
+    //        updateSlack(ffpin->getSlackInfor()->preFFPin());
+    //    }
+    //}
+// }
 
 /**
  * Update radius value of Module
@@ -469,11 +524,11 @@ void Database::updateRadius(FFCell* _newType) {
     // For multibit FF, the smallest radius will be consider
     double _newQDelay = _newType->getQdelay();
     // Reset the Slack first
-    unMarkedDPin();
-    //Require to update the slack first
+    // unMarkedDPin();
+    // Require to update the slack first
     Module* _tModule;
     Pin* _tPin;
-    Timing _tSlack;
+    Timing* _tSlack;
     double _dist2PreGate;
     double _nRadius;
     double _tRadius;
@@ -486,10 +541,125 @@ void Database::updateRadius(FFCell* _newType) {
             _tPin = _tModule->InPin(j);
             _tSlack = _tPin->getSlackInfor();
             _dist2PreGate = Pin::calHPWL(*_tPin, *_tPin->net()->getOutputPin());
-            _nRadius = (_tSlack.slack() + _tSlack.oldQ()-_newQDelay+_dDelay*_dist2PreGate)/_dDelay;
-            if (_nRadius < _tRadius)
+            _nRadius = (_tSlack->slack() + _tSlack->oldQ() - _newQDelay + _dDelay * _dist2PreGate) / _dDelay;
+            if (_nRadius < _tRadius) 
                 _tRadius = _nRadius;
         }
         _tModule->setRadius(_tRadius);
     }
+}
+
+Module* Database::FindPrePin(Module* currentM)
+{
+    string originFF = currentM->name();
+    queue<Pin*> que;
+    Net* OriginalCLKNet = nullptr;
+    Net* CurrentCLKNet = nullptr;
+    Net * currentnet = nullptr;
+    Pin* currentPin = nullptr;
+    if (currentM->isFF() == 0)
+    {
+        cout << "please put FF in the argumemt!!! bad guy" << endl;
+        return 0;
+    }
+    for (int i = 0; i < currentM->totnumPins(); i++)
+    {
+        if (currentM->pin(i)->name() == "CLK")
+        {
+            OriginalCLKNet = currentM->pin(i)->net();
+        }
+    }
+    while (1)
+    {
+
+        for (int i = 0; i < currentM->numInPins(); i++)
+        {
+            que.push(currentM->InPin(i));
+        }
+
+        currentPin = que.front();
+        que.pop();
+        if (que.empty()) //如果找不到 可能接到IOdesign 將回傳Nullptr
+        {
+            return nullptr;
+        }
+        while (currentPin->name() == "CLK" || currentPin->net()->getOutPin()->module() ==nullptr) //排除找到IOdesign Module會是nullptr
+        {
+            currentPin = que.front();
+            que.pop();
+            if (que.empty()) //如果找不到 可能接到IOdesign 將回傳Nullptr
+            {
+                return nullptr;
+            }
+        }
+        currentM = currentPin->net()->getOutPin()->module();
+        for (int i = 0; i < currentM->totnumPins(); i++)
+        {
+            if (currentM->pin(i)->name() == "CLK")
+            {
+                CurrentCLKNet = currentM->pin(i)->net();
+            }
+        }
+        if (currentM->isFF() == 1 && CurrentCLKNet == OriginalCLKNet && originFF!= currentM->name())//只要找FF並且同一clk 並排除找到自己的可能!
+        {
+            // should go to currentM to find the pin
+            return currentM;
+        }
+
+    }
+
+
+
+
+
+    //Net* currentnet = currentPin->net();
+    //bool confindPreFF = 1;
+    //Pin* NetInputPin = currentnet->getOutputPin();
+    //while (confindPreFF)
+    //{
+    //    if (NetInputPin->module() == nullptr)
+    //    {
+    //        cout << "Maybe is IODesign" << endl;
+    //        return nullptr;
+    //    }
+    //    if (NetInputPin->module()->isFF() == 1)
+    //    {
+    //        return NetInputPin;
+    //    }
+    //    else
+    //    {
+    //        currentPin = NetInputPin->module()->InPin(0);
+    //        cout << NetInputPin->module()->name() << endl;
+    //        currentnet = currentPin->net();
+    //        NetInputPin = currentnet->getOutputPin();
+    //    }
+    //}
+    //
+
+  /*  int Shortest = 0;
+    for (int i = 0; i < currentPin->module()->numInPins(); i++)
+    {
+        if (currentPin->module()->InPin(i)->name().find("CLK") != string::npos)
+        {
+            currentCLKnet = currentPin->module()->InPin(i)->net();
+        }
+    }
+    if (currentCLKnet == nullptr)
+    {
+        cout << "開玩笑嗎" << endl;
+    }
+    for (int i = 0; i < currentCLKnet->numPins(); i++)
+    {
+        Pin* pinptr = currentCLKnet->pin(i);
+        pinptr->module()->OutPin(0)->net()->get;
+
+
+
+        while ()
+        {
+           pinptr->module()->OutPin(); 
+        }
+    }*/
+
+    
 }
