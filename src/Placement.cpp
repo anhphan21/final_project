@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <limits>
 #include <vector>
+#include <random>
 using namespace std;
 
 #define leafthresold 0.75 // TODO: can be changed
@@ -14,6 +15,18 @@ void Placement::mainLoop()
     // find same clk path-> calculate diamond -> construct graph according to cost -> find MST -> merge FFs
     // TODO:how to find same clk path , and loop it
     NodeList mst = findMST();
+    // print MST ///////////////////////////////////////////////
+    for (size_t i = 0; i < mst.size(); i++)
+    {
+        cout << "Node " << mst[i]->getFFinNode()->name() << " has neighbor: ";
+        map<string, pair<Node *, double>> neighbor = mst[i]->getneighbormap();
+        for (const auto &pair : neighbor)
+        {
+            cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
+        }
+        cout << endl;
+    }
+    // print MST ///////////////////////////////////////////////
     int leafsize = 0;
     for (size_t i = 0; i < mst.size(); i++)
     {
@@ -27,9 +40,9 @@ void Placement::mainLoop()
             mst[i]->setisleaf(false);
         }
     }
-
     if (static_cast<double>(leafsize) / static_cast<double>(_nodes.size()) < leafthresold) // leaf not too much
     {                                                                                      // do merge & store mst into _nodes
+        cout << "do merge on mst\n";
         for (size_t i = 0; i < _nodes.size(); i++)
         {
             free(_nodes[i]);
@@ -40,30 +53,37 @@ void Placement::mainLoop()
     }
     else // greedy pick to merge leaf too much
     {
+        cout << "leaf too much, merge randomly\n";
         for (size_t i = 0; i < mst.size(); i++)
         {
             free(mst[i]);
         }
         mst.clear();
-        unsigned target = rand() % _nodes.size();
-        while (_nodes[target]->getNeighborsize() < 1)
+        cout << "node size : " << _nodes.size() << endl;
+        while (_nodes.size() > 1)
         {
-            target = rand() % _nodes.size();
-        }
-        map<string, pair<Node *, double>> neighbor = _nodes[target]->getneighbormap();
-        string maxidx = neighbor.begin()->first;
-        for (const auto &pair : neighbor)
-        {
-            if (pair.second.second > neighbor[maxidx].second)
+            random_device rd;
+            mt19937 generator(rd());
+            uniform_int_distribution<unsigned> distribution(0, _nodes.size() - 1);
+            unsigned target = distribution(generator);
+            cout << "target : " << target << endl;
+            while (_nodes[target]->getNeighborsize() < 1)
             {
-                maxidx = pair.first;
+                target = distribution(generator);
             }
+            map<string, pair<Node *, double>> neighbor = _nodes[target]->getneighbormap();
+            string maxidx = neighbor.begin()->first;
+            for (const auto &pair : neighbor)
+            {
+                if (pair.second.second > neighbor[maxidx].second)
+                {
+                    maxidx = pair.first;
+                }
+            }
+            // TODO: maybe randomly pick which FF to merge to ??
+            merge2FF(target, neighbor[maxidx].first->getNodeidxheap(), 0);
         }
-        // TODO: maybe randomly pick which FF to merge to ??
-        merge2FF(target, neighbor[maxidx].first->getNodeidxheap(), 0);
     }
-    _dataBase->module(0)->setPosition(480, 6000);
-    _dataBase->module(1)->setPosition(480, 3600);
 }
 
 void Placement::mergeFFinG()
@@ -78,7 +98,35 @@ void Placement::mergeFFinG()
         }
         auto mymap = *_nodes[idx]->getneighbormap().begin();
         unsigned idx2 = mymap.second.first->getNodeidxheap();
-        merge2FF(idx, idx2, 0);
+        if (_nodes[idx]->getneighborweight(_nodes[idx2]->getFFinNode()->name()) < 0)
+        {
+            merge2FF(idx, idx2, 0);
+        }
+        else
+        {
+            cout << "won't improve\n";
+            eraseEdge(idx, idx2);
+        }
+    }
+    return;
+}
+void Placement::eraseEdge(unsigned idx1, unsigned idx2)
+{
+    _nodes[idx1]->eraseNeighbor(_nodes[idx2]->getFFinNode()->name());
+    _nodes[idx2]->eraseNeighbor(_nodes[idx1]->getFFinNode()->name());
+    // delete nodes with no neighbor
+    for (auto it = _nodes.begin(); it != _nodes.end();)
+    {
+        if ((*it)->getNeighborsize() == 0)
+        {
+            delete *it;
+            it = _nodes.erase(it);
+        }
+        else
+        {
+            (*it)->setNodeidxheap(it - _nodes.begin());
+            ++it;
+        }
     }
     return;
 }
@@ -95,7 +143,7 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
     neighbor = _nodes[idx2]->getneighbormap();
     for (const auto &pair : neighbor)
     {
-        pair.second.first->eraseNeighbor(_nodes[idx1]->getFFinNode()->name());
+        pair.second.first->eraseNeighbor(_nodes[idx2]->getFFinNode()->name());
     }
     _nodes[idx1]->clearNeighbor();
     _nodes[idx2]->clearNeighbor();
@@ -133,7 +181,10 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
     }
     int num = stoi(numbers);
     m3name = letters + to_string(num + 1);
-    newffidx = rand() % _dataBase->getNumfflibBit((m1->cellType()->getnumBit()) * 2);
+    random_device rd;
+    mt19937 generator(rd());
+    uniform_int_distribution<unsigned> distribution(0, _dataBase->getNumfflibBit((m1->cellType()->getnumBit()) * 2) - 1);
+    newffidx = distribution(generator);
     Module *m3 = new Module(m3name, _dataBase->ffLib((m1->cellType()->getnumBit()) * 2, newffidx), newX, newY);
     m3->clearPins();
     m3->setPinsize(m3->cellType()->getnumBit() * 2 + 1);
@@ -285,6 +336,8 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
     {
         m3->setPosition(m3->x(), _dataBase->getBoundaryTop() - m3->height());
     }
+
+    // delete nodes with no neighbor
     for (auto it = _nodes.begin(); it != _nodes.end();)
     {
         if ((*it)->getNeighborsize() == 0)
@@ -326,7 +379,6 @@ NodeList Placement::findMST()
     // graph should be in _nodes////////////////////////////////
     vector<pair<Node *, pair<double, Node *>>> qheap; // <Node,key,predecessor>
     qheap.resize(_nodes.size());
-    cout << _nodes.size() << endl;
     for (size_t i = 0; i < _nodes.size(); i++)
     {
         _nodes[i]->setNodeidxheap(i);
@@ -369,16 +421,16 @@ NodeList Placement::findMST()
         mst[id]->addNeighborPair(make_pair(mst[i], mstHeap[i].second.first));
     }
     // print MST ///////////////////////////////////////////////
-    for (size_t i = 0; i < mst.size(); i++)
-    {
-        cout << "Node " << mst[i]->getFFinNode()->name() << " has neighbor: ";
-        map<string, pair<Node *, double>> neighbor = mst[i]->getneighbormap();
-        for (const auto &pair : neighbor)
-        {
-            cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
-        }
-        cout << endl;
-    }
+    // for (size_t i = 0; i < mst.size(); i++)
+    // {
+    //     cout << "Node " << mst[i]->getFFinNode()->name() << " has neighbor: ";
+    //     map<string, pair<Node *, double>> neighbor = mst[i]->getneighbormap();
+    //     for (const auto &pair : neighbor)
+    //     {
+    //         cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
+    //     }
+    //     cout << endl;
+    // }
     // print MST ///////////////////////////////////////////////
     mstHeap.clear();
     qheap.clear();
@@ -514,6 +566,7 @@ void Placement::constructGraph()
             // if(_dataBase->getClkNets()[i]->pin(j)->module()->cellType()->numBit()>=max_BitFF)    //ex: if the max bit FF in FFlib is 2, we can't merge 2 bits FF(numInPins()-1 == 2)
             //     continue;
             // else
+
             if (_dataBase->getClkNets()[i]->pin(j)->module() != nullptr && _dataBase->getClkNets()[i]->pin(j)->module()->isFF() && _dataBase->getClkNets()[i]->pin(j)->module()->cellType()->numBit() < max_BitFF)
             {
                 Module *module_i_j = _dataBase->getClkNets()[i]->pin(j)->module();
@@ -522,17 +575,15 @@ void Placement::constructGraph()
                     Module *module_i_k = _dataBase->getClkNets()[i]->pin(k)->module();
                     Rhombus r_i_j(_dataBase->getClkNets()[i]->pin(j)->net()->OutputPin()->x(), _dataBase->getClkNets()[i]->pin(j)->net()->OutputPin()->y(), module_i_j->radius());
                     Rhombus r_i_k(_dataBase->getClkNets()[i]->pin(k)->net()->OutputPin()->x(), _dataBase->getClkNets()[i]->pin(k)->net()->OutputPin()->y(), module_i_k->radius());
-                    // cout<<module_i_j->name()<<" "<<module_i_j->x()<<" "<<module_i_j->y()<<" "<<module_i_j->radius()<<endl;
-                    // cout<<module_i_k->name()<<" "<<module_i_k->x()<<" "<<module_i_k->y()<<" "<<module_i_j->radius()<<endl;
-                    // cout<<endl;
+
                     if (module_i_k == nullptr || module_i_k->isFF() == 0 || module_i_k->cellType()->numBit() >= max_BitFF)
                         continue;
                     else if (overlap_ornot(r_i_j, r_i_k) && module_i_j->cellType()->numBit() == module_i_k->cellType()->numBit()) // they are overlapping ,in the same clknet,have the same bit FF and both of them are not larger than max_BitFF
                     {
                         cout << "name: " << module_i_j->name() << "、" << module_i_k->name() << " ,cost: " << cal_cost(module_i_j, module_i_k) << endl;
-
+                        cout << module_i_j->InPin(0)->slack() << " " << module_i_k->InPin(0)->slack() << endl;
                         _name2Node[module_i_j->name()]->addNeighborPair({_name2Node[module_i_k->name()], cal_cost(module_i_j, module_i_k)});
-                        _name2Node[module_i_k->name()]->addNeighborPair({_name2Node[module_i_j->name()], cal_cost(module_i_j, module_i_k)});
+                        _name2Node[module_i_k->name()]->addNeighborPair({_name2Node[module_i_j->name()], cal_cost(module_i_k, module_i_j)});
                     }
                 }
             }
@@ -545,7 +596,10 @@ double Placement::cal_cost(Module *ffN, Module *ff0) // ffN is primary
     // initail cost
     double initial_cost = 0;
     double initial_TNS_cost = 0;
-    initial_TNS_cost = ffN->InPin(0)->slack() + ff0->InPin(0)->slack();
+    if (ffN->InPin(0)->slack() < 0)
+        initial_TNS_cost += ffN->InPin(0)->slack();
+    if (ff0->InPin(0)->slack() < 0)
+        initial_TNS_cost += ff0->InPin(0)->slack();
     double initial_Power_cost = 0;
     initial_Power_cost = _dataBase->getBeta() * ffN->getPower() + _dataBase->getBeta() * ff0->getPower();
     double initial_Area_cost = 0;
@@ -563,18 +617,21 @@ double Placement::cal_cost(Module *ffN, Module *ff0) // ffN is primary
         pair<double, double> new_location = Rhombus::findCentroidIntersect(r1, r2);
         ffN->setPosition(new_location.first, new_location.second);
         ff0->setPosition(new_location.first, new_location.second);
+        // cout<<ffN->InPin(i)->slack()
         _dataBase->updateSlack(ffN->InPin(i));
         _dataBase->updateSlack(ff0->InPin(i));
         if (ffN->InPin(i)->slack() < 0)
             TNS_cost += ffN->InPin(i)->slack();
-
+        if (ff0->InPin(i)->slack() < 0)
+            TNS_cost += ff0->InPin(i)->slack();
         // turn back
         ffN->setPosition(ffN->InPin(i)->oldX(), ffN->InPin(i)->oldY());
         ff0->setPosition(ff0->InPin(i)->oldX(), ff0->InPin(i)->oldY());
         ffN->InPin(i)->setSlack(old_slack1);
         ff0->InPin(i)->setSlack(old_slack2);
     }
-
+    _dataBase->totalCost(1);
+    _dataBase->unMarkedDPin();
     int next_level_FF = 0;
     next_level_FF = pow(2, log2(ffN->cellType()->numBit()) + 1);
     double Power_cost = 0;
@@ -584,5 +641,6 @@ double Placement::cal_cost(Module *ffN, Module *ff0) // ffN is primary
 
     initial_cost = initial_TNS_cost + initial_Power_cost + initial_Area_cost;
     double new_cost = TNS_cost + Power_cost + Area_cost;
+    // cout << ffN->name() << " " << ff0->name() << " ,cost: " << initial_cost << " " << new_cost << endl;
     return (new_cost - initial_cost);
 }

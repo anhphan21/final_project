@@ -485,7 +485,7 @@ void Database::parser(const string &filename)
             double power;
             iss >> type >> power;
             BaseCell *_type = CellType2Ptr[type];
-            _type->setQdelay(power);
+            _type->setPower(power);
         }
     }
     initialBinArray();
@@ -661,19 +661,20 @@ void Database::updateSlack(Pin *ffpin)
                         _tPin = _preNet->pin(i);
                     }
                 }
-                _displacement += abs(_preFFPin->oldX() - _tPin->x()) + abs(_preFFPin->oldY() - _tPin->y()) - abs(_preFFPin->x() - _tPin->x()) + abs(_preFFPin->y() - _tPin->y());
+                _displacement += (abs(_preFFPin->oldX() - _tPin->x()) + abs(_preFFPin->oldY()) - (_tPin->y()) - abs(_preFFPin->x() - _tPin->x()) + abs(_preFFPin->y() - _tPin->y()));
             }
         }
 
         if (ffpin->isMoved())
         { // If the FF is moved then update the new slack
             _tPin = ffpin->net()->OutputPin();
-            _displacement += abs(ffpin->oldX() - _tPin->x()) + abs(ffpin->oldY() - _tPin->y()) - abs(ffpin->x() - _tPin->x()) + abs(ffpin->y() - _tPin->y());
+            _displacement += (abs(ffpin->oldX() - _tPin->x()) + abs(ffpin->oldY() - _tPin->y())) - (abs(ffpin->x() - _tPin->x()) + abs(ffpin->y() - _tPin->y()));
         }
-        cout << "before: " << ffpin->slack() << endl;
+        // cout << "before: " << ffpin->slack() << endl;
+
         ffpin->setSlack(ffpin->slack() + _displacement * _dDelay + (ffpin->oldQ() - ffpin->module()->cellType()->getQdelay()));
-        cout << ffpin->module()->name() << "/" << ffpin->name() << endl;
-        cout << "after: " << ffpin->slack() << endl;
+        // cout << ffpin->module()->name() << "/" << ffpin->name() << endl;
+        // cout << "after: " << ffpin->slack() << endl;
     }
     ffpin->setVisited(true);
 }
@@ -838,7 +839,7 @@ Pin *Database::FindPrePin(Pin *inputPin)
                 CurrentCLKNet = currentM->pin(i)->net();
             }
         }
-        if (currentM->isFF() == 1 && CurrentCLKNet == OriginalCLKNet && originFF != currentM->name()) // 只要找FF並且同一clk 並排除找到自己的可能!
+        if (currentM->isFF() == 1 && CurrentCLKNet == OriginalCLKNet && originFF != currentM->name())
         {
             // cout << endl << endl;
             currentPin = currentPin->net()->getOutputPin();
@@ -847,55 +848,6 @@ Pin *Database::FindPrePin(Pin *inputPin)
             return currentPin;
         }
     }
-
-    // Net* currentnet = currentPin->net();
-    // bool confindPreFF = 1;
-    // Pin* NetInputPin = currentnet->getOutputPin();
-    // while (confindPreFF)
-    //{
-    //     if (NetInputPin->module() == nullptr)
-    //     {
-    //         cout << "Maybe is IODesign" << endl;
-    //         return nullptr;
-    //     }
-    //     if (NetInputPin->module()->isFF() == 1)
-    //     {
-    //         return NetInputPin;
-    //     }
-    //     else
-    //     {
-    //         currentPin = NetInputPin->module()->InPin(0);
-    //         cout << NetInputPin->module()->name() << endl;
-    //         currentnet = currentPin->net();
-    //         NetInputPin = currentnet->getOutputPin();
-    //     }
-    // }
-    //
-
-    /*  int Shortest = 0;
-      for (int i = 0; i < currentPin->module()->numInPins(); i++)
-      {
-          if (currentPin->module()->InPin(i)->name().find("CLK") != string::npos)
-          {
-              currentCLKnet = currentPin->module()->InPin(i)->net();
-          }
-      }
-      if (currentCLKnet == nullptr)
-      {
-          cout << "@@" << endl;
-      }
-      for (int i = 0; i < currentCLKnet->numPins(); i++)
-      {
-          Pin* pinptr = currentCLKnet->pin(i);
-          pinptr->module()->OutPin(0)->net()->get;
-
-
-
-          while ()
-          {
-             pinptr->module()->OutPin();
-          }
-      }*/
 }
 
 double Database::getTNS() const
@@ -913,6 +865,7 @@ double Database::getTNS() const
         {
 >>>>>>> master
             _tPin = _ffModules[i]->InPin(j);
+            cout << "slack: " << _tPin->slack() << endl;
             if (_tPin->slack() < 0)
                 _tns += _tPin->slack();
         }
