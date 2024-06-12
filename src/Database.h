@@ -148,8 +148,8 @@ class Database {
     unsigned getDen(double) const;
     double totalCost(double) const;
 
-   private:
-    string _name;  // Design Name
+private:
+    string _name; // Design Name
 
     // Design Data
     unsigned _numModules;
@@ -203,6 +203,7 @@ class Database {
     // void createPinforModule(Module *);
     // void updateRadiusRecur(FFCell*, Module*);
     Module *FindPrePin(Module *currentM);
+    
     // void updateInitialSlackInfo();
 };
 

@@ -12,6 +12,7 @@ class Placement {
     void mainLoop();
     void constructDiamond();
     void constructGraph();
+    double cal_cost(Module *ff1, Module *ff2);
     NodeList findMST();
     // methods for design (hyper-graph) construction
     void addNode(Node *node) { _nodes.push_back(node); }
