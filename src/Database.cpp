@@ -55,14 +55,36 @@ void Database::parser(const string &filename)
             if (keyword == "Alpha")
             {
                 setAlpha(data);
-            } else if (keyword == "Beta") {
+            }
+<<<<<<< HEAD
+            else if (keyword == "Beta") {
                 setBeta(data);
-            } else if (keyword == "Gamma") {
+            }
+            else if (keyword == "Gamma") {
                 setGamma(data);
-            } else if (keyword == "Lambda") {
+            }
+            else if (keyword == "Lambda") {
                 setLambda(data);
             }
-        } else if (keyword == "DieSize") {
+        }
+        else if (keyword == "DieSize") {
+=======
+            else if (keyword == "Beta")
+            {
+                setBeta(data);
+            }
+            else if (keyword == "Gamma")
+            {
+                setGamma(data);
+            }
+            else if (keyword == "Lambda")
+            {
+                setLambda(data);
+            }
+        }
+        else if (keyword == "DieSize")
+        {
+>>>>>>> master
             int left, bottom, right, top;
             iss >> left >> bottom >> right >> top;
             setBoundaryLeft(left);
@@ -70,7 +92,13 @@ void Database::parser(const string &filename)
             setBoundaryRight(right);
             setBoundaryTop(top);
             updateRectangle();
-        } else if (keyword == "NumInput") {
+        }
+<<<<<<< HEAD
+        else if (keyword == "NumInput") {
+=======
+        else if (keyword == "NumInput")
+        {
+>>>>>>> master
             iss >> _numInput;
             // map<string, Pin*> IODesignPin;
             for (int i = 0; i < _numInput; ++i)
@@ -96,7 +124,13 @@ void Database::parser(const string &filename)
                 // IODesignPin.insert({type, pinptr});
             }
             // PinName2Ptr.insert({"IODesignIn", IODesignPin});
-        } else if (keyword == "NumOutput") {
+        }
+<<<<<<< HEAD
+        else if (keyword == "NumOutput") {
+=======
+        else if (keyword == "NumOutput")
+        {
+>>>>>>> master
             iss >> _numOutput;
             // map<string, Pin*> IODesignPin;
             for (int i = 0; i < _numOutput; i++)
@@ -118,7 +152,13 @@ void Database::parser(const string &filename)
                 IODesign.insert({ type, pinptr });
             }
             // PinName2Ptr.insert({"IODesignOut", IODesignPin});
-        } else if (keyword == "FlipFlop") {
+        }
+<<<<<<< HEAD
+        else if (keyword == "FlipFlop") {
+=======
+        else if (keyword == "FlipFlop")
+        {
+>>>>>>> master
             double bitCount, width, height, pinCount;
             string id;
 
@@ -154,7 +194,13 @@ void Database::parser(const string &filename)
             FFcellptr->setPin(_clkPin, make_pair(_clkX, _clkY), false);
             FFcellptr->setClkPin(FFcellptr->getInNum() - 1);
             CellType2Ptr[id] = FFcellptr;
-        } else if (keyword == "Gate") {
+        }
+<<<<<<< HEAD
+        else if (keyword == "Gate") {
+=======
+        else if (keyword == "Gate")
+        {
+>>>>>>> master
             double width, height;
             int pinCount = 0;
             string id;
@@ -186,7 +232,13 @@ void Database::parser(const string &filename)
             }
             // cout << "Gate" << " " << id << " " << width << " " << height <<
             // endl;
-        } else if (keyword == "NumInstances") {
+        }
+<<<<<<< HEAD
+        else if (keyword == "NumInstances") {
+=======
+        else if (keyword == "NumInstances")
+        {
+>>>>>>> master
             // Handle Instances
             iss >> _numModules;
             string temp, name, type;
@@ -213,7 +265,13 @@ void Database::parser(const string &filename)
                     // can't find Standard Cell
                     // Comment: Nice idea for checking error of input file
                     // cout << "Test error" << type << endl;
-                } else {
+                }
+<<<<<<< HEAD
+                else {
+=======
+                else
+                {
+>>>>>>> master
                     _type = CellType2Ptr[type];
                     PinOfMnum = _type->pinNum();
                     currentM = new Module(name, _type, x, y);
@@ -236,7 +294,13 @@ void Database::parser(const string &filename)
                     }
                 }
             }
-        } else if (keyword == "NumNets") {
+        }
+<<<<<<< HEAD
+        else if (keyword == "NumNets") {
+=======
+        else if (keyword == "NumNets")
+        {
+>>>>>>> master
             int PinNum;
             string temp, Netname;
             iss >> _numNet;
@@ -274,8 +338,16 @@ void Database::parser(const string &filename)
                         {
                             // IODesignPin腳 處理跟FF不一樣
                             cout << "No match pin!!" << endl;
-                        } else {
+                        }
+<<<<<<< HEAD
+                        else {
                             if (type.find("CLK") != string::npos) {
+=======
+                        else
+                        {
+                            if (type.find("CLK") != string::npos)
+                            {
+>>>>>>> master
                                 // 找到clk
                                 Isclk = true;
                                 netptr->setclkFlag(true);
@@ -284,7 +356,12 @@ void Database::parser(const string &filename)
                             netptr->addPin(it->second);
                             netptr->setOutputPins(j);
                         }
-                    } else  // 有'/'切割的Net Pin
+                    }
+<<<<<<< HEAD
+                    else  // 有'/'切割的Net Pin
+=======
+                    else // 有'/'切割的Net Pin
+>>>>>>> master
                     {
                         // cout << "有'/'切割的Net Pin" << endl;
                         FFname = type.substr(0, pos);
@@ -293,7 +370,13 @@ void Database::parser(const string &filename)
                         if (it == ModuleName2Ptr.end())
                         {
                             cout << "can't find correspoding module" << endl;
-                        } else {
+                        }
+<<<<<<< HEAD
+                        else {
+=======
+                        else
+                        {
+>>>>>>> master
                             // Found Pin
                             _type = it->second->cellType();
                             if ((TargetPin.substr(0, 3) == "OUT") ||
@@ -313,35 +396,77 @@ void Database::parser(const string &filename)
                 if (Isclk)
                     addClkNet(netptr);
             }
-        } else if (keyword == "BinWidth" || keyword == "BinHeight" ||
-                   keyword == "BinMaxUtil") {
+        }
+        else if (keyword == "BinWidth" || keyword == "BinHeight" ||
+<<<<<<< HEAD
+            keyword == "BinMaxUtil") {
+=======
+                 keyword == "BinMaxUtil")
+        {
+>>>>>>> master
             int data;
             iss >> data;
             if (keyword == "BinWidth")
             {
                 setBinWidth(data);
-            } else if (keyword == "BinHeight") {
+            }
+<<<<<<< HEAD
+            else if (keyword == "BinHeight") {
                 setBinHeight(data);
-            } else if (keyword == "BinMaxUtil") {
+            }
+            else if (keyword == "BinMaxUtil") {
                 setBinUtil(data);
             }
-        } else if (keyword == "PlacementRows") {
+        }
+        else if (keyword == "PlacementRows") {
+=======
+            else if (keyword == "BinHeight")
+            {
+                setBinHeight(data);
+            }
+            else if (keyword == "BinMaxUtil")
+            {
+                setBinUtil(data);
+            }
+        }
+        else if (keyword == "PlacementRows")
+        {
+>>>>>>> master
             double startX, startY, siteWidth, siteHeight, totalNumOfSites;
             iss >> startX >> startY >> siteWidth >> siteHeight >>
                 totalNumOfSites;
             Row *_tRow = new Row(startX, startY, siteWidth, siteHeight, totalNumOfSites);
             addRow(_tRow);
-        } else if (keyword == "DisplacementDelay") {
+        }
+<<<<<<< HEAD
+        else if (keyword == "DisplacementDelay") {
             double delay;
             iss >> delay;
             setDisplacementDelay(delay);
+
         } else if (keyword == "QpinDelay") {
+=======
+        else if (keyword == "DisplacementDelay")
+        {
+            double delay;
+            iss >> delay;
+            setDisplacementDelay(delay);
+        }
+        else if (keyword == "QpinDelay")
+        {
+>>>>>>> master
             string type;
             double delay;
             iss >> type >> delay;
             CellType *_type = CellType2Ptr[type];
             _type->setQdelay(delay);
-        } else if (keyword == "TimingSlack") {
+        }
+<<<<<<< HEAD
+        else if (keyword == "TimingSlack") {
+=======
+        else if (keyword == "TimingSlack")
+        {
+>>>>>>> master
             string name, Dpin;
             double slack;
             iss >> name >> Dpin >> slack;
@@ -349,7 +474,13 @@ void Database::parser(const string &filename)
             CellType *_type = _tModule->cellType();
             Pin *_tDPin = _tModule->pin(_type->getPinIdxFromName(Dpin));
             _tDPin->setSlack(slack);
-        } else if (keyword == "GatePower") {
+        }
+<<<<<<< HEAD
+        else if (keyword == "GatePower") {
+=======
+        else if (keyword == "GatePower")
+        {
+>>>>>>> master
             string type;
             double power;
             iss >> type >> power;
@@ -649,13 +780,30 @@ Pin *Database::FindPrePin(Pin *inputPin)
         cout << "please put FF in the argumemt!!! bad guy" << endl;
         return 0;
     }
-    for (int i = 0; i < currentM->totnumPins(); i++) {
-        if (currentM->pin(i)->name() == "CLK") {
+<<<<<<< HEAD
+
+    // for (int i = 0; i < currentM->totnumPins(); i++) {
+    //     if (currentM->pin(i)->name() == "CLK") {
+    //         OriginalCLKNet = currentM->pin(i)->net();
+    //     }
+    // }
+    OriginalCLKNet = currentM->pin(currentM->cellType()->clkPinIdx())->net();
+
+    while (1) {
+        for (int i = 0; i < currentM->numInPins(); i++) {
+=======
+    for (int i = 0; i < currentM->totnumPins(); i++)
+    {
+        if (currentM->pin(i)->name() == "CLK")
+        {
             OriginalCLKNet = currentM->pin(i)->net();
         }
     }
-    while (1) {
-        for (int i = 0; i < currentM->numInPins(); i++) {
+    while (1)
+    {
+        for (int i = 0; i < currentM->numInPins(); i++)
+        {
+>>>>>>> master
             que.push(currentM->InPin(i));
         }
 
@@ -666,9 +814,14 @@ Pin *Database::FindPrePin(Pin *inputPin)
             // If it cannot be found, it may be received by IOdesign and will return Nullptr
             return nullptr;
         }
-        while (currentPin->name() == "CLK" || currentPin->net()->getOutputPin()->module() == nullptr) 
+<<<<<<< HEAD
+
+        while (currentPin->name() == "CLK" || currentPin->net()->OutputPin()->module() == nullptr) {  // 排除找到IOdesign Module會是nullptr
+=======
+        while (currentPin->name() == "CLK" || currentPin->net()->getOutputPin()->module() == nullptr)
         {
-            //Exclude finding IOdesign Module will be nullptr
+            // Exclude finding IOdesign Module will be nullptr
+>>>>>>> master
             currentPin = que.front();
             que.pop();
             if (que.empty())
@@ -748,9 +901,17 @@ Pin *Database::FindPrePin(Pin *inputPin)
 double Database::getTNS() const
 {
     double _tns = 0;
-    Pin *_tPin;
+<<<<<<< HEAD
+    Pin* _tPin;
     for (size_t i = 0, endi = _ffModules.size(); i < endi; i++) {
         for (size_t j = 0, endj = _ffModules[i]->numInPins(); j < endj; j++) {
+=======
+    Pin *_tPin;
+    for (size_t i = 0, endi = _ffModules.size(); i < endi; i++)
+    {
+        for (size_t j = 0, endj = _ffModules[i]->numInPins(); j < endj; j++)
+        {
+>>>>>>> master
             _tPin = _ffModules[i]->InPin(j);
             if (_tPin->slack() < 0)
                 _tns += _tPin->slack();
