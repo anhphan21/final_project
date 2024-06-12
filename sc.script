@@ -1,6 +1,0 @@
-#!bash 
-make
-clear
-cd bin
-./fp ../sampleCase
-cd ..
