@@ -70,9 +70,9 @@ class Module {
     unsigned numOutPins() const { return _type->getOutNum(); }
     unsigned numInPins() const { return _type->getInNum(); }
     void addPin(Pin *pPin) { _pins.push_back(pPin); }
-	
-    Pin* pin(unsigned idx) {
-		assert(idx < _pins.size());
+    unsigned currentNumPins() const { return _pins.size(); }
+    Pin *pin(unsigned idx) {
+        assert(idx < _pins.size());
         return _pins[idx];
     }
 
@@ -102,7 +102,7 @@ class Module {
     // pins of the module
     vector<Pin *> _pins;
 
-  //  // update pin positions
+    // update pin positions
     void updatePinPositions() {
         Pin *_tPin;
         for (unsigned i = 0, endi = totnumPins(); i < endi; ++i) {

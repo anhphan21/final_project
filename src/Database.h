@@ -17,15 +17,16 @@
 #include "rhombus.h"
 using namespace std;
 
-class Database {
-   public:
+class Database
+{
+public:
     Database();
     ~Database() = default;
 
-    void parser(const string& filename);
+    void parser(const string &filename);
 
     // Design parameters
-    void setName(string& name) { _name = name; }
+    void setName(string &name) { _name = name; }
 
     void setAlpha(double alpha) { _alpha = alpha; }
     void setBeta(double beta) { _beta = beta; }
@@ -60,6 +61,9 @@ class Database {
     void addRow(Row *row) { _rows.push_back(row); }
     void addCellLib(CellType *cellLib) { _cellLib.push_back(cellLib); }
     void addFFLib(FFCell *ffLib, unsigned bitNum) { _ffLib[bitNum].push_back(ffLib); }
+    void erasePin(unsigned pinId) { _pins.erase(_pins.begin() + pinId); }
+    void eraseModule(unsigned moduleId) { _modules.erase(_modules.begin() + moduleId); }
+    void eraseFF(unsigned ffId) { _ffModules.erase(_ffModules.begin() + ffId); }
 
     // Bin operation
     void initialBinArray();
@@ -68,17 +72,20 @@ class Database {
 
     // get design property
     Module *module(unsigned moduleId) { return _modules[moduleId]; }
+    Module *ff(unsigned ffId) { return _ffModules[ffId]; }
     Net *net(unsigned netId) { return _nets[netId]; }
     Pin *pin(unsigned pinId) { return _pins[pinId]; }
     Row *row(unsigned rowId) { return _rows[rowId]; }
     Bin *bin(unsigned colIdx, unsigned rowIdx) { return _bins[colIdx][rowIdx]; }
 
-    Pin *input(unsigned inId) {
+    Pin *input(unsigned inId)
+    {
         assert(inId < _numInput);
         return _pins[inId];
     }
 
-    Pin *output(unsigned outId) {
+    Pin *output(unsigned outId)
+    {
         assert(outId < _numOutput);
         return _pins[_numInput + outId];
     }
@@ -133,7 +140,7 @@ class Database {
     // For slack update
     void sortClkNet();
     void updateSlackAll();
-    void updateSlack(Pin*);
+    void updateSlack(Pin *);
     void resetVisit();
 
     void unMarkedDPin(); // unmarked all clk pin of FF
@@ -147,6 +154,8 @@ class Database {
     double getTNS() const;
     unsigned getDen(double) const;
     double totalCost(double) const;
+
+    FFCell *getFFlib(int bit){return _ffLib[bit][0];}
 
 private:
     string _name; // Design Name
@@ -189,9 +198,9 @@ private:
     double _lambda;
 
     // Caching
-    map<string, BaseCell*> CellType2Ptr;
-    map<string, Module*> ModuleName2Ptr;
-    map<string, Pin*> IODesign;
+    map<string, BaseCell *> CellType2Ptr;
+    map<string, Module *> ModuleName2Ptr;
+    map<string, Pin *> IODesign;
 
     // Caching the list for processing
     ModuleList _ffModules;
