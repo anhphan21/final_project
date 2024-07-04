@@ -307,7 +307,10 @@ void Database::parser(const string &filename)
                             }
                             it->second->setNetPtr(netptr);
                             netptr->addPin(it->second);
-                            netptr->setOutputPins(j);
+                            if (type.substr(0, 5) == "INPUT")
+                            {
+                                netptr->setOutputPins(j);
+                            }
                         }
                     }
                     else // 有'/'切割的Net Pin
@@ -632,7 +635,6 @@ void Database::updateRadius()
     double _dist2PreGate;
     double _nRadius;
     double _tRadius;
-
     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i)
     {
         // _radius.clear();
@@ -640,12 +642,15 @@ void Database::updateRadius()
         _tModule = _ffModules[i];
         for (size_t j = 0, endj = _tModule->numInPins(); j < endj; ++j)
         {
+            cout << "here " << endl;
             _tPin = _tModule->InPin(j);
             _tSlack = _tPin->getSlackInfor();
-            _dist2PreGate = Pin::calHPWL(*_tPin, *_tPin->net()->getOutputPin());
+            _dist2PreGate = Pin::calHPWL(*_tPin, *(_tPin->net()->getOutputPin()));
+            cout << "here 3" << endl;
             _nRadius = (_tSlack->slack() + _dDelay * _dist2PreGate) / _dDelay;
             if (_nRadius < _tRadius)
                 _tRadius = _nRadius;
+            cout << "here 2" << endl;
         }
         _tModule->setRadius(_tRadius);
     }
