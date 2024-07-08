@@ -7,6 +7,27 @@ int main(int argc, char **argv)
     Database testDTB;
     testDTB.parser(argv[1]);
     cout << "Done parser!!!" << endl;
+    string name = "reg5";
+    Module *testff = new Module(name, testDTB.ffLib(2, 0), 0, 0);
+    testDTB.addModule(testff);
+    for (size_t i = 0; i < testDTB.getNumModules(); i++)
+    {
+        cout << testDTB.module(i)->name() << endl;
+        string name = testDTB.module(i)->name();
+        cout << testDTB.getModuleByName(name)->name() << endl;
+    }
+    // for (size_t i = 0; i < testDTB.getNumPins(); i++)
+    // {
+    //     if (testDTB.pin(i)->net() == nullptr)
+    //     {
+    //         cout << "netptr is null!" << endl;
+    //         cout << "pin : " << testDTB.pin(i)->name() << endl;
+    //         if (testDTB.pin(i)->module() != nullptr)
+    //         {
+    //             cout << "is on module " << testDTB.pin(i)->module()->name() << endl;
+    //         }
+    //     }
+    // }
 
     // Module* ptrM = testDTB.module(2);
     // Pin* currentPin = nullptr;
@@ -25,25 +46,27 @@ int main(int argc, char **argv)
     // testDTB.updateSlack(currentPin);
     // cout<<"after: "<<currentPin->slack()<<endl;
     // for(int i=0;i<testDTB.getNumFF();++i)
-    testDTB.updateRadius();
-    testDTB.updateInitialSlackInfo();
-    Placement testGraph;
-    testGraph.setDatabase(&testDTB);
-    testGraph.constructGraph();
-    cout << testDTB.totalCost(1) << endl;
 
-    // // print MST ///////////////////////////////////////////////
-    for (size_t i = 0; i < testGraph.getNumNode(); i++)
-    {
-        cout << "Node " << testGraph.node(i)->getFFinNode()->name() << " has neighbor: ";
-        map<string, pair<Node *, double>> neighbor = testGraph.node(i)->getneighbormap();
-        for (const auto &pair : neighbor)
-        {
-            cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
-        }
-        cout << endl;
-    }
-    // // print MST ///////////////////////////////////////////////
+    // testDTB.updateRadius();
+    // testDTB.updateInitialSlackInfo();
+    // Placement testGraph;
+    // testGraph.setDatabase(&testDTB);
+    // testGraph.constructGraph();
+    // cout << testDTB.totalCost(1) << endl;
+
+    // // // print MST ///////////////////////////////////////////////
+    // for (size_t i = 0; i < testGraph.getNumNode(); i++)
+    // {
+    //     cout << "Node " << testGraph.node(i)->getFFinNode()->name() << " has neighbor: ";
+    //     map<string, pair<Node *, double>> neighbor = testGraph.node(i)->getneighbormap();
+    //     for (const auto &pair : neighbor)
+    //     {
+    //         cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
+    //     }
+    //     cout << endl;
+    // }
+    // // // print MST ///////////////////////////////////////////////
+
     // double cost = 0;
     // double a = testDTB.getAlpha();
     // double b = testDTB.getBeta();
@@ -60,13 +83,14 @@ int main(int argc, char **argv)
     //     }
     // }
     // cout << cost << endl;
-    testGraph.mainLoop();
-    for (size_t i = 0; i < testGraph.getDatabase()->getNumModules(); i++)
-    {
-        cout << "Module name " << testGraph.getDatabase()->module(i)->name() << "  Bit: " << testGraph.getDatabase()->module(i)->cellType()->getnumBit();
-        cout << " x " << testGraph.getDatabase()->module(i)->x() << " " << "y " << testGraph.getDatabase()->module(i)->y() << endl;
-    }
-    cout << testDTB.totalCost(1) << endl;
+
+    // testGraph.mainLoop();
+    // for (size_t i = 0; i < testGraph.getDatabase()->getNumModules(); i++)
+    // {
+    //     cout << "Module name " << testGraph.getDatabase()->module(i)->name() << "  Bit: " << testGraph.getDatabase()->module(i)->cellType()->getnumBit();
+    //     cout << " x " << testGraph.getDatabase()->module(i)->x() << " " << "y " << testGraph.getDatabase()->module(i)->y() << endl;
+    // }
+    // cout << testDTB.totalCost(1) << endl;
 
     // cout<<testGraph.getNumNode()<<endl;
     // for(int i=0;i<testGraph.getNumNode();++i)

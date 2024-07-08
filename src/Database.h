@@ -53,7 +53,13 @@ public:
     void setDisplacementDelay(double delay) { _dDelay = delay; }
 
     // methods for design (hyper-graph) construction
-    void addModule(Module *module) { _modules.push_back(module); }
+    void addModule(Module *module)
+    {
+        _modules.push_back(module);
+        auto iter = ModuleName2Ptr.find(module->name());
+        assert(iter == ModuleName2Ptr.end());
+        ModuleName2Ptr[module->name()] = module;
+    }
     void addFF(Module *ff) { _ffModules.push_back(ff); }
     void addNet(Net *net) { _nets.push_back(net); }
     void addClkNet(Net *clk) { _clkNets.push_back(clk); }
@@ -62,8 +68,16 @@ public:
     void addCellLib(CellType *cellLib) { _cellLib.push_back(cellLib); }
     void addFFLib(FFCell *ffLib, unsigned bitNum) { _ffLib[bitNum].push_back(ffLib); }
     void erasePin(unsigned pinId) { _pins.erase(_pins.begin() + pinId); }
-    void eraseModule(unsigned moduleId) { _modules.erase(_modules.begin() + moduleId); }
-    void eraseFF(unsigned ffId) { _ffModules.erase(_ffModules.begin() + ffId); }
+    void eraseModule(unsigned moduleId)
+    {
+        ModuleName2Ptr.erase(_modules[moduleId]->name());
+        _modules.erase(_modules.begin() + moduleId);
+    }
+    void eraseFF(unsigned ffId)
+    {
+        ModuleName2Ptr.erase(_ffModules[ffId]->name());
+        _ffModules.erase(_ffModules.begin() + ffId);
+    }
 
     // Bin operation
     void initialBinArray();
@@ -89,7 +103,13 @@ public:
         assert(outId < _numOutput);
         return _pins[_numInput + outId];
     }
-
+    // get design property through name
+    Module *getModuleByName(string &name)
+    {
+        auto it = ModuleName2Ptr.find(name);
+        assert(it != ModuleName2Ptr.end());
+        return ModuleName2Ptr[name];
+    }
     unsigned getNumModules() const { return _modules.size(); }
     unsigned getNumFF() const { return _ffModules.size(); }
     unsigned getNumNets() const { return _nets.size(); }
@@ -155,7 +175,7 @@ public:
     unsigned getDen(double) const;
     double totalCost(double) const;
 
-    FFCell *getFFlib(int bit){return _ffLib[bit][0];}
+    FFCell *getFFlib(int bit) { return _ffLib[bit][0]; }
 
 private:
     string _name; // Design Name
@@ -212,7 +232,7 @@ private:
     // void createPinforModule(Module *);
     // void updateRadiusRecur(FFCell*, Module*);
     Module *FindPrePin(Module *currentM);
-    
+
     // void updateInitialSlackInfo();
 };
 

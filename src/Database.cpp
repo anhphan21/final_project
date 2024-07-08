@@ -35,7 +35,6 @@ void Database::parser(const string &filename)
 {
     ifstream file(filename);
     string line;
-
     while (getline(file, line))
     {
         auto _pos = filename.find_last_of("/");
@@ -237,7 +236,7 @@ void Database::parser(const string &filename)
                     _type = CellType2Ptr[type];
                     PinOfMnum = _type->pinNum();
                     currentM = new Module(name, _type, x, y);
-                    ModuleName2Ptr[name] = currentM;
+                    // ModuleName2Ptr[name] = currentM;
                     addModule(currentM);
                     if (_type->isFF())
                         addFF(currentM);
@@ -269,7 +268,6 @@ void Database::parser(const string &filename)
             Pin *_tPin;
             Net *netptr;
             bool Isclk;
-
             for (int i = 0; i < _numNet; i++)
             {
                 Isclk = false; // 定義這個Net是clkNet!!!每一條定義一個
@@ -307,7 +305,7 @@ void Database::parser(const string &filename)
                             }
                             it->second->setNetPtr(netptr);
                             netptr->addPin(it->second);
-                            if (type.substr(0, 5) == "INPUT")
+                            if (type.substr(0, 5) == "INPUT" || type.substr(0, 2) == "in" || type.substr(0, 3) == "CLK")
                             {
                                 netptr->setOutputPins(j);
                             }
@@ -333,8 +331,7 @@ void Database::parser(const string &filename)
                                 netptr->setOutputPins(j);
                             }
                             _tModule = it->second;
-                            _tPin = _tModule->pin(
-                                _type->getPinIdxFromName(TargetPin));
+                            _tPin = _tModule->pin(_type->getPinIdxFromName(TargetPin));
                             _tPin->setNetPtr(netptr);
                             netptr->addPin(_tPin);
                         }
