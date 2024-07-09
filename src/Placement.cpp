@@ -15,18 +15,6 @@ void Placement::mainLoop()
     // find same clk path-> calculate diamond -> construct graph according to cost -> find MST -> merge FFs
     // TODO:how to find same clk path , and loop it
     NodeList mst = findMST();
-    // print MST ///////////////////////////////////////////////
-    for (size_t i = 0; i < mst.size(); i++)
-    {
-        cout << "Node " << mst[i]->getFFinNode()->name() << " has neighbor: ";
-        map<string, pair<Node *, double>> neighbor = mst[i]->getneighbormap();
-        for (const auto &pair : neighbor)
-        {
-            cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
-        }
-        cout << endl;
-    }
-    // print MST ///////////////////////////////////////////////
     int leafsize = 0;
     for (size_t i = 0; i < mst.size(); i++)
     {
@@ -84,6 +72,7 @@ void Placement::mainLoop()
             merge2FF(target, neighbor[maxidx].first->getNodeidxheap(), 0);
         }
     }
+
 }
 
 void Placement::mergeFFinG()
@@ -100,6 +89,7 @@ void Placement::mergeFFinG()
         unsigned idx2 = mymap.second.first->getNodeidxheap();
         if (_nodes[idx]->getneighborweight(_nodes[idx2]->getFFinNode()->name()) < 0)
         {
+            cout <<"merge " << _nodes[idx]->getFFinNode()->name() << " and " << _nodes[idx2]->getFFinNode()->name() << endl;
             merge2FF(idx, idx2, 0);
         }
         else
@@ -186,6 +176,7 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
     uniform_int_distribution<unsigned> distribution(0, _dataBase->getNumfflibBit((m1->cellType()->getnumBit()) * 2) - 1);
     newffidx = distribution(generator);
     Module *m3 = new Module(m3name, _dataBase->ffLib((m1->cellType()->getnumBit()) * 2, newffidx), newX, newY);
+    
     m3->clearPins();
     m3->setPinsize(m3->cellType()->getnumBit() * 2 + 1);
     int pinid = 0;
@@ -580,8 +571,8 @@ void Placement::constructGraph()
                         continue;
                     else if (overlap_ornot(r_i_j, r_i_k) && module_i_j->cellType()->numBit() == module_i_k->cellType()->numBit()) // they are overlapping ,in the same clknet,have the same bit FF and both of them are not larger than max_BitFF
                     {
-                        cout << "name: " << module_i_j->name() << "、" << module_i_k->name() << " ,cost: " << cal_cost(module_i_j, module_i_k) << endl;
-                        cout << module_i_j->InPin(0)->slack() << " " << module_i_k->InPin(0)->slack() << endl;
+                        // cout << "name: " << module_i_j->name() << "、" << module_i_k->name() << " ,cost: " << cal_cost(module_i_j, module_i_k) << endl;
+                        // cout << module_i_j->InPin(0)->slack() << " " << module_i_k->InPin(0)->slack() << endl;
                         _name2Node[module_i_j->name()]->addNeighborPair({_name2Node[module_i_k->name()], cal_cost(module_i_j, module_i_k)});
                         _name2Node[module_i_k->name()]->addNeighborPair({_name2Node[module_i_j->name()], cal_cost(module_i_k, module_i_j)});
                     }
@@ -630,7 +621,7 @@ double Placement::cal_cost(Module *ffN, Module *ff0) // ffN is primary
         ffN->InPin(i)->setSlack(old_slack1);
         ff0->InPin(i)->setSlack(old_slack2);
     }
-    _dataBase->totalCost(1);
+    // _dataBase->totalCost(1);
     _dataBase->unMarkedDPin();
     int next_level_FF = 0;
     next_level_FF = pow(2, log2(ffN->cellType()->numBit()) + 1);
@@ -639,8 +630,18 @@ double Placement::cal_cost(Module *ffN, Module *ff0) // ffN is primary
     double Area_cost = 0;
     Area_cost = _dataBase->getGamma() * _dataBase->getFFlib(next_level_FF)->getArea();
 
-    initial_cost = initial_TNS_cost + initial_Power_cost + initial_Area_cost;
-    double new_cost = TNS_cost + Power_cost + Area_cost;
+    initial_cost = _dataBase->getAlpha() *initial_TNS_cost + initial_Power_cost + initial_Area_cost;
+    double new_cost = _dataBase->getAlpha() *TNS_cost + Power_cost + Area_cost;
     // cout << ffN->name() << " " << ff0->name() << " ,cost: " << initial_cost << " " << new_cost << endl;
+    // if((new_cost - initial_cost) < 0)
+    // {
+    //     cout <<"neg: " <<ffN->name() << " " << ff0->name() << endl;
+    //     cout << initial_Power_cost<<" "<<Power_cost<<endl;
+    //     cout << initial_Area_cost<<" "<<Area_cost<<endl;
+    //     cout << initial_TNS_cost<<" "<<TNS_cost<<endl;
+    //     cout <<initial_cost<<" "<<new_cost<<endl;
+    //     cout << endl;
+    // }
+        
     return (new_cost - initial_cost);
 }
