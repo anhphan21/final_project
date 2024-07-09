@@ -1,6 +1,6 @@
 #!bash 
 make
 clear
-#cd bin
-./bin/fp ./benchmark/sampleCase
-#cd ..
+cd bin
+./fp ./case.txt
+cd ..

@@ -307,7 +307,10 @@ void Database::parser(const string &filename)
                             }
                             it->second->setNetPtr(netptr);
                             netptr->addPin(it->second);
-                            netptr->setOutputPins(j);
+                            if (type.substr(0, 5) == "INPUT")
+                            {
+                                netptr->setOutputPins(j);
+                            }
                         }
                     }
                     else // 有'/'切割的Net Pin
@@ -542,13 +545,12 @@ void Database::updateInitialSlackInfo()
 void Database::updateSlack(Pin *ffpin)
 {
     Pin *_preFFPin;
-
     if (!ffpin->isVisited())
     { // Check if we need to update or not ?
         double _displacement = 0;
         Pin *_tPin;
         Net *_preNet;
-
+ 
         _preFFPin = FindPrePin(ffpin);
         ffpin->setPreFFPin(_preFFPin);
         if (_preFFPin != nullptr)
@@ -557,8 +559,20 @@ void Database::updateSlack(Pin *ffpin)
             { // If the pre ff pin didn't update slack, then update it before update this FF
                 string _prePinName = _preFFPin->name();
                 _prePinName[0] = 'D';
+                // for(int i=0;i<_preFFPin->module()->numInPins()-1;i++)
+                // {
+                //     cout<<_preFFPin->module()->name()<<endl;
+                //     cout<<_preFFPin->module()->pin(i)->name()<<endl;
+                
+                //     updateSlack(_preFFPin->module()->InPin(i)); // Input idx 0 is D pin
+                    
+                    
+                    
+                // }
+                
                 unsigned idx = _preFFPin->module()->cellType()->getPinIdxFromName(_prePinName);
                 updateSlack(_preFFPin->module()->InPin(idx)); // Input idx 0 is D pin
+                
             }
             // Update slack of this D pin
             // Calculate the preFF->comb displacement
@@ -577,14 +591,14 @@ void Database::updateSlack(Pin *ffpin)
                 _displacement += (abs(_preFFPin->oldX() - _tPin->x()) + abs(_preFFPin->oldY()) - (_tPin->y()) - abs(_preFFPin->x() - _tPin->x()) + abs(_preFFPin->y() - _tPin->y()));
             }
         }
-
+ 
         if (ffpin->isMoved())
         { // If the FF is moved then update the new slack
             _tPin = ffpin->net()->OutputPin();
             _displacement += (abs(ffpin->oldX() - _tPin->x()) + abs(ffpin->oldY() - _tPin->y())) - (abs(ffpin->x() - _tPin->x()) + abs(ffpin->y() - _tPin->y()));
         }
         // cout << "before: " << ffpin->slack() << endl;
-
+ 
         ffpin->setSlack(ffpin->slack() + _displacement * _dDelay + (ffpin->oldQ() - ffpin->module()->cellType()->getQdelay()));
         // cout << ffpin->module()->name() << "/" << ffpin->name() << endl;
         // cout << "after: " << ffpin->slack() << endl;
@@ -632,7 +646,6 @@ void Database::updateRadius()
     double _dist2PreGate;
     double _nRadius;
     double _tRadius;
-
     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i)
     {
         // _radius.clear();
@@ -640,12 +653,15 @@ void Database::updateRadius()
         _tModule = _ffModules[i];
         for (size_t j = 0, endj = _tModule->numInPins(); j < endj; ++j)
         {
+            cout << "here " << endl;
             _tPin = _tModule->InPin(j);
             _tSlack = _tPin->getSlackInfor();
-            _dist2PreGate = Pin::calHPWL(*_tPin, *_tPin->net()->getOutputPin());
+            _dist2PreGate = Pin::calHPWL(*_tPin, *(_tPin->net()->getOutputPin()));
+            cout << "here 3" << endl;
             _nRadius = (_tSlack->slack() + _dDelay * _dist2PreGate) / _dDelay;
             if (_nRadius < _tRadius)
                 _tRadius = _nRadius;
+            cout << "here 2" << endl;
         }
         _tModule->setRadius(_tRadius);
     }
@@ -754,7 +770,7 @@ double Database::getTNS() const
         for (size_t j = 0, endj = _ffModules[i]->numInPins(); j < endj; j++)
         {
             _tPin = _ffModules[i]->InPin(j);
-            cout << "slack: " << _tPin->slack() << endl;
+            // cout << "slack: " << _tPin->slack() << endl;
             if (_tPin->slack() < 0)
                 _tns += _tPin->slack();
         }
@@ -788,6 +804,9 @@ double Database::totalCost(double _denThrs) const
         _powerCost += _ffModules[i]->getPower();
         _areaCost += _ffModules[i]->area();
     }
-
+    cout << "tns: " << _tnsCost << endl;
+    cout << "power: " << _powerCost << endl;
+    cout << "area: " << _areaCost << endl;
+    
     return _alpha * _tnsCost + _beta * _powerCost + _gamma * _areaCost + _lambda * getDen(_denThrs);
 }
