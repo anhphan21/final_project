@@ -241,6 +241,8 @@ void Database::parser(const string &filename)
                     addModule(currentM);
                     if (_type->isFF())
                         addFF(currentM);
+                    else
+                        addGate(currentM);
                     for (int i = 0; i < PinOfMnum; ++i)
                     {
                         string PinName = _type->pinName(i);
@@ -699,8 +701,9 @@ void Database::printResult()
 Pin *Database::FindPrePin(Pin *inputPin)
 {
     Module *currentM = inputPin->module();
-    string originFF = currentM->name();
+    string originFFName = currentM->name();
     queue<Pin *> que;
+    double _displacement = 0;
     Net *OriginalCLKNet = nullptr;
     Net *CurrentCLKNet = nullptr;
     Net *currentnet = nullptr;
@@ -750,7 +753,7 @@ Pin *Database::FindPrePin(Pin *inputPin)
                 CurrentCLKNet = currentM->pin(i)->net();
             }
         }
-        if (currentM->isFF() == 1 && CurrentCLKNet == OriginalCLKNet && originFF != currentM->name())
+        if (currentM->isFF() == 1 && CurrentCLKNet == OriginalCLKNet && originFFName != currentM->name())
         {
             // cout << endl << endl;
             currentPin = currentPin->net()->getOutputPin();
@@ -758,6 +761,7 @@ Pin *Database::FindPrePin(Pin *inputPin)
             // cout << "PreModule " << currentM->name() << endl;
             return currentPin;
         }
+        
     }
 }
 

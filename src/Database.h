@@ -55,6 +55,7 @@ public:
     // methods for design (hyper-graph) construction
     void addModule(Module *module) { _modules.push_back(module); }
     void addFF(Module *ff) { _ffModules.push_back(ff); }
+    void addGate(Module* ff){_GateModule.push_back(ff); }
     void addNet(Net *net) { _nets.push_back(net); }
     void addClkNet(Net *clk) { _clkNets.push_back(clk); }
     void addPin(Pin *pin) { _pins.push_back(pin); }
@@ -204,6 +205,7 @@ private:
 
     // Caching the list for processing
     ModuleList _ffModules;
+    GateList _GateModule;
     NetList _clkNets;
 
     // History for output

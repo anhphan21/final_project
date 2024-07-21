@@ -34,6 +34,7 @@ public:
     Node *node(unsigned nodeId) { return _nodes[nodeId]; }
     void setDatabase(Database *dataBase) { _dataBase = dataBase; }
     Database *getDatabase() { return _dataBase; }
+    void netListGraph();
 
 private:
     Database *_dataBase;
@@ -41,6 +42,7 @@ private:
     vector<Module *> _diamondINF; // Graph_input
     NodeList _nodes;
     map<string, Node *> _name2Node;
+    map<string , Node*> _recordGraph;
 };
 
 #endif // PLACEMENT_H

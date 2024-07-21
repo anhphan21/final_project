@@ -538,6 +538,7 @@ void Placement::constructGraph()
     int max_BitFF = _dataBase->getMaxBitFFLib(); // the max bit FF in FFlib
 
     _nodes.clear();
+    
     for (int i = 0; i < num_node; ++i)
     {
         Node *n = new Node;
@@ -644,4 +645,32 @@ double Placement::cal_cost(Module *ffN, Module *ff0) // ffN is primary
     // }
         
     return (new_cost - initial_cost);
+}
+
+void Placement::netListGraph()
+{
+
+    NetList net = _dataBase->getClkNets();
+    int num_node = _dataBase->getNumFF();
+    // cout<<num_node<<endl;
+    int max_BitFF = _dataBase->getMaxBitFFLib(); // the max bit FF in FFlib
+    //_data;
+    _nodes.clear();
+    for (int i = 0; i < num_node; ++i)
+    {
+        Node *n = new Node;
+        n->setFFinNode(_dataBase->ff(i));
+        _name2Node[n->getFFinNode()->name()] = n;
+        _nodes.push_back(n);
+    }
+    // cout<<__LINE__<<endl;
+    for (int i = 0; i < _dataBase->getNumClkNets(); ++i)
+    {
+        for (int j = 0; j < _dataBase->getClkNets()[i]->numPins(); ++j)
+        {
+            
+        }
+    }
+
+
 }

@@ -218,9 +218,9 @@ struct Point2 {
     }
 
     /// Element-wise clamp
-    friend Point2<T> Clamp(const Point2<T> &u, const Point2<T> &lo, const Point2<T> &hi) {
-        return Point2<T>(std::clamp(u.x, lo.x, hi.x), std::clamp(u.y, lo.y, hi.y));
-    }
+    // friend Point2<T> Clamp(const Point2<T> &u, const Point2<T> &lo, const Point2<T> &hi) {
+    //     return Point2<T>(std::clamp(u.x, lo.x, hi.x), std::clamp(u.y, lo.y, hi.y));
+    // }
 
     /// Is finite
     friend bool IsFinite(const Point2<T> &u) {
