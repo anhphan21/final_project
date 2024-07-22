@@ -74,6 +74,7 @@ public:
     // get design property
     Module *module(unsigned moduleId) { return _modules[moduleId]; }
     Module *ff(unsigned ffId) { return _ffModules[ffId]; }
+    Module *Gate(unsigned GateId) { return _GateModule[GateId]; }
     Net *net(unsigned netId) { return _nets[netId]; }
     Pin *pin(unsigned pinId) { return _pins[pinId]; }
     Row *row(unsigned rowId) { return _rows[rowId]; }
@@ -100,6 +101,7 @@ public:
     unsigned getNumInputs() const { return _numInput; }
     unsigned getNumOutputs() const { return _numOutput; }
     unsigned getNumRows() const { return _rows.size(); }
+    unsigned getNumGate() const { return _GateModule.size(); }
     double getAlpha() const { return _alpha; }
     double getBeta() const { return _beta; }
     double getGamma() const { return _gamma; }
@@ -214,7 +216,7 @@ private:
     // void createPinforModule(Module *);
     // void updateRadiusRecur(FFCell*, Module*);
     Module *FindPrePin(Module *currentM);
-    
+
     // void updateInitialSlackInfo();
 };
 

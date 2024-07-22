@@ -35,7 +35,7 @@ public:
     void setDatabase(Database *dataBase) { _dataBase = dataBase; }
     Database *getDatabase() { return _dataBase; }
     void netListGraph();
-
+    map<string, vector<Module*>> CLKnetmodule;
 private:
     Database *_dataBase;
     // construct graph

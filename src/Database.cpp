@@ -242,7 +242,14 @@ void Database::parser(const string &filename)
                     if (_type->isFF())
                         addFF(currentM);
                     else
+                    {   
                         addGate(currentM);
+                        if(currentM->isFF()==1)
+                        {
+                            cout<<"test "<<currentM->name()<<endl;
+                        }
+                        
+                    }
                     for (int i = 0; i < PinOfMnum; ++i)
                     {
                         string PinName = _type->pinName(i);
@@ -264,7 +271,7 @@ void Database::parser(const string &filename)
             int PinNum;
             string temp, Netname;
             iss >> _numNet;
-
+            cout << "NumNet: "<< _numNet << endl;
             string type, FFname, TargetPin;
             Module *_tModule;
             CellType *_type;
@@ -281,7 +288,7 @@ void Database::parser(const string &filename)
                 iss >> temp >> Netname >> PinNum;
                 netptr = new Net();
                 netptr->setName(Netname);
-
+                //cout << "PinNum: " <<Netname<<endl;
                 for (int j = 0; j < PinNum; j++)
                 {
                     getline(file, line);

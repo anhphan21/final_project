@@ -7,7 +7,9 @@ int main(int argc, char **argv)
     Database testDTB;
     testDTB.parser(argv[1]);
     cout << "Done parser!!!" << endl;
-    
+    Placement testGraph;
+    testGraph.setDatabase(&testDTB);
+    testGraph.netListGraph();
     // Module* ptrM = testDTB.module(2);
     // Pin* currentPin = nullptr;
     // for (int i = 0; i < ptrM->numInPins(); i++) {
@@ -25,30 +27,31 @@ int main(int argc, char **argv)
     // testDTB.updateSlack(currentPin);
     // cout<<"after: "<<currentPin->slack()<<endl;
     // for(int i=0;i<testDTB.getNumFF();++i)
-    cout << testDTB.totalCost(1) << endl;
-    testDTB.updateRadius();
-    testDTB.updateInitialSlackInfo();
-    Placement testGraph;
-    testGraph.setDatabase(&testDTB);
-    for (size_t i = 0; i < testGraph.getDatabase()->getNumModules(); i++)
-    {
-        cout << "Module name " << testGraph.getDatabase()->module(i)->name() << "  FFtype " << testGraph.getDatabase()->module(i)->cellType()->getName();
-        cout << " x " << testGraph.getDatabase()->module(i)->x() << " " << "y " << testGraph.getDatabase()->module(i)->y() << endl;
-    }
-    testGraph.constructGraph();
+    //=====
+    // cout << testDTB.totalCost(1) << endl;
+    // testDTB.updateRadius();
+    // testDTB.updateInitialSlackInfo();
+    // Placement testGraph;
+    // testGraph.setDatabase(&testDTB);
+    // for (size_t i = 0; i < testGraph.getDatabase()->getNumModules(); i++)
+    // {
+    //     cout << "Module name " << testGraph.getDatabase()->module(i)->name() << "  FFtype " << testGraph.getDatabase()->module(i)->cellType()->getName();
+    //     cout << " x " << testGraph.getDatabase()->module(i)->x() << " " << "y " << testGraph.getDatabase()->module(i)->y() << endl;
+    // }
+    // testGraph.constructGraph();
     
 
-    // // print MST ///////////////////////////////////////////////
-    for (size_t i = 0; i < testGraph.getNumNode(); i++)
-    {
-        // cout << "Node " << testGraph.node(i)->getFFinNode()->name() << " has neighbor: ";
-        map<string, pair<Node *, double>> neighbor = testGraph.node(i)->getneighbormap();
-        for (const auto &pair : neighbor)
-        {
-            // cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
-        }
-        // cout << endl;
-    }
+    // // // print MST ///////////////////////////////////////////////
+    // for (size_t i = 0; i < testGraph.getNumNode(); i++)
+    // {
+    //     // cout << "Node " << testGraph.node(i)->getFFinNode()->name() << " has neighbor: ";
+    //     map<string, pair<Node *, double>> neighbor = testGraph.node(i)->getneighbormap();
+    //     for (const auto &pair : neighbor)
+    //     {
+    //         // cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
+    //     }
+    //     // cout << endl;
+    // }
     // // print MST ///////////////////////////////////////////////
     // double cost = 0;
     // double a = testDTB.getAlpha();
@@ -66,18 +69,19 @@ int main(int argc, char **argv)
     //     }
     // }
     // cout << cost << endl;
-    testGraph.mainLoop();
-    for (size_t i = 0; i < testGraph.getDatabase()->getNumModules(); i++)
-    {
-        cout << "Module name " << testGraph.getDatabase()->module(i)->name() << "  Bit: " << testGraph.getDatabase()->module(i)->cellType()->getnumBit();
-        cout << " x " << testGraph.getDatabase()->module(i)->x() << " " << "y " << testGraph.getDatabase()->module(i)->y() << endl;
-        // for (size_t j = 0; j < testGraph.getDatabase()->module(i)->numInPins(); j++)
-        // {
-        //     cout <<"pre module :"<< testGraph.getDatabase()->module(i)->InPin(j)->preFFPin()->module()->name()<<endl;
-        // }
+    // ===
+    // testGraph.mainLoop();
+    // for (size_t i = 0; i < testGraph.getDatabase()->getNumModules(); i++)
+    // {
+    //     cout << "Module name " << testGraph.getDatabase()->module(i)->name() << "  Bit: " << testGraph.getDatabase()->module(i)->cellType()->getnumBit();
+    //     cout << " x " << testGraph.getDatabase()->module(i)->x() << " " << "y " << testGraph.getDatabase()->module(i)->y() << endl;
+    //     // for (size_t j = 0; j < testGraph.getDatabase()->module(i)->numInPins(); j++)
+    //     // {
+    //     //     cout <<"pre module :"<< testGraph.getDatabase()->module(i)->InPin(j)->preFFPin()->module()->name()<<endl;
+    //     // }
         
-    }
-    cout << testDTB.totalCost(1) << endl;
+    // }
+    // cout << testDTB.totalCost(1) << endl;
 
     // cout<<testGraph.getNumNode()<<endl;
     // for(int i=0;i<testGraph.getNumNode();++i)

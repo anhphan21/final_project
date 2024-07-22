@@ -6,6 +6,7 @@
 #include <limits>
 #include <vector>
 #include <random>
+#include <queue>
 using namespace std;
 
 #define leafthresold 0.75 // TODO: can be changed
@@ -649,28 +650,40 @@ double Placement::cal_cost(Module *ffN, Module *ff0) // ffN is primary
 
 void Placement::netListGraph()
 {
-
-    NetList net = _dataBase->getClkNets();
-    int num_node = _dataBase->getNumFF();
-    // cout<<num_node<<endl;
-    int max_BitFF = _dataBase->getMaxBitFFLib(); // the max bit FF in FFlib
-    //_data;
-    _nodes.clear();
-    for (int i = 0; i < num_node; ++i)
+    queue<Pin* > que;
+    bool first = 1;
+    for (int i = 0; i < this->_dataBase->getNumInputs(); i++)
     {
-        Node *n = new Node;
-        n->setFFinNode(_dataBase->ff(i));
-        _name2Node[n->getFFinNode()->name()] = n;
-        _nodes.push_back(n);
-    }
-    // cout<<__LINE__<<endl;
-    for (int i = 0; i < _dataBase->getNumClkNets(); ++i)
-    {
-        for (int j = 0; j < _dataBase->getClkNets()[i]->numPins(); ++j)
+        Net* netptr = this->_dataBase->input(i)->net();
+        for (int j = 0; j < netptr->pinNum(); j++)
         {
-            
+            if (j == netptr->getOutIdx())
+            {
+                continue;
+            }
+            que.push(netptr->pin(i));
         }
+        while (que.empty() || first)
+        {
+            first = 0;
+            Module* moduleptr = que.front()->module();
+
+            if (moduleptr->isFF())
+            {
+                cout << "finding" << endl;
+                auto it = this->CLKnetmodule.find(moduleptr->pin(moduleptr->cellType()->pinNum() - 1)->net()->name());
+                if (it == CLKnetmodule.end())
+                {
+                    vector<Module*> module_vec;
+                    module_vec.push_back(moduleptr);
+                    CLKnetmodule.insert({ moduleptr->pin(moduleptr->cellType()->pinNum() - 1)->net()->name(),module_vec });
+                }
+                else
+                {
+                    it->second.push_back(moduleptr);
+                }
+            }
+        }
+        que.pop();
     }
-
-
 }
