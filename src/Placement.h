@@ -3,6 +3,14 @@
 
 #include "Database.h"
 // We declare a Placement every time we are doing merge on a clk net
+class Nodeinf
+{
+    public:
+        Nodeinf() {  };
+        int level = 0;
+
+};
+
 class Placement
 {
 public:
@@ -16,6 +24,7 @@ public:
     void constructGraph();
     double cal_cost(Module *ff1, Module *ff2);
     NodeList findMST();
+    void netListGraph();
     // methods for design (hyper-graph) construction
     void addNode(Node *node) { _nodes.push_back(node); }
     unsigned getNumNode() { return _nodes.size(); }
@@ -34,15 +43,14 @@ public:
     Node *node(unsigned nodeId) { return _nodes[nodeId]; }
     void setDatabase(Database *dataBase) { _dataBase = dataBase; }
     Database *getDatabase() { return _dataBase; }
-    void netListGraph();
-    map<string, vector<Module*>> CLKnetmodule;
+    map<string, vector<Module*>>  CLKNetModule;
+
 private:
     Database *_dataBase;
     // construct graph
     vector<Module *> _diamondINF; // Graph_input
     NodeList _nodes;
     map<string, Node *> _name2Node;
-    map<string , Node*> _recordGraph;
 };
 
 #endif // PLACEMENT_H

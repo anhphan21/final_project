@@ -3,19 +3,34 @@
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
-#include <limits>
+#include <limits.h>
 #include <vector>
 #include <random>
-#include <queue>
+#include <math.h>
+#include <cfloat>
+
 using namespace std;
 
 #define leafthresold 0.75 // TODO: can be changed
+#define __DBL_MAX__         1.7976931348623158e+308 /* max value */
 
 void Placement::mainLoop()
 {
     // find same clk path-> calculate diamond -> construct graph according to cost -> find MST -> merge FFs
     // TODO:how to find same clk path , and loop it
     NodeList mst = findMST();
+    // print MST ///////////////////////////////////////////////
+    for (size_t i = 0; i < mst.size(); i++)
+    {
+        cout << "Node " << mst[i]->getFFinNode()->name() << " has neighbor: ";
+        map<string, pair<Node *, double>> neighbor = mst[i]->getneighbormap();
+        for (const auto &pair : neighbor)
+        {
+            cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
+        }
+        cout << endl;
+    }
+    // print MST ///////////////////////////////////////////////
     int leafsize = 0;
     for (size_t i = 0; i < mst.size(); i++)
     {
@@ -73,7 +88,6 @@ void Placement::mainLoop()
             merge2FF(target, neighbor[maxidx].first->getNodeidxheap(), 0);
         }
     }
-
 }
 
 void Placement::mergeFFinG()
@@ -90,7 +104,6 @@ void Placement::mergeFFinG()
         unsigned idx2 = mymap.second.first->getNodeidxheap();
         if (_nodes[idx]->getneighborweight(_nodes[idx2]->getFFinNode()->name()) < 0)
         {
-            cout <<"merge " << _nodes[idx]->getFFinNode()->name() << " and " << _nodes[idx2]->getFFinNode()->name() << endl;
             merge2FF(idx, idx2, 0);
         }
         else
@@ -177,7 +190,6 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
     uniform_int_distribution<unsigned> distribution(0, _dataBase->getNumfflibBit((m1->cellType()->getnumBit()) * 2) - 1);
     newffidx = distribution(generator);
     Module *m3 = new Module(m3name, _dataBase->ffLib((m1->cellType()->getnumBit()) * 2, newffidx), newX, newY);
-    
     m3->clearPins();
     m3->setPinsize(m3->cellType()->getnumBit() * 2 + 1);
     int pinid = 0;
@@ -539,7 +551,6 @@ void Placement::constructGraph()
     int max_BitFF = _dataBase->getMaxBitFFLib(); // the max bit FF in FFlib
 
     _nodes.clear();
-    
     for (int i = 0; i < num_node; ++i)
     {
         Node *n = new Node;
@@ -573,8 +584,8 @@ void Placement::constructGraph()
                         continue;
                     else if (overlap_ornot(r_i_j, r_i_k) && module_i_j->cellType()->numBit() == module_i_k->cellType()->numBit()) // they are overlapping ,in the same clknet,have the same bit FF and both of them are not larger than max_BitFF
                     {
-                        // cout << "name: " << module_i_j->name() << "、" << module_i_k->name() << " ,cost: " << cal_cost(module_i_j, module_i_k) << endl;
-                        // cout << module_i_j->InPin(0)->slack() << " " << module_i_k->InPin(0)->slack() << endl;
+                        //cout << "name: " << module_i_j->name() << "、" << module_i_k->name() << " cost: " << cal_cost(module_i_j, module_i_k) << endl;
+                        cout << module_i_j->InPin(0)->slack() << " " << module_i_k->InPin(0)->slack() << endl;
                         _name2Node[module_i_j->name()]->addNeighborPair({_name2Node[module_i_k->name()], cal_cost(module_i_j, module_i_k)});
                         _name2Node[module_i_k->name()]->addNeighborPair({_name2Node[module_i_j->name()], cal_cost(module_i_k, module_i_j)});
                     }
@@ -623,7 +634,7 @@ double Placement::cal_cost(Module *ffN, Module *ff0) // ffN is primary
         ffN->InPin(i)->setSlack(old_slack1);
         ff0->InPin(i)->setSlack(old_slack2);
     }
-    // _dataBase->totalCost(1);
+    _dataBase->totalCost(1);
     _dataBase->unMarkedDPin();
     int next_level_FF = 0;
     next_level_FF = pow(2, log2(ffN->cellType()->numBit()) + 1);
@@ -632,58 +643,109 @@ double Placement::cal_cost(Module *ffN, Module *ff0) // ffN is primary
     double Area_cost = 0;
     Area_cost = _dataBase->getGamma() * _dataBase->getFFlib(next_level_FF)->getArea();
 
-    initial_cost = _dataBase->getAlpha() *initial_TNS_cost + initial_Power_cost + initial_Area_cost;
-    double new_cost = _dataBase->getAlpha() *TNS_cost + Power_cost + Area_cost;
+    initial_cost = initial_TNS_cost + initial_Power_cost + initial_Area_cost;
+    double new_cost = TNS_cost + Power_cost + Area_cost;
     // cout << ffN->name() << " " << ff0->name() << " ,cost: " << initial_cost << " " << new_cost << endl;
-    // if((new_cost - initial_cost) < 0)
-    // {
-    //     cout <<"neg: " <<ffN->name() << " " << ff0->name() << endl;
-    //     cout << initial_Power_cost<<" "<<Power_cost<<endl;
-    //     cout << initial_Area_cost<<" "<<Area_cost<<endl;
-    //     cout << initial_TNS_cost<<" "<<TNS_cost<<endl;
-    //     cout <<initial_cost<<" "<<new_cost<<endl;
-    //     cout << endl;
-    // }
-        
     return (new_cost - initial_cost);
 }
 
+
 void Placement::netListGraph()
 {
-    queue<Pin* > que;
-    bool first = 1;
-    for (int i = 0; i < this->_dataBase->getNumInputs(); i++)
+   
+    int count=0;
+    for (int i = 0; i < this->_dataBase->getNumModules(); i++)
     {
-        Net* netptr = this->_dataBase->input(i)->net();
-        for (int j = 0; j < netptr->pinNum(); j++)
+        if (this->_dataBase->module(i)->numOutPins() == 0)
         {
-            if (j == netptr->getOutIdx())
-            {
-                continue;
-            }
-            que.push(netptr->pin(i));
+
+            cout << this->_dataBase->module(i)->name()<< " OUTPUT PIN ZERO" << endl;
         }
-        while (que.empty() || first)
+    }
+    cout << this->_dataBase->record << endl;
+    queue< Pin* > que;
+    bool first = 1;
+    for (int i = 0; i < this->_dataBase->getNumInputs(); i++) //抓取每一個IO
+    {
+        first = 1;
+        Net * netptr = this->_dataBase->input(i)->net();
+        if (netptr == nullptr) //
+        {
+            continue;
+        }
+        for (int j = 0; j < netptr->pinNum();  j++)
+        {
+           /* cout << "HI"<<que.size() << endl;
+            cout << "j " << j << "  /" << netptr->getOutIdx() << endl;*/
+            if (j == netptr->getOutIdx()) //如果取到Output Pin就跳過 我不用往會指
+            {  continue;
+            }
+            que.push(netptr->pin(j));
+        }
+        while (!que.empty() || first)
         {
             first = 0;
             Module* moduleptr = que.front()->module();
-
-            if (moduleptr->isFF())
+            /*cout << que.front()->name() << endl;
+            cout << "Round: "<<moduleptr->name() << endl;*/
+            if (moduleptr == nullptr)
             {
-                cout << "finding" << endl;
-                auto it = this->CLKnetmodule.find(moduleptr->pin(moduleptr->cellType()->pinNum() - 1)->net()->name());
-                if (it == CLKnetmodule.end())
+                cout << "EEEEE" << endl;
+            }
+            if ( moduleptr->isFF() ) //如果走訪到FF 就要去查看其clkNet
+            {
+                
+                auto it = this->CLKNetModule.find(moduleptr->pin(moduleptr->totnumPins() - 1)->net()->name());
+                if (CLKNetModule.end() == it )//看有沒有存過這個clkNet
                 {
                     vector<Module*> module_vec;
                     module_vec.push_back(moduleptr);
-                    CLKnetmodule.insert({ moduleptr->pin(moduleptr->cellType()->pinNum() - 1)->net()->name(),module_vec });
-                }
+                    CLKNetModule.insert({ moduleptr->pin(moduleptr->totnumPins() - 1)->net()->name() , module_vec });
+                } 
                 else
-                {
+                { 
                     it->second.push_back(moduleptr);
                 }
             }
+            /*cout << "Name " << moduleptr->cellType()->getName() << " " << moduleptr->numOutPins() << endl;*/
+            for (int j = 0; j < moduleptr->numOutPins(); j++)
+            {
+              /*  cout<<"cow lily booloo cow zhigi "<<moduleptr->OutPin(j)->name() << endl;*/
+                /*cout << "FINAL " << moduleptr->OutPin(j)->net()->numPins() - 1 << endl;*/
+                for (int z = 0; z < moduleptr->OutPin(j)->net()->numPins(); z++)
+                {
+                    
+                    if (z == moduleptr->OutPin(j)->net()->getOutIdx())
+                    {
+                        continue;
+                    }
+                    if (moduleptr->OutPin(j)->net()->pin(z)->module() == nullptr) //如果今天pin沒任何的module 就不要用
+                    {
+                        if (this->_dataBase->IODesign.find(moduleptr->OutPin(j)->net()->pin(z)->name()) != this->_dataBase->IODesign.end())
+                        {
+                            /*cout << (moduleptr->OutPin(j)->net()->pin(z)->name())<< endl;*/
+                            count++;
+                           /* cout << count << endl;*/
+                        }
+                        else
+                        {
+                            exit;
+                        }
+                    }
+                    else
+                    {
+                        cout << moduleptr->OutPin(j)->net()->pin(z)->module()->name() << endl;
+                        que.push(moduleptr->OutPin(j)->net()->pin(z));
+                        /*cout << ":::" << moduleptr->OutPin(j)->net()->pin(z)->module()->name() << endl;*/
+                    }
+                    /*cout << moduleptr->OutPin(j)->net()->pin(z)->name() << endl;*/
+                }
+            
+            }
+            
+            que.pop();
         }
-        que.pop();
     }
+    cout << count << endl;
+
 }

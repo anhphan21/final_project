@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 #include <vector>
-
+#include <queue>
 #include "Bin.h"
 #include "DatabaseDef.h"
 #include "History.h"
@@ -55,7 +55,6 @@ public:
     // methods for design (hyper-graph) construction
     void addModule(Module *module) { _modules.push_back(module); }
     void addFF(Module *ff) { _ffModules.push_back(ff); }
-    void addGate(Module* ff){_GateModule.push_back(ff); }
     void addNet(Net *net) { _nets.push_back(net); }
     void addClkNet(Net *clk) { _clkNets.push_back(clk); }
     void addPin(Pin *pin) { _pins.push_back(pin); }
@@ -74,7 +73,6 @@ public:
     // get design property
     Module *module(unsigned moduleId) { return _modules[moduleId]; }
     Module *ff(unsigned ffId) { return _ffModules[ffId]; }
-    Module *Gate(unsigned GateId) { return _GateModule[GateId]; }
     Net *net(unsigned netId) { return _nets[netId]; }
     Pin *pin(unsigned pinId) { return _pins[pinId]; }
     Row *row(unsigned rowId) { return _rows[rowId]; }
@@ -101,7 +99,6 @@ public:
     unsigned getNumInputs() const { return _numInput; }
     unsigned getNumOutputs() const { return _numOutput; }
     unsigned getNumRows() const { return _rows.size(); }
-    unsigned getNumGate() const { return _GateModule.size(); }
     double getAlpha() const { return _alpha; }
     double getBeta() const { return _beta; }
     double getGamma() const { return _gamma; }
@@ -160,6 +157,10 @@ public:
 
     FFCell *getFFlib(int bit){return _ffLib[bit][0];}
 
+    map<string, Pin*> IODesign;
+
+    int record = 0;
+
 private:
     string _name; // Design Name
 
@@ -203,11 +204,9 @@ private:
     // Caching
     map<string, BaseCell *> CellType2Ptr;
     map<string, Module *> ModuleName2Ptr;
-    map<string, Pin *> IODesign;
 
     // Caching the list for processing
     ModuleList _ffModules;
-    GateList _GateModule;
     NetList _clkNets;
 
     // History for output
@@ -216,7 +215,7 @@ private:
     // void createPinforModule(Module *);
     // void updateRadiusRecur(FFCell*, Module*);
     Module *FindPrePin(Module *currentM);
-
+    
     // void updateInitialSlackInfo();
 };
 

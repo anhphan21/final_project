@@ -96,6 +96,7 @@ class Module {
     string _name;
     double _x, _y;  // bottom-left coordinate
     bool _isFixed;
+    int prioriy;
     double _radius;
     CellType *_type;
 

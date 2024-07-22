@@ -102,6 +102,7 @@ void Database::parser(const string &filename)
                 {
                     type = "CLK";
                 }
+                cout << type << endl;
                 IODesign.insert({type, pinptr});
                 // IODesignPin.insert({type, pinptr});
             }
@@ -197,7 +198,10 @@ void Database::parser(const string &filename)
                 //     bptr->setPinOffset(name, pair<double, double>(x, y));
                 // }
                 if (name.size() >= 3)
-                    _check = (name.substr(0, 3) == "Out") ? true : false;
+                {
+                    _check = ((name.substr(0, 3) == "Out") || ((name.substr(0, 3) == "OUT"))) ? true : false;
+
+                }
                 bptr->setPin(name, make_pair(width, height), _check);
             }
             // cout << "Gate" << " " << id << " " << width << " " << height <<
@@ -241,15 +245,6 @@ void Database::parser(const string &filename)
                     addModule(currentM);
                     if (_type->isFF())
                         addFF(currentM);
-                    else
-                    {   
-                        addGate(currentM);
-                        if(currentM->isFF()==1)
-                        {
-                            cout<<"test "<<currentM->name()<<endl;
-                        }
-                        
-                    }
                     for (int i = 0; i < PinOfMnum; ++i)
                     {
                         string PinName = _type->pinName(i);
@@ -271,24 +266,29 @@ void Database::parser(const string &filename)
             int PinNum;
             string temp, Netname;
             iss >> _numNet;
-            cout << "NumNet: "<< _numNet << endl;
+
             string type, FFname, TargetPin;
             Module *_tModule;
             CellType *_type;
             Pin *_tPin;
             Net *netptr;
             bool Isclk;
-
+          /*  cout << "JJJJ" << endl;*/
             for (int i = 0; i < _numNet; i++)
             {
                 Isclk = false; // 定義這個Net是clkNet!!!每一條定義一個
                 getline(file, line);
+                //getline(file, line);
                 istringstream iss(line);
 
                 iss >> temp >> Netname >> PinNum;
+
+               /* cout << temp << endl;
+                cout << Netname << endl;
+                cout << PinNum << endl;*/
                 netptr = new Net();
                 netptr->setName(Netname);
-                //cout << "PinNum: " <<Netname<<endl;
+
                 for (int j = 0; j < PinNum; j++)
                 {
                     getline(file, line);
@@ -300,7 +300,6 @@ void Database::parser(const string &filename)
                         // 如果沒有'/'的Net pin角 代表會再IODesign  this is
                         // design pin
                         auto it = IODesign.find(type);
-
                         if (it == IODesign.end())
                         {
                             // IODesignPin腳 處理跟FF不一樣
@@ -308,6 +307,7 @@ void Database::parser(const string &filename)
                         }
                         else
                         {
+                            record++;
                             if (type.find("CLK") != string::npos)
                             {
                                 // 找到clk
@@ -554,12 +554,13 @@ void Database::updateInitialSlackInfo()
 void Database::updateSlack(Pin *ffpin)
 {
     Pin *_preFFPin;
+
     if (!ffpin->isVisited())
     { // Check if we need to update or not ?
         double _displacement = 0;
-        Pin *_tPin;
+        Pin *_tPin = nullptr;
         Net *_preNet;
- 
+
         _preFFPin = FindPrePin(ffpin);
         ffpin->setPreFFPin(_preFFPin);
         if (_preFFPin != nullptr)
@@ -568,20 +569,8 @@ void Database::updateSlack(Pin *ffpin)
             { // If the pre ff pin didn't update slack, then update it before update this FF
                 string _prePinName = _preFFPin->name();
                 _prePinName[0] = 'D';
-                // for(int i=0;i<_preFFPin->module()->numInPins()-1;i++)
-                // {
-                //     cout<<_preFFPin->module()->name()<<endl;
-                //     cout<<_preFFPin->module()->pin(i)->name()<<endl;
-                
-                //     updateSlack(_preFFPin->module()->InPin(i)); // Input idx 0 is D pin
-                    
-                    
-                    
-                // }
-                
                 unsigned idx = _preFFPin->module()->cellType()->getPinIdxFromName(_prePinName);
                 updateSlack(_preFFPin->module()->InPin(idx)); // Input idx 0 is D pin
-                
             }
             // Update slack of this D pin
             // Calculate the preFF->comb displacement
@@ -600,14 +589,14 @@ void Database::updateSlack(Pin *ffpin)
                 _displacement += (abs(_preFFPin->oldX() - _tPin->x()) + abs(_preFFPin->oldY()) - (_tPin->y()) - abs(_preFFPin->x() - _tPin->x()) + abs(_preFFPin->y() - _tPin->y()));
             }
         }
- 
+
         if (ffpin->isMoved())
         { // If the FF is moved then update the new slack
             _tPin = ffpin->net()->OutputPin();
             _displacement += (abs(ffpin->oldX() - _tPin->x()) + abs(ffpin->oldY() - _tPin->y())) - (abs(ffpin->x() - _tPin->x()) + abs(ffpin->y() - _tPin->y()));
         }
         // cout << "before: " << ffpin->slack() << endl;
- 
+
         ffpin->setSlack(ffpin->slack() + _displacement * _dDelay + (ffpin->oldQ() - ffpin->module()->cellType()->getQdelay()));
         // cout << ffpin->module()->name() << "/" << ffpin->name() << endl;
         // cout << "after: " << ffpin->slack() << endl;
@@ -708,9 +697,8 @@ void Database::printResult()
 Pin *Database::FindPrePin(Pin *inputPin)
 {
     Module *currentM = inputPin->module();
-    string originFFName = currentM->name();
+    string originFF = currentM->name();
     queue<Pin *> que;
-    double _displacement = 0;
     Net *OriginalCLKNet = nullptr;
     Net *CurrentCLKNet = nullptr;
     Net *currentnet = nullptr;
@@ -760,7 +748,7 @@ Pin *Database::FindPrePin(Pin *inputPin)
                 CurrentCLKNet = currentM->pin(i)->net();
             }
         }
-        if (currentM->isFF() == 1 && CurrentCLKNet == OriginalCLKNet && originFFName != currentM->name())
+        if (currentM->isFF() == 1 && CurrentCLKNet == OriginalCLKNet && originFF != currentM->name())
         {
             // cout << endl << endl;
             currentPin = currentPin->net()->getOutputPin();
@@ -768,7 +756,6 @@ Pin *Database::FindPrePin(Pin *inputPin)
             // cout << "PreModule " << currentM->name() << endl;
             return currentPin;
         }
-        
     }
 }
 
@@ -781,7 +768,7 @@ double Database::getTNS() const
         for (size_t j = 0, endj = _ffModules[i]->numInPins(); j < endj; j++)
         {
             _tPin = _ffModules[i]->InPin(j);
-            // cout << "slack: " << _tPin->slack() << endl;
+            cout << "slack: " << _tPin->slack() << endl;
             if (_tPin->slack() < 0)
                 _tns += _tPin->slack();
         }
@@ -815,9 +802,6 @@ double Database::totalCost(double _denThrs) const
         _powerCost += _ffModules[i]->getPower();
         _areaCost += _ffModules[i]->area();
     }
-    cout << "tns: " << _tnsCost << endl;
-    cout << "power: " << _powerCost << endl;
-    cout << "area: " << _areaCost << endl;
-    
+
     return _alpha * _tnsCost + _beta * _powerCost + _gamma * _areaCost + _lambda * getDen(_denThrs);
 }
