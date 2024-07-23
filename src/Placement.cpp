@@ -690,7 +690,7 @@ void Placement::netListGraph()
             cout << "Round: "<<moduleptr->name() << endl;*/
             if (moduleptr == nullptr)
             {
-                cout << "EEEEE" << endl;
+                cout << "ERROR" << endl;
             }
             if ( moduleptr->isFF() ) //如果走訪到FF 就要去查看其clkNet
             {
@@ -710,7 +710,6 @@ void Placement::netListGraph()
             /*cout << "Name " << moduleptr->cellType()->getName() << " " << moduleptr->numOutPins() << endl;*/
             for (int j = 0; j < moduleptr->numOutPins(); j++)
             {
-              /*  cout<<"cow lily booloo cow zhigi "<<moduleptr->OutPin(j)->name() << endl;*/
                 /*cout << "FINAL " << moduleptr->OutPin(j)->net()->numPins() - 1 << endl;*/
                 for (int z = 0; z < moduleptr->OutPin(j)->net()->numPins(); z++)
                 {
