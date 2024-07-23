@@ -663,8 +663,8 @@ double Placement::cal_cost(Module *ffN, Module *ff0) // ffN is primary
 
 Rhombus Placement::findInputRegion(Module *ff)
 {
-    //ff must be 1 bit FF
-    if (ff->InPin(0)->net()->OutputPin()->module() == nullptr)   //directory to input pin
+    // ff must be 1 bit FF
+    if (ff->InPin(0)->net()->OutputPin()->module() == nullptr) // directory to input pin
     {
         Rhombus ans(ff->InPin(0)->net()->OutputPin()->x(), ff->InPin(0)->net()->OutputPin()->y(), 0);
         return ans;
@@ -682,16 +682,27 @@ Rhombus Placement::findInputRegion(Module *ff)
 
 Rhombus Placement::findOutputRegion(Module *ff)
 {
-    //ff must be 1 bit FF
-    vector<Rhombus *> multi_region;
-    for(int i=0;i<ff->get_outputFF().second.size();++i)
+    // ff must be 1 bit FF
+    vector<Rhombus> multi_region;
+    for (int i = 0; i < ff->get_outputFF().size(); ++i)
     {
-        double slack = ff->get_outputFF().second[i]->InPin(0)->slack();
+        double slack = ff->get_outputFF()[i].second->InPin(0)->slack();
         double dis_delay = _dataBase->getDisplacementDelay();
         double WL_Q_0;
-        double radius = (slack + dis_delay * WL_Q_0) / dis_delay;
-        Rhombus *ans;
-        multi_region.push_back(ans);
+        if (ff->get_outputFF()[i].first == nullptr)
+        {
+            WL_Q_0 = abs(ff->OutPin(0)->x() - ff->get_outputFF()[i].second->InPin(0)->x()) + abs(ff->OutPin(0)->y() - ff->get_outputFF()[i].second->InPin(0)->y());
+            double radius = (slack + dis_delay * WL_Q_0) / dis_delay;
+            Rhombus ans(ff->get_outputFF()[i].second->InPin(0)->x(), ff->get_outputFF()[i].second->InPin(0)->y(), radius);
+            multi_region.push_back(ans);
+        }
+        else // curr_FF 和 out_FF 之間有gate
+        {
+            WL_Q_0 = abs(ff->OutPin(0)->x() - ff->get_outputFF()[i].first->InPin(0)->x()) + abs(ff->OutPin(0)->y() - ff->get_outputFF()[i].first->InPin(0)->y());
+            double radius = (slack + dis_delay * WL_Q_0) / dis_delay;
+            Rhombus ans(ff->get_outputFF()[i].first->InPin(0)->x(), ff->get_outputFF()[i].first->InPin(0)->y(), radius);
+            multi_region.push_back(ans);
+        }
     }
 }
 void Placement::constructFeasible(Module *ff, Rhombus in, Rhombus out)
@@ -710,8 +721,8 @@ void Placement::constructFeasible(Module *ff, Rhombus in, Rhombus out)
         ff->getfeasibleRegion().setY2(Feas_y + Feas_height);
         ff->getfeasibleRegion().setHeight(Feas_height);
         ff->getfeasibleRegion().setWidth(Feas_width);
-        in.RotatePeak(-45);             //rhombus
-        out.RotatePeak(-45);            //rhombus
-        //feasibleRegion still be retangleable
+        in.RotatePeak(-45);  // rhombus
+        out.RotatePeak(-45); // rhombus
+        // feasibleRegion still be retangleable
     }
 }
