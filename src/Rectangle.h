@@ -27,6 +27,12 @@ class Rectangle {
     double centerX() const { return (_left + _right) / 2; }
     double centerY() const { return (_bottom + _top) / 2; }
 
+    double getX1() const { return _x1; }
+    double getX2() const { return _x2; }
+    double getY1() const { return _y1; }
+    double getY2() const { return _y2; }
+    double getWidth() const { return _width; }
+    double getHeight() const { return _height; }
     /////////////////////////////////////////////
     // set
     /////////////////////////////////////////////
@@ -37,6 +43,24 @@ class Rectangle {
         _top = top;
     }
 
+    void setX1(double x) {
+        _x1 = x;
+    }
+    void setX2(double x) {
+        _x2 = x;
+    }
+    void setY1(double y) {
+        _y1 = y;
+    }
+    void setY2(double y) {
+        _y2 = y;
+    }
+    void setWidth(double w) {
+        _width = w;
+    }
+    void setHeight(double h) {
+        _height = h;
+    }
     /////////////////////////////////////////////
     // overlap area of two rectangles
     /////////////////////////////////////////////
@@ -53,6 +77,11 @@ class Rectangle {
     double _bottom;
     double _right;
     double _top;
+    
+    //feasible region of intersection
+    double _x1, _y1;//left bottom
+    double _x2, _y2;//right top
+    double _width, _height;  // width and height of rectangle
 };
 
 #endif  // RECTANGLE_H

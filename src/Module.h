@@ -44,6 +44,7 @@ class Module {
 
     double radius() const { return _radius; }
 
+    Rectangle getfeasibleRegion() const {return _feasibleRegion;}
     /////////////////////////////////////////////
     // set
     /////////////////////////////////////////////
@@ -110,5 +111,8 @@ class Module {
             _tPin->setPosition(x() + _tPin->xOffset(), y() + _tPin->yOffset());
         }
     }
+
+    // feasible region
+    Rectangle _feasibleRegion;
 };
 #endif
