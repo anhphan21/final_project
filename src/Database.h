@@ -160,6 +160,9 @@ public:
     FFCell *getFFlib(int bit){return _ffLib[bit][0];}
     // unsigned getMaxBitFFLib() const { return _ffLib.end()->first; }
 
+
+    // let all slack be positive
+    void setPositive_slack();
 private:
     string _name; // Design Name
 

@@ -18,7 +18,7 @@ class Module {
     }
 
     Module(string &name, CellType *type, double x, double y)
-        : _name(name), _type(type), _x(x), _y(y), _isFixed(false), _radius(0) {
+        : _name(name), _type(type), _x(x), _y(y), _isFixed(false), _radius(0){
     }
 
     /////////////////////////////////////////////
@@ -92,6 +92,12 @@ class Module {
     void setOutPin(unsigned idx, Pin *pPin) { _pins[_type->outIdx(idx)] = pPin; }
     void setCellType(CellType *type) { _type = type; }
 
+
+
+    void store_ouputGate(Module *gate){_outputFF.first=gate;}
+    void store_ouputFF(Module *ff){_outputFF.second.push_back(ff);}
+    pair<Module *,vector<Module *>> get_outputFF(){return _outputFF;}
+
    private:
     // variables from benchmark input
     string _name;
@@ -114,5 +120,7 @@ class Module {
 
     // feasible region
     Rectangle _feasibleRegion;
+    // vector<Module *> _outputFF;
+    pair<Module *,vector<Module *>> _outputFF;  //first: Gate; second: ouput FF
 };
 #endif

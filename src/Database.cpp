@@ -798,3 +798,9 @@ double Database::totalCost(double _denThrs) const
 
     return _alpha * _tnsCost + _beta * _powerCost + _gamma * _areaCost + _lambda * getDen(_denThrs);
 }
+
+
+void Database::setPositive_slack()
+{
+    
+}

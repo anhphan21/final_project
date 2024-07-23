@@ -12,12 +12,21 @@ public:
         _nodes[0] = nullptr;
     };
     void mainLoop();
-    void constructFeasible(Module ff,Rhombus in,Rhombus out);
-    Rhombus findInputRegion(Module ff);
-    vector<Rhombus > findOutputRegion(Module ff);
+
+
+
+    void constructFeasible(Module *ff,Rhombus in,Rhombus out);
+    Rhombus findInputRegion(Module *ff);
+    Rhombus findOutputRegion(Module *ff);
+
+
+
     void netListGraph();
     void constructGraph();
     double cal_cost(Module *ff1, Module *ff2);
+
+
+
     NodeList findMST();
     // methods for design (hyper-graph) construction
     void addNode(Node *node) { _nodes.push_back(node); }
