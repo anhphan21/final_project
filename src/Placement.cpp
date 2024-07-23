@@ -682,6 +682,7 @@ void Placement::netListGraph()
             }
             que.push(netptr->pin(j));
         }
+        vector<Module*> module_vec;
         while (!que.empty() || first)
         {
             first = 0;
@@ -698,9 +699,9 @@ void Placement::netListGraph()
                 auto it = this->CLKNetModule.find(moduleptr->pin(moduleptr->totnumPins() - 1)->net()->name());
                 if (CLKNetModule.end() == it )//看有沒有存過這個clkNet
                 {
-                    vector<Module*> module_vec;
+                    // vector<Module*> module_vec;
                     module_vec.push_back(moduleptr);
-                    CLKNetModule.insert({ moduleptr->pin(moduleptr->totnumPins() - 1)->net()->name() , module_vec });
+                    CLKNetModule.insert({ moduleptr->pin(moduleptr->totnumPins() - 1)->net()->name() , module_vec }); //CLK net
                 } 
                 else
                 { 
