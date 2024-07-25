@@ -24,7 +24,7 @@ public:
     ~Database() = default;
 
     void parser(const string &filename);
-
+    void outputTofile(const string &filename);
     // Design parameters
     void setName(string &name) { _name = name; }
 
@@ -49,7 +49,12 @@ public:
     void setBinWidth(double w) { _binWidth = w; }
     void setBinHeight(double h) { _binHeight = h; }
     void setBinUtil(double u) { _binMaxUtil = u; }
-
+    void setModule(unsigned idx, Module *mod)
+    {
+        _modules[idx] = mod;
+        ModuleName2Ptr[mod->name()] = mod;
+    }
+    void setFF(unsigned idx, Module *mod) { _ffModules[idx] = mod; }
     void setDisplacementDelay(double delay) { _dDelay = delay; }
 
     // methods for design (hyper-graph) construction
@@ -144,6 +149,8 @@ public:
             exit(1);
         }
     }
+    FFCell *getBestCelltype(unsigned bitnum) { return _bestCells[bitnum]; }
+    unsigned getFFlibBitsize() { return _bestCells.size(); }
     unsigned getNumfflibBit(unsigned bit)
     {
         auto it = _ffLib.find(bit);
@@ -162,7 +169,7 @@ public:
     void updateSlackAll();
     void updateSlack(Pin *);
     void resetVisit();
-
+    void builBestCelltype();
     void unMarkedDPin(); // unmarked all clk pin of FF
     // void updateRadius(FFCell *);
     void updateRadius();
@@ -195,6 +202,7 @@ private:
     // Library
     FFLLibrary _ffLib;
     CellLibrary _cellLib;
+    map<unsigned, FFCell *> _bestCells;
 
     // Design statics
     Rectangle _dieRectangle;

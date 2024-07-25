@@ -14,6 +14,7 @@ public:
     void mainLoop();
     void constructDiamond();
     void constructGraph();
+    set<set<Module *>> calMaxClique(unsigned clkidx);
     double cal_cost(Module *ff1, Module *ff2);
     NodeList findMST();
     // methods for design (hyper-graph) construction

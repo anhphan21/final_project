@@ -5,7 +5,7 @@
 #include <fstream>
 #include <queue>
 #include <sstream>
-
+#include <math.h>
 #include "Pin.h"
 #include "Row.h"
 
@@ -792,4 +792,71 @@ double Database::totalCost(double _denThrs) const
     }
 
     return _alpha * _tnsCost + _beta * _powerCost + _gamma * _areaCost + _lambda * getDen(_denThrs);
+}
+
+void Database::builBestCelltype()
+{
+    for (size_t i = 0; i < _ffLib.size(); i++)
+    {
+        vector<FFCell *> cellv = _ffLib[pow(2, i)];
+        double maxCost = 0;
+        unsigned bestid;
+        vector<double> disCost;
+        disCost.clear();
+        // find best among cellv(same bit celltype)
+        for (size_t j = 0; j < cellv.size(); j++)
+        { // cal displacement cost
+            unsigned clkidx = cellv[j]->clkPinIdx();
+            double cost = 0;
+            for (size_t k = 0; k < cellv[j]->getInNum(); k++)
+            {
+                if (k != clkidx)
+                {
+                    cost += (cellv[j]->pinOffsetX(k) + cellv[j]->pinOffsetY(k)) * _dDelay;
+                }
+            }
+            disCost.push_back(cost);
+            if (cost > maxCost)
+            {
+                maxCost = cost;
+            }
+        }
+        double mintotCost = DBL_MAX;
+        for (size_t j = 0; j < cellv.size(); j++)
+        {
+            double totcost = 0;
+            totcost += maxCost - disCost[j];
+            totcost += cellv[j]->getArea() + cellv[j]->getPower();
+            cout << "total cost of " << cellv[j]->getName() << " is : " << totcost << endl;
+            if (totcost < mintotCost)
+            {
+                mintotCost = totcost;
+                bestid = j;
+            }
+        }
+        cout << "best cell type is " << cellv[bestid]->getName() << "cost is : " << mintotCost << endl;
+        _bestCells[pow(2, i)] = cellv[bestid];
+    }
+    return;
+}
+void Database::outputTofile(const string &filename)
+{
+    ofstream outFile(filename);
+    if (!outFile.is_open())
+    {
+        cerr << "Error opening file: " << filename << endl;
+        exit(1);
+    }
+    outFile << "CellInst " << getNumFF() << "/n";
+    for (size_t i = 0; i < getNumFF(); i++)
+    {
+        outFile << "Inst " << _ffModules[i]->name() << " " << _ffModules[i]->cellType()->getName() << " "
+                << _ffModules[i]->x() << " " << _ffModules[i]->y() << "/n";
+    }
+    for (size_t i = 0; i < getNumPins(); i++)
+    {
+        outFile << _pins[i]->history()->oldModuleName() << "/" << _pins[i]->history()->oldPinName()
+                << " map " << _pins[i]->module()->name() << "/" << _pins[i]->name() << "/n";
+    }
+    return;
 }
