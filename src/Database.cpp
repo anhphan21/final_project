@@ -5,6 +5,7 @@
 #include <fstream>
 #include <queue>
 #include <sstream>
+#include <cmath>
 
 #include "Pin.h"
 #include "Row.h"
@@ -394,6 +395,8 @@ void Database::parser(const string &filename)
             CellType *_type = _tModule->cellType();
             Pin *_tDPin = _tModule->pin(_type->getPinIdxFromName(Dpin));
             _tDPin->setSlack(slack);
+            if (slack < 0)
+                _initial_negSlack.push_back(_tDPin);
         }
         else if (keyword == "GatePower")
         {
@@ -648,8 +651,8 @@ void Database::updateRadius()
             _dist2PreGate = Pin::calHPWL(*_tPin, *(_tPin->net()->getOutputPin()));
             cout << "here 3" << endl;
             double _DeltaQpinDelay = 0;
-            
-            _nRadius = (_tSlack->slack()+_DeltaQpinDelay+_dDelay*(0)/_dDelay)+_dist2PreGate;
+
+            _nRadius = (_tSlack->slack() + _DeltaQpinDelay + _dDelay * (0) / _dDelay) + _dist2PreGate;
             if (_nRadius < _tRadius)
                 _tRadius = _nRadius;
             cout << "here 2" << endl;
@@ -799,8 +802,39 @@ double Database::totalCost(double _denThrs) const
     return _alpha * _tnsCost + _beta * _powerCost + _gamma * _areaCost + _lambda * getDen(_denThrs);
 }
 
-
 void Database::setPositive_slack()
 {
-    
+    for (int i = 0; i < _initial_negSlack.size(); ++i)
+    {
+        double ff_original_slack = _initial_negSlack[i]->getSlackInfor()->slack();
+        double dis_delay = getDisplacementDelay();
+        double initial_dist = abs(_initial_negSlack[i]->net()->OutputPin()->x() - _initial_negSlack[i]->x()) + abs(_initial_negSlack[i]->net()->OutputPin()->y() - _initial_negSlack[i]->y());
+        double radius = (ff_original_slack + dis_delay * initial_dist) / dis_delay;
+        adjust_position(_initial_negSlack[i]->net()->OutputPin(), _initial_negSlack[i], radius, row(0)->width(), row(0)->height());
+        
+        // update slack
+        double new_dist = abs(_initial_negSlack[i]->net()->OutputPin()->x() - _initial_negSlack[i]->x()) + abs(_initial_negSlack[i]->net()->OutputPin()->y() - _initial_negSlack[i]->y());
+        double new_slack = (initial_dist - new_dist) * dis_delay + ff_original_slack;
+        _initial_negSlack[i]->getSlackInfor()->setSlack(new_slack);
+        // cout<<initial_dist<<" "<<new_dist<<endl;
+        // cout<<ff_original_slack<<" "<<new_slack<<endl;
+    }
+}
+
+void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, double grid_width, double grid_height)
+{
+    double deltaX = abs(fix_pin->x() - adjust_pin->x());
+    double deltaY = abs(fix_pin->y() - adjust_pin->y());
+    double initial_dist = deltaX + deltaY;
+    if (initial_dist <= radius)
+        return ; // don't have to adjust
+    double reduceBy = initial_dist - radius;
+    if (deltaX > deltaY)
+        deltaX = max(deltaX - reduceBy, 0.0);
+    else
+        deltaY = max(deltaY - reduceBy, 0.0);
+
+    adjust_pin->setPosition((fix_pin->x() + deltaX * (adjust_pin->x() > fix_pin->x() ? 1 : -1)), (fix_pin->y() + deltaY * (adjust_pin->y() > fix_pin->y() ? 1 : -1)));
+    // snap to grid
+    // adjust_pin->setPosition((((adjust_pin->x() + grid_width - 1) / grid_width) * grid_width), (((adjust_pin->y() + grid_height - 1) / grid_height) * grid_height));
 }

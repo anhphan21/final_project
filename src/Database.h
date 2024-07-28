@@ -15,6 +15,7 @@
 #include "Pin.h"
 #include "Placement.h"
 #include "rhombus.h"
+#include "Row.h"
 using namespace std;
 
 class Database
@@ -163,6 +164,8 @@ public:
 
     // let all slack be positive
     void setPositive_slack();
+    void adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius , double grid_width, double grid_height);
+    vector<Pin *> getNegative_slack(){return _initial_negSlack;};
 private:
     string _name; // Design Name
 
@@ -219,6 +222,7 @@ private:
     // void updateRadiusRecur(FFCell*, Module*);
     Module *FindPrePin(Module *currentM);
     // void updateInitialSlackInfo();
+    vector<Pin *> _initial_negSlack;
 };
 
 #endif // DATABASE_H

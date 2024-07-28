@@ -43,24 +43,16 @@ class Rectangle {
         _top = top;
     }
 
-    void setX1(double x) {
-        _x1 = x;
+    void setInf(double x1, double y1,double x2, double y2)
+    {
+        _x1 = x1;
+        _y1 = y1;
+        _x2 = x2;
+        _y2 = y2;
+        _width = abs(x2 - x1);
+        _height = abs(y2 - y1);
     }
-    void setX2(double x) {
-        _x2 = x;
-    }
-    void setY1(double y) {
-        _y1 = y;
-    }
-    void setY2(double y) {
-        _y2 = y;
-    }
-    void setWidth(double w) {
-        _width = w;
-    }
-    void setHeight(double h) {
-        _height = h;
-    }
+   
     /////////////////////////////////////////////
     // overlap area of two rectangles
     /////////////////////////////////////////////

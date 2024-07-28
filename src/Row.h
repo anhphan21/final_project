@@ -37,7 +37,7 @@ class Row {
     double x() const { return _x; }
     double y() const { return _y; }
     double height() const { return _siteHeight; }
-    double width() const { return _numSites * _siteWidth; }
+    double width() const { return  _siteWidth; }
     double siteSpacing() const { return _siteSpacing; }
     double numSites() const { return _numSites; }
 

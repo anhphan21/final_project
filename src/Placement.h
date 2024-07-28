@@ -15,11 +15,9 @@ public:
 
 
 
-    void constructFeasible(Module *ff,Rhombus in,Rhombus out);
+    void constructFeasible(Module *ff,Rhombus in,vector<Rhombus > out);
     Rhombus findInputRegion(Module *ff);
-    Rhombus findOutputRegion(Module *ff);
-
-
+    vector<Rhombus > findOutputRegion(Module *ff);
 
     void netListGraph();
     void constructGraph();

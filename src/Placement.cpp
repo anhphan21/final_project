@@ -524,24 +524,40 @@ double cal_distance(pair<double, double> A, pair<double, double> B)
     return (abs(A.first - B.first) + abs(A.second - B.second));
 }
 
-bool overlap_ornot(Rhombus _rohm0, Rhombus _rohm1)
+bool overlap_ornot(vector<Rhombus> &input_rhombus, double &leftBound, double &rightBound, double &botBound, double &topBound)
 {
+    if (input_rhombus.empty())
+        return false;
+    leftBound = numeric_limits<double>::lowest();
+    rightBound = numeric_limits<double>::max();
+    botBound = numeric_limits<double>::lowest();
+    topBound = numeric_limits<double>::max();
     // Rotate 45 deg
-    _rohm0.RotatePeak(45);
-    _rohm1.RotatePeak(45);
-    double _leftBound = max(max(_rohm0.peak(0).x, _rohm1.peak(0).x), max(_rohm0.peak(3).x, _rohm1.peak(3).x));
-    double _rightBound = min(min(_rohm0.peak(1).x, _rohm1.peak(1).x), min(_rohm0.peak(2).x, _rohm1.peak(2).x));
-    double _botBound = max(max(_rohm0.peak(2).y, _rohm1.peak(2).y), max(_rohm0.peak(3).y, _rohm1.peak(3).y));
-    double _topBound = min(min(_rohm0.peak(0).y, _rohm1.peak(0).y), min(_rohm0.peak(1).y, _rohm1.peak(1).y));
-
-    // Check if 2 rhombus are overlap or not ?
-    _rohm0.RotatePeak(-45);
-    _rohm1.RotatePeak(-45);
-    if ((_leftBound > _rightBound) || (_botBound > _topBound))
+    for (auto &rhombus : input_rhombus)
     {
-        return 0;
+        rhombus.RotatePeak(45);
     }
-    return 1;
+    for (Rhombus &rhombus : input_rhombus)
+    {
+        leftBound = max(leftBound, rhombus.peak(3).x);
+        rightBound = min(rightBound, rhombus.peak(1).x);
+        botBound = max(botBound, rhombus.peak(3).y);
+        topBound = min(topBound, rhombus.peak(1).y);
+    }
+
+    for (auto &rhombus : input_rhombus)
+    {
+        rhombus.RotatePeak(-45);
+    }
+    // Check if vec. rhombus are overlap or not ?
+    if ((leftBound > rightBound) || (botBound > topBound))
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
 }
 void Placement::constructGraph()
 {
@@ -576,11 +592,11 @@ void Placement::constructGraph()
                 Rhombus r_current(_dataBase->getClkNets()[i]->pin(j)->net()->OutputPin()->x(), _dataBase->getClkNets()[i]->pin(j)->net()->OutputPin()->y(), currentFF->radius());
                 Rhombus r_compare(_dataBase->getClkNets()[i]->pin(k)->net()->OutputPin()->x(), _dataBase->getClkNets()[i]->pin(k)->net()->OutputPin()->y(), compareFF->radius());
                 //
-                if (overlap_ornot(r_current, r_compare) == 1)
-                {
-                    _name2Node[currentFF->name()]->addNeighborPair({_name2Node[compareFF->name()], cal_cost(currentFF, compareFF)});
-                    _name2Node[compareFF->name()]->addNeighborPair({_name2Node[currentFF->name()], cal_cost(compareFF, currentFF)});
-                }
+                // if (overlap_ornot(r_current, r_compare) == 1)
+                // {
+                //     _name2Node[currentFF->name()]->addNeighborPair({_name2Node[compareFF->name()], cal_cost(currentFF, compareFF)});
+                //     _name2Node[compareFF->name()]->addNeighborPair({_name2Node[currentFF->name()], cal_cost(compareFF, currentFF)});
+                // }
             }
 
             // if (_dataBase->getClkNets()[i]->pin(j)->module() != nullptr && _dataBase->getClkNets()[i]->pin(j)->module()->isFF() && _dataBase->getClkNets()[i]->pin(j)->module()->cellType()->numBit() < max_BitFF)
@@ -680,7 +696,7 @@ Rhombus Placement::findInputRegion(Module *ff)
     }
 }
 
-Rhombus Placement::findOutputRegion(Module *ff)
+vector<Rhombus> Placement::findOutputRegion(Module *ff)
 {
     // ff must be 1 bit FF
     vector<Rhombus> multi_region;
@@ -704,25 +720,20 @@ Rhombus Placement::findOutputRegion(Module *ff)
             multi_region.push_back(ans);
         }
     }
+    return multi_region;
 }
-void Placement::constructFeasible(Module *ff, Rhombus in, Rhombus out)
+void Placement::constructFeasible(Module *ff, Rhombus in, vector<Rhombus> out)
 {
-    if (overlap_ornot(in, out) == 1)
+    if (out.empty())
+        return;
+    out.push_back(in);              //in_and_out
+    double Feas_x1=0, Feas_y1=0, Feas_x2=0, Feas_y2=0;
+    if (overlap_ornot(out, Feas_x1, Feas_x2, Feas_y1, Feas_y2) == 1)
+    { // if return is true then Feas_x1, Feas_x2, Feas_y1, Feas_y2 have correct value
+        ff->getfeasibleRegion().setInf(Feas_x1, Feas_y1, Feas_x2, Feas_y2); // feasibleRegion still be retangleable
+    }
+    else 
     {
-        in.RotatePeak(45);
-        out.RotatePeak(45);
-        double Feas_x = max(in.peak(3).x, out.peak(3).x); // left bottom
-        double Feas_y = max(in.peak(3).y, out.peak(3).y);
-        double Feas_width = min(in.peak(1).x, out.peak(1).x) - max(in.peak(3).x, out.peak(3).x);
-        double Feas_height = min(in.peak(1).y, out.peak(1).y) - max(in.peak(3).y, out.peak(3).y);
-        ff->getfeasibleRegion().setX1(Feas_x);
-        ff->getfeasibleRegion().setY1(Feas_y);
-        ff->getfeasibleRegion().setX2(Feas_x + Feas_width);
-        ff->getfeasibleRegion().setY2(Feas_y + Feas_height);
-        ff->getfeasibleRegion().setHeight(Feas_height);
-        ff->getfeasibleRegion().setWidth(Feas_width);
-        in.RotatePeak(-45);  // rhombus
-        out.RotatePeak(-45); // rhombus
-        // feasibleRegion still be retangleable
+        cout<<"feasibleRegion not found\n"<<endl;
     }
 }
