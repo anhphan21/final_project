@@ -15,7 +15,8 @@ class Net {
     Net(string &name) : _name(name), _clkFlag(false), _outputIdx(-1) {}
 
     string name() const { return _name; }
-    unsigned numPins() const { return _pPins.size(); }
+    unsigned numPins()
+        const { return _pPins.size(); }
     Pin *pin(unsigned index) { return _pPins[index]; }  // index: 0 ~ (numPins-1), not Pin id
     Pin *getOutputPin() { return _pPins[_outputIdx]; }
     bool clkFlag() const { return _clkFlag; }

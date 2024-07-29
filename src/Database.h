@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 #include <vector>
-
+#include <queue>
 #include "Bin.h"
 #include "DatabaseDef.h"
 #include "History.h"
@@ -109,6 +109,7 @@ public:
     NetList getClkNets() const { return _clkNets; }
 
     double getBoundaryTop() const { return _boundaryTop; }
+    Module* getStringModule(string moduleName) { return ModuleName2Ptr[moduleName]; }
     double getBoundaryLeft() const { return _boundaryLeft; }
     double getBoundaryBottom() const { return _boundaryBottom; }
     double getBoundaryRight() const { return _boundaryRight; }
@@ -158,7 +159,7 @@ public:
 
     //FFlib
     // int getMaxbit(){return _ffLib.size();}
-    FFCell *getFFlib(int bit){return _ffLib[bit][0];}
+    // FFCell *getFFlib(int bit){return _ffLib[bit][0];}
     // unsigned getMaxBitFFLib() const { return _ffLib.end()->first; }
 
 
@@ -166,6 +167,14 @@ public:
     void setPositive_slack();
     void adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius , double grid_width, double grid_height);
     vector<Pin *> getNegative_slack(){return _initial_negSlack;};
+    FFCell *getFFlib(int bit){return _ffLib[bit][0];}
+
+    map<string, Pin*> IODesign;
+
+
+    map<string, int > OriginModuleN;
+    int record = 0;
+
 private:
     string _name; // Design Name
 
@@ -209,7 +218,6 @@ private:
     // Caching
     map<string, BaseCell *> CellType2Ptr;
     map<string, Module *> ModuleName2Ptr;
-    map<string, Pin *> IODesign;
 
     // Caching the list for processing
     ModuleList _ffModules;
@@ -221,6 +229,7 @@ private:
     // void createPinforModule(Module *);
     // void updateRadiusRecur(FFCell*, Module*);
     Module *FindPrePin(Module *currentM);
+    
     // void updateInitialSlackInfo();
     vector<Pin *> _initial_negSlack;
 };

@@ -3,13 +3,17 @@
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
-#include <limits>
+#include <limits.h>
 #include <vector>
 #include <random>
+#include <math.h>
+#include <unordered_set>
+#include <cfloat>
 #include <queue>
 using namespace std;
 
 #define leafthresold 0.75 // TODO: can be changed
+#define __DBL_MAX__         1.7976931348623158e+308 /* max value */
 
 void Placement::mainLoop()
 {
