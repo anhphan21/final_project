@@ -766,10 +766,10 @@ void Placement::netListGraph()
 	//			cout<<a.first->module()->name()<<" ";
 	//		} 
 	//	}
-       if (ModuleTraverseN.size() > 100000)
-        {
-        	cout<<que.size()<<endl;
-        }
+    //    if (ModuleTraverseN.size() > 100000)
+    //     {
+    //     	cout<<que.size()<<endl;
+    //     }
         /* cout << "QUE 內容: ";
          for (auto& a : que)
          {
