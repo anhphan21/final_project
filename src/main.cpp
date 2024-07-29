@@ -9,10 +9,10 @@ int main(int argc, char **argv)
     testDTB.parser(argv[1]);
     cout << "Done parser!!!" << endl;
     testDTB.setPositive_slack();
-    for (int i = 0; i < testDTB.getNegative_slack().size(); ++i)
-    {
-        cout << testDTB.getNegative_slack()[i]->slack() << endl;
-    }
+    // for (int i = 0; i < testDTB.getNegative_slack().size(); ++i)
+    // {
+    //     cout << testDTB.getNegative_slack()[i]->slack() << endl;
+    // }
     // for(int i= 0;i<testDTB.getNumFF();++i)
     // {
     //     cout<<testDTB.ff(i)->name()<<" "<<testDTB.ff(i)->x()<<" "<<testDTB.ff(i)->y() << endl;
