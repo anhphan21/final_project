@@ -90,19 +90,15 @@ class Module {
     void setInPin(unsigned idx, Pin *pPin) { _pins[_type->inIdx(idx)] = pPin; }
     void setOutPin(unsigned idx, Pin *pPin) { _pins[_type->outIdx(idx)] = pPin; }
     void setCellType(CellType *type) { _type = type; }
+    vector<Module*> _outputFF;  //first: Gate; second: ouput FF
+    int No;
 
-
-    // Weilun add
-    void store_ouputFF(Module *gate,Module *ff){_outputFF.push_back({gate,ff});}
-    vector<pair<Module *,Module *>> get_outputFF(){return _outputFF;}
-    //
 
    private:
     // variables from benchmark input
     string _name;
     double _x, _y;  // bottom-left coordinate
     bool _isFixed;
-    int prioriy;
     double _radius;
     CellType *_type;
 
@@ -118,10 +114,5 @@ class Module {
         }
     }
 
-    // Weilun add
-    // feasible region
-    Rectangle _feasibleRegion;
-    // vector<Module *> _outputFF;
-    vector<pair<Module *,Module *>> _outputFF;  //first: Gate; second: ouput FF
 };
 #endif

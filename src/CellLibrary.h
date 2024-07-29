@@ -4,24 +4,23 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <iostream>
 
 #include "DatabaseDef.h"
 
 using namespace std;
 
 class BaseCell {
-public:
+   public:
     BaseCell() : _width(0), _height(0), _isFF(false), _pinNum(-1) {}
-    BaseCell(string& name, double width, double height, int pinNum) : _name(name), _width(width), _height(height), _isFF(false), _pinNum(pinNum) {}
-    BaseCell(string& name, double width, double height, int pinNum, bool isFF) : _name(name), _width(width), _height(height), _pinNum(pinNum), _isFF(isFF) {}
+    BaseCell(string &name, double width, double height, int pinNum) : _name(name), _width(width), _height(height), _isFF(false), _pinNum(pinNum) {}
+    BaseCell(string &name, double width, double height, int pinNum, bool isFF) : _name(name), _width(width), _height(height), _pinNum(pinNum), _isFF(isFF) {}
 
-    void setName(string& name) { _name = name; }
+    void setName(string &name) { _name = name; }
     void setWidth(double width) { _width = width; }
     void setHeight(double height) { _height = height; }
     void setFF(bool isFF) { _isFF = isFF; }
     void setNumPin(int numPin) { _pinNum = numPin; }
-    void setPin(string& pinName, pair<double, double> offset, bool isOut) {
+    void setPin(string &pinName, pair<double, double> offset, bool isOut) {
         _pinNameList.push_back(pinName);
         _pinOffset.push_back(offset);
         if (isOut)
@@ -51,7 +50,7 @@ public:
         return _inList[idx];
     }
 
-    int getPinIdxFromName(string& pinName) const {
+    int getPinIdxFromName(string &pinName) const {
         for (size_t i = 0; i < _pinNum; ++i) {
             if (pinName == _pinNameList[i])
                 return i;
@@ -103,12 +102,12 @@ public:
 };
 
 class FFCell : public BaseCell {
-public:
+   public:
     FFCell() : BaseCell(), _qDelay(0), _power(0), _numBit(0) {}
-    FFCell(string& name, double width, double height, unsigned pinNum, unsigned numBit) : BaseCell(name, width, height, pinNum, true),
-        _numBit(numBit),
-        _qDelay(0),
-        _power(0) {};
+    FFCell(string &name, double width, double height, unsigned pinNum, unsigned numBit) : BaseCell(name, width, height, pinNum, true),
+                                                                                          _numBit(numBit),
+                                                                                          _qDelay(0),
+                                                                                          _power(0){};
     FFCell(double qDelay, double power) : _qDelay(qDelay), _power(power) {}
 
     // set
@@ -123,7 +122,7 @@ public:
     unsigned numBit() const { return _numBit; }
     unsigned getnumBit() const { return _numBit; }
 
-private:
+   private:
     unsigned _clkPinIdx;
     unsigned _numBit;
     double _qDelay;

@@ -108,6 +108,7 @@ public:
     NetList getClkNets() const { return _clkNets; }
 
     double getBoundaryTop() const { return _boundaryTop; }
+    Module* getStringModule(string moduleName) { return ModuleName2Ptr[moduleName]; }
     double getBoundaryLeft() const { return _boundaryLeft; }
     double getBoundaryBottom() const { return _boundaryBottom; }
     double getBoundaryRight() const { return _boundaryRight; }
@@ -159,6 +160,8 @@ public:
 
     map<string, Pin*> IODesign;
 
+
+    map<string, int > OriginModuleN;
     int record = 0;
 
 private:

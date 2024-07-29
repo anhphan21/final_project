@@ -7,7 +7,7 @@ class Nodeinf
 {
     public:
         Nodeinf() {  };
-        int level = 0;
+        vector<string> record_str;
 
 };
 
@@ -44,13 +44,14 @@ public:
     void setDatabase(Database *dataBase) { _dataBase = dataBase; }
     Database *getDatabase() { return _dataBase; }
     map<string, vector<Module*>>  CLKNetModule;
-
+    vector<pair<vector<string>, string>> latch_record;
 private:
     Database *_dataBase;
     // construct graph
     vector<Module *> _diamondINF; // Graph_input
     NodeList _nodes;
     map<string, Node *> _name2Node;
+    map<string, int> ModuleTraverseN;
 };
 
 #endif // PLACEMENT_H

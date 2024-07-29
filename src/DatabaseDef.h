@@ -28,7 +28,6 @@ typedef vector<CellType *> CellLibrary;
 typedef map<unsigned, vector<FFCell *>> FFLLibrary;
 
 typedef vector<Module *> ModuleList;
-typedef vector<Module*> GateList;
 typedef vector<Pin *> PinList;
 typedef vector<Net *> NetList;
 typedef vector<Row *> RowList;

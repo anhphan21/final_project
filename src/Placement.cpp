@@ -7,6 +7,7 @@
 #include <vector>
 #include <random>
 #include <math.h>
+#include <unordered_set>
 #include <cfloat>
 
 using namespace std;
@@ -652,24 +653,13 @@ double Placement::cal_cost(Module *ffN, Module *ff0) // ffN is primary
 
 void Placement::netListGraph()
 {
-   
-    int count=0;
-    for (int i = 0; i < this->_dataBase->getNumModules(); i++)
-    {
-        if (this->_dataBase->module(i)->numOutPins() == 0)
-        {
 
-            cout << this->_dataBase->module(i)->name()<< " OUTPUT PIN ZERO" << endl;
-        }
-    }
-    cout << this->_dataBase->record << endl;
-    queue< Pin* > que;
-    bool first = 1;
+    int count=0;
+    deque< pair<Pin*, vector<int>>> que;
     for (int i = 0; i < this->_dataBase->getNumInputs(); i++) //抓取每一個IO
     {
-        first = 1;
         Net * netptr = this->_dataBase->input(i)->net();
-        if (netptr == nullptr) //
+        if (netptr == nullptr || netptr->clkFlag() == 1) //
         {
             continue;
         }
@@ -678,73 +668,116 @@ void Placement::netListGraph()
            /* cout << "HI"<<que.size() << endl;
             cout << "j " << j << "  /" << netptr->getOutIdx() << endl;*/
             if (j == netptr->getOutIdx()) //如果取到Output Pin就跳過 我不用往會指
-            {  continue;
+            {  
+                continue;
             }
-            que.push(netptr->pin(j));
+            else
+            {
+                vector<int> a;
+                a.push_back(netptr->pin(j)->module()->No);/*
+                cout << netptr->pin(j)->module()->name() << endl;*/
+                que.push_back({ netptr->pin(j) ,a});
+            }
         }
-        vector<Module*> module_vec;
-        while (!que.empty() || first)
+    }
+    while (!que.empty())
+    {
+
+        Module* moduleptr = que.front().first->module();
+        if (moduleptr->isFF())
         {
-            first = 0;
-            Module* moduleptr = que.front()->module();
-            /*cout << que.front()->name() << endl;
-            cout << "Round: "<<moduleptr->name() << endl;*/
-            if (moduleptr == nullptr)
+            for (int i= que.front().second.size()-1 ; i >= 0 ; i--)
             {
-                cout << "ERROR" << endl;
-            }
-            if ( moduleptr->isFF() ) //如果走訪到FF 就要去查看其clkNet
-            {
-                
-                auto it = this->CLKNetModule.find(moduleptr->pin(moduleptr->totnumPins() - 1)->net()->name());
-                if (CLKNetModule.end() == it )//看有沒有存過這個clkNet
-                {
-                    // vector<Module*> module_vec;
-                    module_vec.push_back(moduleptr);
-                    CLKNetModule.insert({ moduleptr->pin(moduleptr->totnumPins() - 1)->net()->name() , module_vec }); //CLK net
-                } 
-                else
-                { 
-                    it->second.push_back(moduleptr);
-                }
-            }
-            /*cout << "Name " << moduleptr->cellType()->getName() << " " << moduleptr->numOutPins() << endl;*/
-            for (int j = 0; j < moduleptr->numOutPins(); j++)
-            {
-                /*cout << "FINAL " << moduleptr->OutPin(j)->net()->numPins() - 1 << endl;*/
-                for (int z = 0; z < moduleptr->OutPin(j)->net()->numPins(); z++)
+                auto it = this->_dataBase->module(que.front().second[i]);
+                if (it->isFF() && it->name()!=moduleptr->name())
                 {
                     
-                    if (z == moduleptr->OutPin(j)->net()->getOutIdx())
-                    {
-                        continue;
-                    }
-                    if (moduleptr->OutPin(j)->net()->pin(z)->module() == nullptr) //如果今天pin沒任何的module 就不要用
-                    {
-                        if (this->_dataBase->IODesign.find(moduleptr->OutPin(j)->net()->pin(z)->name()) != this->_dataBase->IODesign.end())
-                        {
-                            /*cout << (moduleptr->OutPin(j)->net()->pin(z)->name())<< endl;*/
-                            count++;
-                           /* cout << count << endl;*/
-                        }
-                        else
-                        {
-                            exit;
-                        }
+                    moduleptr->_outputFF.push_back(it);
+                    que.front().second.clear();
+                    que.front().second.shrink_to_fit();
+                    que.front().second.push_back(moduleptr->No);
+                    break;
+                }
+            }
+        }
+        auto it = this->ModuleTraverseN.find(moduleptr->name());
+        if (it == ModuleTraverseN.end())
+        {
+            /*cout << moduleptr->name() << " " << ModuleTraverseN.size() << endl;*/
+            ModuleTraverseN.insert({ moduleptr->name() , 1 });
+        }
+        else
+        {
+            it->second++;
+        }
+        if (moduleptr == nullptr)
+        {
+            cout << "EEEEE" << endl;
+        }
+        for (int j = 0; j < moduleptr->numOutPins(); j++)
+        {
+
+            /*cout<< "Module Name: "<<moduleptr->name() << endl;*/
+             /*cout << "FINAL " << moduleptr->OutPin(j)->net()->numPins() - 1 << endl;*/
+            for (int z = 0; z < moduleptr->OutPin(j)->net()->numPins(); z++)
+            {
+                bool IO_Design = 0;
+                if (moduleptr->OutPin(j)->net()->pin(z)->module() == nullptr) //如果今天pin沒任何的module 就不要用
+                {
+                    ;
+                    if (this->_dataBase->IODesign.find(moduleptr->OutPin(j)->net()->pin(z)->name()) != this->_dataBase->IODesign.end()) //pin 沒有module可能是IO Design
+                    {/*
+                        cout << "I'm IODesign: " << moduleptr->OutPin(j)->net()->pin(z)->name() << endl;*/
+                        continue; //如果是IO Desgin 就不要繼續traverse
                     }
                     else
                     {
-                        cout << moduleptr->OutPin(j)->net()->pin(z)->module()->name() << endl;
-                        que.push(moduleptr->OutPin(j)->net()->pin(z));
-                        /*cout << ":::" << moduleptr->OutPin(j)->net()->pin(z)->module()->name() << endl;*/
+                        exit(0);
                     }
-                    /*cout << moduleptr->OutPin(j)->net()->pin(z)->name() << endl;*/
                 }
-            
+                auto it = std::find(que.front().second.begin(), que.front().second.end(), moduleptr->OutPin(j)->net()->pin(z)->module()->No);
+                if (z == moduleptr->OutPin(j)->net()->getOutIdx() || it != que.front().second.end() || IO_Design)
+                {
+                    if (it != que.front().second.end() && moduleptr->OutPin(j)->net()->pin(z)->module()->name() == "C101355")
+                    {
+                        /*cout << endl << endl;
+                        cout << "---------------------" << endl;
+                        cout << "Latch" << endl;*/
+                    }
+                }
+                else
+                {
+                   /* cout << "HE" << endl;*/
+                    /*cout << "Drop IN " << moduleptr->OutPin(j)->net()->pin(z)->module()->name()<< endl;*/
+                    que.push_back({ moduleptr->OutPin(j)->net()->pin(z), que.front().second });
+                    que.back().second.push_back(moduleptr->OutPin(j)->net()->pin(z)->module()->No);
+                }
             }
-            
-            que.pop();
+
         }
+        que.front().second.clear();
+        que.front().second.shrink_to_fit();
+        que.pop_front();
+
+	//	if(que.size()>1000000)
+	//	{
+	//		for(auto a:que)
+	//		{
+	//			cout<<a.first->module()->name()<<" ";
+	//		} 
+	//	}
+       if (ModuleTraverseN.size() > 100000)
+        {
+        	cout<<que.size()<<endl;
+        }
+        /* cout << "QUE 內容: ";
+         for (auto& a : que)
+         {
+
+             cout << a.first->module()->name() << " ";
+         }
+         cout << endl;*/
+
     }
     cout << count << endl;
 

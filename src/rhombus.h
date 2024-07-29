@@ -1,11 +1,11 @@
 #ifndef ROHMBUS_H
 #define ROHMBUS_H
-
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <iostream>
 // #include <numbers>
 #include <utility>
-
+#include <math.h>
 #include "Point.h"
 using namespace std;
 
