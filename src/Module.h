@@ -92,7 +92,7 @@ class Module {
     void setOutPin(unsigned idx, Pin *pPin) { _pins[_type->outIdx(idx)] = pPin; }
     void setCellType(CellType *type) { _type = type; }
     // vector<Module*> _outputFF;  //first: Gate; second: ouput FF
-    // int No;
+    int No;
 
 
 
