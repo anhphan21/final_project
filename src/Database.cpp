@@ -237,7 +237,9 @@ void Database::parser(const string &filename)
                     _type = CellType2Ptr[type];
                     PinOfMnum = _type->pinNum();
                     currentM = new Module(name, _type, x, y);
-                    // ModuleName2Ptr[name] = currentM;
+                    ModuleName2Ptr[name] = currentM;
+                    currentM->No = i;
+                    ModuleNo2Ptr[i] = currentM;
                     addModule(currentM);
                     if (_type->isFF())
                         addFF(currentM);
@@ -273,6 +275,7 @@ void Database::parser(const string &filename)
             {
                 Isclk = false; // 定義這個Net是clkNet!!!每一條定義一個
                 getline(file, line);
+                // getline(file, line);
                 istringstream iss(line);
 
                 iss >> temp >> Netname >> PinNum;
@@ -318,6 +321,15 @@ void Database::parser(const string &filename)
                         FFname = type.substr(0, pos);
                         TargetPin = type.substr(pos + 1);
                         auto it = ModuleName2Ptr.find(FFname);
+                        auto it2 = OriginModuleN.find(FFname);
+                        if (it2 == OriginModuleN.end())
+                        {
+                            OriginModuleN.insert({ FFname , 1 });
+                        }
+                        else
+                        {
+                            it2->second++;
+                        }
                         if (it == ModuleName2Ptr.end())
                         {
                             cout << "can't find correspoding module" << endl;

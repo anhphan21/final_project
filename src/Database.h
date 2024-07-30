@@ -135,6 +135,7 @@ public:
 
     double getBoundaryTop() const { return _boundaryTop; }
     Module* getStringModule(string moduleName) { return ModuleName2Ptr[moduleName]; }
+    Module* getIntModule(int No) { return ModuleNo2Ptr[No]; }
     double getBoundaryLeft() const { return _boundaryLeft; }
     double getBoundaryBottom() const { return _boundaryBottom; }
     double getBoundaryRight() const { return _boundaryRight; }
@@ -246,6 +247,7 @@ private:
     // Caching
     map<string, BaseCell *> CellType2Ptr;
     map<string, Module *> ModuleName2Ptr;
+    map<int , Module*> ModuleNo2Ptr;
 
     // Caching the list for processing
     ModuleList _ffModules;

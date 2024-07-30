@@ -1,5 +1,6 @@
 #include "Placement.h"
-
+#include <mutex>
+#include <thread>
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
@@ -8,7 +9,7 @@
 #include <random>
 #include <set>
 #include <math.h>
-#include <unordered_set>
+#include <set>
 #include <cfloat>
 #include <queue>
 using namespace std;
@@ -752,86 +753,110 @@ void Placement::constructFeasible(Module *ff, Rhombus in, vector<Rhombus> out)
         cout<<"feasibleRegion not found\n"<<endl;
     }
 }
-void Placement::netListGraph()
-{
+void Placement::netListGraph() {
+    int numThreads = thread::hardware_concurrency(); // 根據硬體條件選擇線程數量
+    numThreads = 1;
+    int numFF = this->_dataBase->getNumFF();
+    int chunkSize = (numFF + numThreads - 1) / numThreads; // 計算每個線程處理的範圍
+    mutex mtx; // 保護輸出和共享資源
 
-    int count=0;
-    for (int i = 0; i < this->_dataBase->getNumFF() ; i++) //抓取每一個IO
+    auto processFFRange = [&](int start, int end) 
     {
-        deque< pair<Pin*, vector<int>>> que;
-        for (int j = 0; j < this->_dataBase->ff(i)->numOutPins(); j++)
-        {
-            vector<int> a;
-            a.push_back(this->_dataBase->ff(i)->No);
-            que.push_back({ this->_dataBase->ff(i)->OutPin(j),a });
-        }
-        while (!que.empty())
-        {
-            Module* moduleptr = que.front().first->module();
-            if (moduleptr->isFF() && moduleptr->name() != this->_dataBase->ff(i)->name())
-            {
-                this->_dataBase->ff(i)->_outputFF.insert(moduleptr);
+        for (int i = start; i < end; ++i) {
+            deque<pair<Pin*, vector<int>>> que;
+            for (int j = 0; j < this->_dataBase->ff(i)->numOutPins(); j++) {
+                vector<int> a;
+                a.push_back(this->_dataBase->ff(i)->No);
+                que.push_back({ this->_dataBase->ff(i)->OutPin(j), a });
+            }
+            while (!que.empty()) {
+                Module* moduleptr = que.front().first->module();
+                if (moduleptr->isFF() && moduleptr->name() != this->_dataBase->ff(i)->name()) {
+                    // que.front().second.size()-1 is moduleptr BenZen
+                    // que.front().second.size()-2 is prelevel Fatboy of moduleptr 
+                    Module * PreModule = this->getDatabase()->getIntModule(que.front().second[que.front().second.size()-2]);
+                    if (PreModule->isFF())
+                    {
+                        this->_dataBase->ff(i)->_outputFF.insert({nullptr,moduleptr});
+                    }
+                    if (!PreModule->isFF())
+                    {
+                        this->_dataBase->ff(i)->_outputFF.insert({ PreModule,moduleptr });
+                    }
+                    que.front().second.clear();
+                    que.front().second.shrink_to_fit();
+                    que.pop_front();
+                    continue;
+                }
+                if (moduleptr == nullptr) {
+                    lock_guard<mutex> lock(mtx);
+                    cout << "BUG" << endl;
+                    exit(0);
+                }
+                for (int j = 0; j < moduleptr->numOutPins(); j++) {
+                    for (int z = 0; z < moduleptr->OutPin(j)->net()->numPins(); z++) {
+                        bool IO_Design = 0;
+                        if (moduleptr->OutPin(j)->net()->pin(z)->module() == nullptr) {
+                            if (this->_dataBase->IODesign.find(moduleptr->OutPin(j)->net()->pin(z)->name()) != this->_dataBase->IODesign.end()) {
+                                continue;
+                            }
+                            else {
+                                exit(0);
+                            }
+                        }
+                        auto it = std::find(que.front().second.begin(), que.front().second.end(), moduleptr->OutPin(j)->net()->pin(z)->module()->No);
+                        if (z == moduleptr->OutPin(j)->net()->getOutIdx() || it != que.front().second.end()) {
+                            if (it != que.front().second.end() && moduleptr->OutPin(j)->net()->pin(z)->module()->name() == "C101355") {
+
+                            }
+                        }
+                        else {
+                            que.push_back({ moduleptr->OutPin(j)->net()->pin(z), que.front().second });
+                            que.back().second.push_back(moduleptr->OutPin(j)->net()->pin(z)->module()->No);
+                             }
+                    }
+                }
+                /*cout << "Master: " << que.front().first->module()->name() << endl;
+                for (auto a : que.front().second)
+                {
+                    cout <<" "<< this->getDatabase()->getIntModule(a)->name() << endl;
+                }
+                cout << endl;*/
                 que.front().second.clear();
                 que.front().second.shrink_to_fit();
                 que.pop_front();
-                continue;
             }
-            if (moduleptr == nullptr)
+            if (i % 1000 == 0) 
             {
-                cout << "BUG" << endl;
-                exit(0);
-            }
-            for (int j = 0; j < moduleptr->numOutPins(); j++)
-            {
-                for (int z = 0; z < moduleptr->OutPin(j)->net()->numPins(); z++)
+                cout << i << endl;
+                cout << this->getDatabase()->ff(i)->name() << endl;
+                for (auto it = this->getDatabase()->ff(i)->_outputFF.begin(); it != this->getDatabase()->ff(i)->_outputFF.end(); it++)
                 {
-                    
-                    bool IO_Design = 0;
-                    if (moduleptr->OutPin(j)->net()->pin(z)->module() == nullptr) //如果今天pin沒任何的module 就不要用
+                    if (it->first == nullptr)
                     {
-                        if (this->_dataBase->IODesign.find(moduleptr->OutPin(j)->net()->pin(z)->name()) != this->_dataBase->IODesign.end()) //pin 沒有module可能是IO Design
-                        {/*
-                            cout << "I'm IODesign: " << moduleptr->OutPin(j)->net()->pin(z)->name() << endl;*/
-                            continue; //如果是IO Desgin 就不要繼續traverse
-                        }
-                        else
-                        {
-                            exit(0);
-                        }
-                    }
-                    auto it = std::find(que.front().second.begin(), que.front().second.end(), moduleptr->OutPin(j)->net()->pin(z)->module()->No);
-                    if (z == moduleptr->OutPin(j)->net()->getOutIdx() || it != que.front().second.end()) //為輸入端 抑或是有 Latch
-                    {
-                        if (it != que.front().second.end() && moduleptr->OutPin(j)->net()->pin(z)->module()->name() == "C101355")
-                        {
-                            /*cout << endl << endl;
-                            cout << "---------------------" << endl;
-                            cout << "Latch" << endl;*/
-                        }
+                        cout << "Gate: nullptr   FF:" << it->second->name() << endl;
                     }
                     else
                     {
-                        /* cout << "HE" << endl;*/
-                         /*cout << "Drop IN " << moduleptr->OutPin(j)->net()->pin(z)->module()->name()<< endl;*/
-                        que.push_back({ moduleptr->OutPin(j)->net()->pin(z), que.front().second });
-                        que.front().second.push_back(moduleptr->OutPin(j)->net()->pin(z)->module()->No);
+                        cout << "Gate: " << it->first->name() << "   FF:" << it->second->name() << endl;
                     }
                 }
             }
-            que.front().second.clear();
-            que.front().second.shrink_to_fit();
-            que.pop_front();
-        }
-        if (i % 1000 == 0 )
-        {
-            cout << i << endl;
 
-        }
+        } //Inside is gragh Funtion
+    };
 
+    vector<thread> threads;
+    for (int t = 0; t < numThreads; ++t) {
+        int start = t * chunkSize;
+        int end = min(start + chunkSize, numFF);
+        threads.emplace_back(processFFRange, start, end);
     }
-    
-}
 
+    for (auto& t : threads) {
+        t.join();
+    }
+}
 
 
 void Placement::netListGraph(Module* moduleOrigin)
@@ -849,7 +874,15 @@ void Placement::netListGraph(Module* moduleOrigin)
             Module* moduleptr = que.front().first->module();
             if (moduleptr->isFF() && moduleptr->name() != moduleOrigin->name())
             {
-                moduleOrigin->_outputFF.insert(moduleptr);
+                Module* PreModule = this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 2]);
+                if (PreModule->isFF())
+                {
+                    moduleOrigin->_outputFF.insert({ nullptr,moduleptr });
+                }
+                if (!PreModule->isFF())
+                {
+                    moduleOrigin->_outputFF.insert({ PreModule,moduleptr });
+                }
                 que.front().second.clear();
                 que.front().second.shrink_to_fit();
                 que.pop_front();
@@ -893,7 +926,7 @@ void Placement::netListGraph(Module* moduleOrigin)
                         /* cout << "HE" << endl;*/
                          /*cout << "Drop IN " << moduleptr->OutPin(j)->net()->pin(z)->module()->name()<< endl;*/
                         que.push_back({ moduleptr->OutPin(j)->net()->pin(z), que.front().second });
-                        que.front().second.push_back(moduleptr->OutPin(j)->net()->pin(z)->module()->No);
+                        que.back().second.push_back(moduleptr->OutPin(j)->net()->pin(z)->module()->No);
                     }
                 }
             }
@@ -903,10 +936,273 @@ void Placement::netListGraph(Module* moduleOrigin)
         }
         for (auto a: moduleOrigin->_outputFF)
         {
-            cout << a->name() << " ";
+            cout << a.second->name() << " ";
         }
 
 
+}
+void Placement::debankFFto1bit(string ffname)
+{
+    // TODO: need to know which FF should be chosed
+    // TODO: Each FF position after debanking
+    int celltypeID = 0;
+    Module *target = _dataBase->getModuleByName(ffname);
+    int ffbit = target->cellType()->getnumBit();
+    vector<Module *> newfflist;
+    newfflist.clear();
+    string pinName;
+    // TODO:radius
+    vector<pair<double, double>> newPos;
+    for (size_t i = 0; i < ffbit; i++)
+    {
+        newPos.push_back(make_pair(target->x(), target->y()));
+        newfflist.push_back(new Module());
+        cout << newfflist.size() << endl;
+        newfflist[i]->setCellType(_dataBase->ffLib(1, celltypeID));
+        newfflist[i]->setPinsize(3);
+        newfflist[i]->setInPin(0, target->InPin(i));
+        newfflist[i]->InPin(0)->setOffset(newfflist[i]->cellType()->pinOffsetX(1), newfflist[i]->cellType()->pinOffsetY(1));
+        newfflist[i]->InPin(0)->setPosition(newfflist[i]->cellType()->pinOffsetX(1) + newPos[i].first,
+                                            newfflist[i]->cellType()->pinOffsetY(1) + newPos[i].second);
+        pinName = "D";
+        newfflist[i]->InPin(0)->setPinName(pinName);
+        newfflist[i]->InPin(0)->setModulePtr(newfflist[i]);
+
+        newfflist[i]->setOutPin(0, target->OutPin(i));
+        newfflist[i]->OutPin(0)->setOffset(newfflist[i]->cellType()->pinOffsetX(0), newfflist[i]->cellType()->pinOffsetY(0));
+        newfflist[i]->OutPin(0)->setPosition(newfflist[i]->cellType()->pinOffsetX(0) + newPos[i].first,
+                                             newfflist[i]->cellType()->pinOffsetY(0) + newPos[i].second);
+        pinName = "Q";
+        newfflist[i]->OutPin(0)->setPinName(pinName);
+        newfflist[i]->OutPin(0)->setModulePtr(newfflist[i]);
+    }
+    newfflist[ffbit - 1]->setName(ffname);
+    // naming =================================================================
+    string nname = _dataBase->module(_dataBase->getNumModules() - 1)->name();
+    string letters;
+    string numbers;
+    for (char c : nname)
+    {
+        if (isdigit(c))
+        {
+            numbers += c;
+        }
+        else
+        {
+            letters += c;
+        }
+    }
+    int num = stoi(numbers);
+    for (size_t i = 0; i < ffbit - 1; i++)
+    {
+        num++;
+        nname = letters + to_string(num);
+        newfflist[i]->setName(nname);
+    }
+    // naming =================================================================
+    newfflist[ffbit - 1]->setInPin(newfflist[ffbit - 1]->cellType()->clkPinIdx(), target->InPin(target->cellType()->clkPinIdx()));
+    newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->setModulePtr(newfflist[ffbit - 1]);
+    for (size_t i = 0; i < ffbit - 1; i++)
+    {
+        Pin *newCLK = new Pin();
+        string n = "CLK";
+        newCLK->setPinName(n);
+        newCLK->setOffset(newfflist[i]->cellType()->pinOffsetX(newfflist[i]->cellType()->clkPinIdx()), newfflist[i]->cellType()->pinOffsetY(newfflist[i]->cellType()->clkPinIdx()));
+        newCLK->setPosition(newfflist[i]->x() + newCLK->x(), newfflist[i]->y() + newCLK->y());
+        newCLK->setModulePtr(newfflist[i]);
+        newfflist[i]->setInPin(newfflist[i]->cellType()->clkPinIdx(), newCLK);
+        // connecting pin to net
+        newCLK->setNetPtr(newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->net());
+        newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->net()->addPin(newCLK);
+        History *newH = new History();
+        newH->setNewPin(newCLK);
+        newH->setOldPinName(n);
+        newH->setOldModuleName(ffname);
+        // add pin into database
+        _dataBase->addPin(newCLK);
+    }
+    for (size_t i = 0; i < ffbit; i++)
+    {
+        newfflist[i]->setPosition(newPos[i].first, newPos[i].second);
+    }
+    for (size_t i = 0; i < _dataBase->getNumModules(); i++)
+    {
+        if (_dataBase->module(i) == target)
+        {
+            _dataBase->setModule(i, newfflist[ffbit - 1]);
+            break;
+        }
+    }
+    for (size_t i = 0; i < _dataBase->getNumFF(); i++)
+    {
+        if (_dataBase->ff(i) == target)
+        {
+            _dataBase->setFF(i, newfflist[ffbit - 1]);
+            break;
+        }
+    }
+    free(target);
+    for (size_t i = 0; i < ffbit - 1; i++)
+    {
+        _dataBase->addFF(newfflist[i]);
+        _dataBase->addModule(newfflist[i]);
+    }
+    return;
+}
+// set<set<Module *>> Placement::calMaxClique(unsigned clkidx)
+// {
+//     // input : clk net id
+//     // output : maximal clique(without proper subset)
+//     Net *targetNet = _dataBase->net(clkidx);
+//     if (targetNet->clkFlag() == false)
+//     {
+//         cout << "error: input isn't a clk" << endl;
+//         return;
+//     }
+//     ModuleList targetFFs;
+//     vector<double> strip; // start pos of every part of strip
+//     set<Edge> edgesSet;
+//     vector<Edge> edges; // Module, y , start x , end x
+//     edges.clear();
+//     edgesSet.clear();
+//     strip.clear();
+//     targetFFs.clear();
+//     for (size_t i = 0; i < targetNet->numPins(); i++)
+//     {
+//         targetFFs.push_back(targetNet->pin(i)->module());
+//         strip.push_back(targetFFs[i]->getFeasibleRegion()->left());
+//         strip.push_back(targetFFs[i]->getFeasibleRegion()->right());
+//         Edge ee;
+//         ee.ff = targetFFs[i];
+//         ee.y = targetFFs[i]->getFeasibleRegion()->top();
+//         ee.isIN = true;
+//         ee.startx = targetFFs[i]->getFeasibleRegion()->left();
+//         ee.endx = targetFFs[i]->getFeasibleRegion()->right();
+//         edgesSet.insert(ee);
+//         Edge ee1;
+//         ee1.ff = targetFFs[i];
+//         ee1.y = targetFFs[i]->getFeasibleRegion()->bottom();
+//         ee1.isIN = false;
+//         ee1.startx = targetFFs[i]->getFeasibleRegion()->left();
+//         ee1.endx = targetFFs[i]->getFeasibleRegion()->right();
+//         edgesSet.insert(ee1);
+//     }
+//     sort(strip.begin(), strip.end());
+//     strip.erase(unique(strip.begin(), strip.end()), strip.end());
+//     edges.assign(edgesSet.begin(), edgesSet.end());
+//     sort(edges.begin(), edges.end(), compareFirst);
+//     set<set<Module *>> maxClique;
+//     vector<set<Module *>> tempClique; // size == 3 , for checking greater than above and below
+//     maxClique.clear();
+//     int counter = 0;
+//     // TODO: currently traverse every edge per strip, maybe a better O() way to implement
+//     for (size_t i = 0; i < strip.size() - 1; i++)
+//     {
+//         counter = 0;
+//         tempClique.clear();
+//         tempClique.resize(3);
+//         for (size_t j = 0; j < edges.size(); j++)
+//         {
+//             // sweep line
+//             if ((edges[j].startx == strip[i] && edges[j].endx >= strip[i + 1]) ||
+//                 (edges[j].startx <= strip[i] && edges[j].endx == strip[i + 1]) ||
+//                 (edges[j].startx < strip[i] && edges[j].endx > strip[i + 1]))
+//             {
+//                 if (counter == 0)
+//                 {
+//                     // check if Module is in the set
+
+//                     counter++;
+//                     if (edges[j].isIN == false)
+//                     {
+//                         cout << "error" << endl;
+//                     }
+//                     else
+//                     {
+//                         tempClique[0].insert(edges[j].ff);
+//                     }
+//                 }
+//                 else if (counter == 1)
+//                 {
+//                     counter++;
+//                     if (edges[j].isIN == false)
+//                     {
+//                         tempClique[1] = tempClique[0];
+//                         tempClique[1].erase(edges[j].ff);
+//                         if (tempClique[1].size() > 0)
+//                         {
+//                             cout << "error" << endl;
+//                         }
+//                     }
+//                 }
+//                 else if (counter == 2)
+//                 {
+//                     counter++;
+//                     tempClique[2] = tempClique[1];
+//                     if (edges[j].isIN == false)
+//                     {
+//                         tempClique[2].erase(edges[j].ff);
+//                     }
+//                     else
+//                     {
+//                         tempClique[2].insert(edges[j].ff);
+//                     }
+//                 }
+//                 else
+//                 {
+//                     // move tempClique
+//                     if (tempClique[1].size() > tempClique[0].size() &&
+//                         tempClique[1].size() > tempClique[2].size() &&
+//                         tempClique[1].size() > 1)
+//                     {
+//                         maxClique.insert(tempClique[1]);
+//                     }
+//                     tempClique[0] = tempClique[1];
+//                     tempClique[1] = tempClique[2];
+//                     if (edges[j].isIN == false)
+//                     {
+//                         tempClique[2].erase(edges[j].ff);
+//                     }
+//                     else
+//                     {
+//                         tempClique[2].insert(edges[j].ff);
+//                     }
+//                 }
+//             }
+//             else
+//             {
+//                 continue;
+//             }
+//         }
+//     }
+//     // TODO: remove proper subset
+//     vector<set<Module *>> toRemove;
+//     for (auto it1 = maxClique.begin(); it1 != maxClique.end(); ++it1)
+//     {
+//         for (auto it2 = maxClique.begin(); it2 != maxClique.end(); ++it2)
+//         {
+//             if (it1 != it2 && isStrictSubset(*it1, *it2))
+//             {
+//                 toRemove.push_back(*it1);
+//                 break;
+//             }
+//         }
+//     }
+//     for (const auto &subset : toRemove)
+//     {
+//         maxClique.erase(subset);
+//     }
+//     return maxClique;
+// }
+bool isStrictSubset(const set<Module *> &a, const set<Module *> &b)
+{
+    return includes(b.begin(), b.end(), a.begin(), a.end());
+}
+
+bool compareFirst(const Edge &a,
+                  const Edge &b)
+{
+    return a.y < b.y;
 }
 void Placement::debankFFto1bit(string ffname)
 {
