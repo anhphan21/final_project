@@ -6,7 +6,7 @@
 #include <queue>
 #include <sstream>
 #include <cmath>
-
+#include <math.h>
 #include "Pin.h"
 #include "Row.h"
 
@@ -36,7 +36,6 @@ void Database::parser(const string &filename)
 {
     ifstream file(filename);
     string line;
-
     while (getline(file, line))
     {
         auto _pos = filename.find_last_of("/");
@@ -238,7 +237,7 @@ void Database::parser(const string &filename)
                     _type = CellType2Ptr[type];
                     PinOfMnum = _type->pinNum();
                     currentM = new Module(name, _type, x, y);
-                    ModuleName2Ptr[name] = currentM;
+                    // ModuleName2Ptr[name] = currentM;
                     addModule(currentM);
                     if (_type->isFF())
                         addFF(currentM);
@@ -270,7 +269,6 @@ void Database::parser(const string &filename)
             Pin *_tPin;
             Net *netptr;
             bool Isclk;
-
             for (int i = 0; i < _numNet; i++)
             {
                 Isclk = false; // 定義這個Net是clkNet!!!每一條定義一個
@@ -308,7 +306,7 @@ void Database::parser(const string &filename)
                             }
                             it->second->setNetPtr(netptr);
                             netptr->addPin(it->second);
-                            if (type.substr(0, 5) == "INPUT")
+                            if (type.substr(0, 5) == "INPUT" || type.substr(0, 2) == "in" || type.substr(0, 3) == "CLK")
                             {
                                 netptr->setOutputPins(j);
                             }
@@ -334,8 +332,7 @@ void Database::parser(const string &filename)
                                 netptr->setOutputPins(j);
                             }
                             _tModule = it->second;
-                            _tPin = _tModule->pin(
-                                _type->getPinIdxFromName(TargetPin));
+                            _tPin = _tModule->pin(_type->getPinIdxFromName(TargetPin));
                             _tPin->setNetPtr(netptr);
                             netptr->addPin(_tPin);
                         }
@@ -847,4 +844,71 @@ void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, dou
         else if(adjust_pin->y() > fix_pin->y())
             adjust_pin->setPosition(adjust_pin->x() , adjust_pin->y() - grid_height);
     }
+}
+
+void Database::builBestCelltype()
+{
+    for (size_t i = 0; i < _ffLib.size(); i++)
+    {
+        vector<FFCell *> cellv = _ffLib[pow(2, i)];
+        double maxCost = 0;
+        unsigned bestid;
+        vector<double> disCost;
+        disCost.clear();
+        // find best among cellv(same bit celltype)
+        for (size_t j = 0; j < cellv.size(); j++)
+        { // cal displacement cost
+            unsigned clkidx = cellv[j]->clkPinIdx();
+            double cost = 0;
+            for (size_t k = 0; k < cellv[j]->getInNum(); k++)
+            {
+                if (k != clkidx)
+                {
+                    cost += (cellv[j]->pinOffsetX(k) + cellv[j]->pinOffsetY(k)) * _dDelay;
+                }
+            }
+            disCost.push_back(cost);
+            if (cost > maxCost)
+            {
+                maxCost = cost;
+            }
+        }
+        double mintotCost = DBL_MAX;
+        for (size_t j = 0; j < cellv.size(); j++)
+        {
+            double totcost = 0;
+            totcost += maxCost - disCost[j];
+            totcost += cellv[j]->getArea() + cellv[j]->getPower();
+            cout << "total cost of " << cellv[j]->getName() << " is : " << totcost << endl;
+            if (totcost < mintotCost)
+            {
+                mintotCost = totcost;
+                bestid = j;
+            }
+        }
+        cout << "best cell type is " << cellv[bestid]->getName() << "cost is : " << mintotCost << endl;
+        _bestCells[pow(2, i)] = cellv[bestid];
+    }
+    return;
+}
+void Database::outputTofile(const string &filename)
+{
+    ofstream outFile(filename);
+    if (!outFile.is_open())
+    {
+        cerr << "Error opening file: " << filename << endl;
+        exit(1);
+    }
+    outFile << "CellInst " << getNumFF() << "/n";
+    for (size_t i = 0; i < getNumFF(); i++)
+    {
+        outFile << "Inst " << _ffModules[i]->name() << " " << _ffModules[i]->cellType()->getName() << " "
+                << _ffModules[i]->x() << " " << _ffModules[i]->y() << "/n";
+    }
+    for (size_t i = 0; i < getNumPins(); i++)
+    {
+        outFile << _pins[i]->history()->oldModuleName() << "/" << _pins[i]->history()->oldPinName()
+                << " map " << _pins[i]->module()->name() << "/" << _pins[i]->name() << "/n";
+    }
+    return;
 }

@@ -28,6 +28,7 @@ public:
     vector<Rhombus > findOutputRegion(Module *ff);
 
     void constructGraph();
+    set<set<Module *>> calMaxClique(unsigned clkidx);
     double cal_cost(Module *ff1, Module *ff2);
 
 
@@ -48,6 +49,8 @@ public:
     void mergeFFinG();
     void eraseEdge(unsigned idx1, unsigned idx2);
     void merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx);
+    void debankFFto1bit(string ffname);
+    void whichFFtoChose();
     // get design property
     Node *node(unsigned nodeId) { return _nodes[nodeId]; }
     void setDatabase(Database *dataBase) { _dataBase = dataBase; }

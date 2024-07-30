@@ -25,7 +25,7 @@ public:
     ~Database() = default;
 
     void parser(const string &filename);
-
+    void outputTofile(const string &filename);
     // Design parameters
     void setName(string &name) { _name = name; }
 
@@ -50,11 +50,22 @@ public:
     void setBinWidth(double w) { _binWidth = w; }
     void setBinHeight(double h) { _binHeight = h; }
     void setBinUtil(double u) { _binMaxUtil = u; }
-
+    void setModule(unsigned idx, Module *mod)
+    {
+        _modules[idx] = mod;
+        ModuleName2Ptr[mod->name()] = mod;
+    }
+    void setFF(unsigned idx, Module *mod) { _ffModules[idx] = mod; }
     void setDisplacementDelay(double delay) { _dDelay = delay; }
 
     // methods for design (hyper-graph) construction
-    void addModule(Module *module) { _modules.push_back(module); }
+    void addModule(Module *module)
+    {
+        _modules.push_back(module);
+        auto iter = ModuleName2Ptr.find(module->name());
+        assert(iter == ModuleName2Ptr.end());
+        ModuleName2Ptr[module->name()] = module;
+    }
     void addFF(Module *ff) { _ffModules.push_back(ff); }
     void addNet(Net *net) { _nets.push_back(net); }
     void addClkNet(Net *clk) { _clkNets.push_back(clk); }
@@ -63,8 +74,16 @@ public:
     void addCellLib(CellType *cellLib) { _cellLib.push_back(cellLib); }
     void addFFLib(FFCell *ffLib, unsigned bitNum) { _ffLib[bitNum].push_back(ffLib); }
     void erasePin(unsigned pinId) { _pins.erase(_pins.begin() + pinId); }
-    void eraseModule(unsigned moduleId) { _modules.erase(_modules.begin() + moduleId); }
-    void eraseFF(unsigned ffId) { _ffModules.erase(_ffModules.begin() + ffId); }
+    void eraseModule(unsigned moduleId)
+    {
+        ModuleName2Ptr.erase(_modules[moduleId]->name());
+        _modules.erase(_modules.begin() + moduleId);
+    }
+    void eraseFF(unsigned ffId)
+    {
+        ModuleName2Ptr.erase(_ffModules[ffId]->name());
+        _ffModules.erase(_ffModules.begin() + ffId);
+    }
 
     // Bin operation
     void initialBinArray();
@@ -90,7 +109,13 @@ public:
         assert(outId < _numOutput);
         return _pins[_numInput + outId];
     }
-
+    // get design property through name
+    Module *getModuleByName(string &name)
+    {
+        auto it = ModuleName2Ptr.find(name);
+        assert(it != ModuleName2Ptr.end());
+        return ModuleName2Ptr[name];
+    }
     unsigned getNumModules() const { return _modules.size(); }
     unsigned getNumFF() const { return _ffModules.size(); }
     unsigned getNumNets() const { return _nets.size(); }
@@ -126,6 +151,8 @@ public:
             exit(1);
         }
     }
+    FFCell *getBestCelltype(unsigned bitnum) { return _bestCells[bitnum]; }
+    unsigned getFFlibBitsize() { return _bestCells.size(); }
     unsigned getNumfflibBit(unsigned bit)
     {
         auto it = _ffLib.find(bit);
@@ -144,7 +171,7 @@ public:
     void updateSlackAll();
     void updateSlack(Pin *);
     void resetVisit();
-
+    void builBestCelltype();
     void unMarkedDPin(); // unmarked all clk pin of FF
     // void updateRadius(FFCell *);
     void updateRadius();
@@ -193,6 +220,7 @@ private:
     // Library
     FFLLibrary _ffLib;
     CellLibrary _cellLib;
+    map<unsigned, FFCell *> _bestCells;
 
     // Design statics
     Rectangle _dieRectangle;
@@ -229,7 +257,7 @@ private:
     // void createPinforModule(Module *);
     // void updateRadiusRecur(FFCell*, Module*);
     Module *FindPrePin(Module *currentM);
-    
+
     // void updateInitialSlackInfo();
     vector<Pin *> _initial_negSlack;
 };
