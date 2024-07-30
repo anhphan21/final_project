@@ -93,6 +93,8 @@ class Module {
     void setCellType(CellType *type) { _type = type; }
     unordered_set<Module*> _outputFF;  //first: Gate; second: ouput FF
     int No;
+
+    
     // void store_ouputFF(Module *gate,Module *ff){_outputFF.push_back({gate,ff});}
     // vector<pair<Module *,Module *>> get_outputFF(){return _outputFF;}
 
