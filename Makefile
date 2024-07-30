@@ -1,5 +1,6 @@
 CC=g++
-LDFLAGS=-std=c++11 -O3 -lm -ggdb
+CXXFLAGS = -std=c++11 -O3 lm -ggdb
+LDFLAGS = -lpthread
 SOURCES= src/*.cpp
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=fp
@@ -7,7 +8,7 @@ INCLUDES=src/Bin.h src/Node.h src/Module.h src/Net.h src/Pin.h src/Placement.h s
 all: $(SOURCES) bin/$(EXECUTABLE)
 
 bin/$(EXECUTABLE): $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+	$(CC) $(LDFLAGS) $(OBJECTS) -o $@ $(LDFLAGS)
 
 %.o:  %.cpp  ${INCLUDES}
 	$(CC) $(CFLAGS) -c $< -o $@
