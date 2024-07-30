@@ -38,7 +38,15 @@ int main(int argc, char **argv)
 
     Placement testGraph;
     testGraph.setDatabase(&testDTB);
-    testGraph.netListGraph();
+
+    
+    Module* test = testDTB.getStringModule("C65638"); //use C65638 FF be a testcase,should be print C65638 Next level FF
+    testGraph.netListGraph(test); //Only find NextFF of argument FF 
+
+
+
+    testGraph.netListGraph();     //all find NextFF
+
 
     /*testGraph.constructGraph();*/
     //cout << testDTB.totalCost(1) << endl;
