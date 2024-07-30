@@ -1,6 +1,6 @@
 #ifndef PLACEMENT_H
 #define PLACEMENT_H
-
+#include <set>
 #include "Database.h"
 // We declare a Placement every time we are doing merge on a clk net
 class Nodeinf
@@ -20,9 +20,6 @@ public:
         _nodes[0] = nullptr;
     };
     void mainLoop();
-
-
-
     void constructFeasible(Module *ff,Rhombus in,vector<Rhombus > out);
     Rhombus findInputRegion(Module *ff);
     vector<Rhombus > findOutputRegion(Module *ff);

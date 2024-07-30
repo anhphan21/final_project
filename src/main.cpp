@@ -22,23 +22,23 @@ int main(int argc, char **argv)
     for (size_t i = 0; i < testDTB.getNumFF(); i++)
     {
         double temp = (testDTB.ff(i)->getPower() + testDTB.ff(i)->area()) / testDTB.ff(i)->cellType()->numBit();
-        cout << "power + area per bit : " << (testDTB.ff(i)->getPower() + testDTB.ff(i)->area()) / testDTB.ff(i)->cellType()->numBit() << endl;
+        // cout << "power + area per bit : " << (testDTB.ff(i)->getPower() + testDTB.ff(i)->area()) / testDTB.ff(i)->cellType()->numBit() << endl;
         if (temp < min)
         {
             min = temp;
             minidx = i;
         }
     }
-    cout << "min power + area per bit : " << min << endl;
-    cout << "name of ff : " << testDTB.ff(minidx)->name() << endl;
-    cout << "bit of ff : " << testDTB.ff(minidx)->cellType()->numBit() << endl;
+    // cout << "min power + area per bit : " << min << endl;
+    // cout << "name of ff : " << testDTB.ff(minidx)->name() << endl;
+    // cout << "bit of ff : " << testDTB.ff(minidx)->cellType()->numBit() << endl;
     return -1;
-    Placement testGraph;
-    testGraph.setDatabase(&testDTB);
-    testGraph.constructGraph();
-    testGraph.merge2FF(0, 1, 0);
-    string name = "reg5";
-    testGraph.debankFFto1bit(name);
+    // Placement testGraph;
+    // testGraph.setDatabase(&testDTB);
+    // testGraph.constructGraph();
+    // testGraph.merge2FF(0, 1, 0);
+    // string name = "reg5";
+    // testGraph.debankFFto1bit(name);
     // cout net =================================================================
     // for (size_t i = 0; i < testDTB.getNumNets(); i++)
     // {
@@ -102,16 +102,16 @@ int main(int argc, char **argv)
   /*  testDTB.updateRadius();
     testDTB.updateInitialSlackInfo();*/
 
-    Placement testGraph;
-    testGraph.setDatabase(&testDTB);
+    // Placement testGraph2;
+    // testGraph2.setDatabase(&testDTB);
 
     
-    Module* test = testDTB.getStringModule("C65638"); //use C65638 FF be a testcase,should be print C65638 Next level FF
-    testGraph.netListGraph(test); //Only find NextFF of argument FF 
+    // Module* test = testDTB.getStringModule("C65638"); //use C65638 FF be a testcase,should be print C65638 Next level FF
+    // testGraph2.netListGraph(test); //Only find NextFF of argument FF 
 
 
 
-    testGraph.netListGraph();     //all find NextFF
+    // testGraph2.netListGraph();     //all find NextFF
 
 
     /*testGraph.constructGraph();*/
