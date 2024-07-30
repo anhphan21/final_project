@@ -1204,114 +1204,114 @@ bool compareFirst(const Edge &a,
 {
     return a.y < b.y;
 }
-void Placement::debankFFto1bit(string ffname)
-{
-    // TODO: need to know which FF should be chosed
-    // TODO: Each FF position after debanking
-    int celltypeID = 0;
-    Module *target = _dataBase->getModuleByName(ffname);
-    int ffbit = target->cellType()->getnumBit();
-    vector<Module *> newfflist;
-    newfflist.clear();
-    string pinName;
-    // TODO:radius
-    vector<pair<double, double>> newPos;
-    for (size_t i = 0; i < ffbit; i++)
-    {
-        newPos.push_back(make_pair(target->x(), target->y()));
-        newfflist.push_back(new Module());
-        cout << newfflist.size() << endl;
-        newfflist[i]->setCellType(_dataBase->ffLib(1, celltypeID));
-        newfflist[i]->setPinsize(3);
-        newfflist[i]->setInPin(0, target->InPin(i));
-        newfflist[i]->InPin(0)->setOffset(newfflist[i]->cellType()->pinOffsetX(1), newfflist[i]->cellType()->pinOffsetY(1));
-        newfflist[i]->InPin(0)->setPosition(newfflist[i]->cellType()->pinOffsetX(1) + newPos[i].first,
-                                            newfflist[i]->cellType()->pinOffsetY(1) + newPos[i].second);
-        pinName = "D";
-        newfflist[i]->InPin(0)->setPinName(pinName);
-        newfflist[i]->InPin(0)->setModulePtr(newfflist[i]);
+// void Placement::debankFFto1bit(string ffname)
+// {
+//     // TODO: need to know which FF should be chosed
+//     // TODO: Each FF position after debanking
+//     int celltypeID = 0;
+//     Module *target = _dataBase->getModuleByName(ffname);
+//     int ffbit = target->cellType()->getnumBit();
+//     vector<Module *> newfflist;
+//     newfflist.clear();
+//     string pinName;
+//     // TODO:radius
+//     vector<pair<double, double>> newPos;
+//     for (size_t i = 0; i < ffbit; i++)
+//     {
+//         newPos.push_back(make_pair(target->x(), target->y()));
+//         newfflist.push_back(new Module());
+//         cout << newfflist.size() << endl;
+//         newfflist[i]->setCellType(_dataBase->ffLib(1, celltypeID));
+//         newfflist[i]->setPinsize(3);
+//         newfflist[i]->setInPin(0, target->InPin(i));
+//         newfflist[i]->InPin(0)->setOffset(newfflist[i]->cellType()->pinOffsetX(1), newfflist[i]->cellType()->pinOffsetY(1));
+//         newfflist[i]->InPin(0)->setPosition(newfflist[i]->cellType()->pinOffsetX(1) + newPos[i].first,
+//                                             newfflist[i]->cellType()->pinOffsetY(1) + newPos[i].second);
+//         pinName = "D";
+//         newfflist[i]->InPin(0)->setPinName(pinName);
+//         newfflist[i]->InPin(0)->setModulePtr(newfflist[i]);
 
-        newfflist[i]->setOutPin(0, target->OutPin(i));
-        newfflist[i]->OutPin(0)->setOffset(newfflist[i]->cellType()->pinOffsetX(0), newfflist[i]->cellType()->pinOffsetY(0));
-        newfflist[i]->OutPin(0)->setPosition(newfflist[i]->cellType()->pinOffsetX(0) + newPos[i].first,
-                                             newfflist[i]->cellType()->pinOffsetY(0) + newPos[i].second);
-        pinName = "Q";
-        newfflist[i]->OutPin(0)->setPinName(pinName);
-        newfflist[i]->OutPin(0)->setModulePtr(newfflist[i]);
-    }
-    newfflist[ffbit - 1]->setName(ffname);
-    // naming =================================================================
-    string nname = _dataBase->module(_dataBase->getNumModules() - 1)->name();
-    string letters;
-    string numbers;
-    for (char c : nname)
-    {
-        if (isdigit(c))
-        {
-            numbers += c;
-        }
-        else
-        {
-            letters += c;
-        }
-    }
-    int num = stoi(numbers);
-    for (size_t i = 0; i < ffbit - 1; i++)
-    {
-        num++;
-        nname = letters + to_string(num);
-        newfflist[i]->setName(nname);
-    }
-    // naming =================================================================
-    newfflist[ffbit - 1]->setInPin(newfflist[ffbit - 1]->cellType()->clkPinIdx(), target->InPin(target->cellType()->clkPinIdx()));
-    newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->setModulePtr(newfflist[ffbit - 1]);
-    for (size_t i = 0; i < ffbit - 1; i++)
-    {
-        Pin *newCLK = new Pin();
-        string n = "CLK";
-        newCLK->setPinName(n);
-        newCLK->setOffset(newfflist[i]->cellType()->pinOffsetX(newfflist[i]->cellType()->clkPinIdx()), newfflist[i]->cellType()->pinOffsetY(newfflist[i]->cellType()->clkPinIdx()));
-        newCLK->setPosition(newfflist[i]->x() + newCLK->x(), newfflist[i]->y() + newCLK->y());
-        newCLK->setModulePtr(newfflist[i]);
-        newfflist[i]->setInPin(newfflist[i]->cellType()->clkPinIdx(), newCLK);
-        // connecting pin to net
-        newCLK->setNetPtr(newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->net());
-        newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->net()->addPin(newCLK);
-        History *newH = new History();
-        newH->setNewPin(newCLK);
-        newH->setOldPinName(n);
-        newH->setOldModuleName(ffname);
-        // add pin into database
-        _dataBase->addPin(newCLK);
-    }
-    for (size_t i = 0; i < ffbit; i++)
-    {
-        newfflist[i]->setPosition(newPos[i].first, newPos[i].second);
-    }
-    for (size_t i = 0; i < _dataBase->getNumModules(); i++)
-    {
-        if (_dataBase->module(i) == target)
-        {
-            _dataBase->setModule(i, newfflist[ffbit - 1]);
-            break;
-        }
-    }
-    for (size_t i = 0; i < _dataBase->getNumFF(); i++)
-    {
-        if (_dataBase->ff(i) == target)
-        {
-            _dataBase->setFF(i, newfflist[ffbit - 1]);
-            break;
-        }
-    }
-    free(target);
-    for (size_t i = 0; i < ffbit - 1; i++)
-    {
-        _dataBase->addFF(newfflist[i]);
-        _dataBase->addModule(newfflist[i]);
-    }
-    return;
-}
+//         newfflist[i]->setOutPin(0, target->OutPin(i));
+//         newfflist[i]->OutPin(0)->setOffset(newfflist[i]->cellType()->pinOffsetX(0), newfflist[i]->cellType()->pinOffsetY(0));
+//         newfflist[i]->OutPin(0)->setPosition(newfflist[i]->cellType()->pinOffsetX(0) + newPos[i].first,
+//                                              newfflist[i]->cellType()->pinOffsetY(0) + newPos[i].second);
+//         pinName = "Q";
+//         newfflist[i]->OutPin(0)->setPinName(pinName);
+//         newfflist[i]->OutPin(0)->setModulePtr(newfflist[i]);
+//     }
+//     newfflist[ffbit - 1]->setName(ffname);
+//     // naming =================================================================
+//     string nname = _dataBase->module(_dataBase->getNumModules() - 1)->name();
+//     string letters;
+//     string numbers;
+//     for (char c : nname)
+//     {
+//         if (isdigit(c))
+//         {
+//             numbers += c;
+//         }
+//         else
+//         {
+//             letters += c;
+//         }
+//     }
+//     int num = stoi(numbers);
+//     for (size_t i = 0; i < ffbit - 1; i++)
+//     {
+//         num++;
+//         nname = letters + to_string(num);
+//         newfflist[i]->setName(nname);
+//     }
+//     // naming =================================================================
+//     newfflist[ffbit - 1]->setInPin(newfflist[ffbit - 1]->cellType()->clkPinIdx(), target->InPin(target->cellType()->clkPinIdx()));
+//     newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->setModulePtr(newfflist[ffbit - 1]);
+//     for (size_t i = 0; i < ffbit - 1; i++)
+//     {
+//         Pin *newCLK = new Pin();
+//         string n = "CLK";
+//         newCLK->setPinName(n);
+//         newCLK->setOffset(newfflist[i]->cellType()->pinOffsetX(newfflist[i]->cellType()->clkPinIdx()), newfflist[i]->cellType()->pinOffsetY(newfflist[i]->cellType()->clkPinIdx()));
+//         newCLK->setPosition(newfflist[i]->x() + newCLK->x(), newfflist[i]->y() + newCLK->y());
+//         newCLK->setModulePtr(newfflist[i]);
+//         newfflist[i]->setInPin(newfflist[i]->cellType()->clkPinIdx(), newCLK);
+//         // connecting pin to net
+//         newCLK->setNetPtr(newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->net());
+//         newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->net()->addPin(newCLK);
+//         History *newH = new History();
+//         newH->setNewPin(newCLK);
+//         newH->setOldPinName(n);
+//         newH->setOldModuleName(ffname);
+//         // add pin into database
+//         _dataBase->addPin(newCLK);
+//     }
+//     for (size_t i = 0; i < ffbit; i++)
+//     {
+//         newfflist[i]->setPosition(newPos[i].first, newPos[i].second);
+//     }
+//     for (size_t i = 0; i < _dataBase->getNumModules(); i++)
+//     {
+//         if (_dataBase->module(i) == target)
+//         {
+//             _dataBase->setModule(i, newfflist[ffbit - 1]);
+//             break;
+//         }
+//     }
+//     for (size_t i = 0; i < _dataBase->getNumFF(); i++)
+//     {
+//         if (_dataBase->ff(i) == target)
+//         {
+//             _dataBase->setFF(i, newfflist[ffbit - 1]);
+//             break;
+//         }
+//     }
+//     free(target);
+//     for (size_t i = 0; i < ffbit - 1; i++)
+//     {
+//         _dataBase->addFF(newfflist[i]);
+//         _dataBase->addModule(newfflist[i]);
+//     }
+//     return;
+// }
 // set<set<Module *>> Placement::calMaxClique(unsigned clkidx)
 // {
 //     // input : clk net id
@@ -1457,13 +1457,13 @@ void Placement::debankFFto1bit(string ffname)
 //     }
 //     return maxClique;
 // }
-bool isStrictSubset(const set<Module *> &a, const set<Module *> &b)
-{
-    return includes(b.begin(), b.end(), a.begin(), a.end());
-}
+// bool isStrictSubset(const set<Module *> &a, const set<Module *> &b)
+// {
+//     return includes(b.begin(), b.end(), a.begin(), a.end());
+// }
 
-bool compareFirst(const Edge &a,
-                  const Edge &b)
-{
-    return a.y < b.y;
-}
+// bool compareFirst(const Edge &a,
+//                   const Edge &b)
+// {
+//     return a.y < b.y;
+// }
