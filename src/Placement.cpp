@@ -745,7 +745,7 @@ void Placement::constructFeasible(Module *ff, Rhombus in, vector<Rhombus> out)
     double Feas_x1=0, Feas_y1=0, Feas_x2=0, Feas_y2=0;
     if (overlap_ornot(out, Feas_x1, Feas_x2, Feas_y1, Feas_y2) == 1)
     { // if return is true then Feas_x1, Feas_x2, Feas_y1, Feas_y2 have correct value
-        ff->getfeasibleRegion().setInf(Feas_x1, Feas_y1, Feas_x2, Feas_y2); // feasibleRegion still be retangleable
+        ff->getFeasibleRegion()->setInf(Feas_x1, Feas_y1, Feas_x2, Feas_y2); // feasibleRegion still be retangleable
     }
     else 
     {

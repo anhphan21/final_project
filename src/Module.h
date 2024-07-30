@@ -46,7 +46,6 @@ public:
 
     double radius() const { return _radius; }
 
-    Rectangle getfeasibleRegion() const {return _feasibleRegion;}
     /////////////////////////////////////////////
     // set
     /////////////////////////////////////////////
@@ -129,7 +128,7 @@ private:
     }
 
     // feasible region
-    Rectangle _feasibleRegion;
+    // Rectangle _feasibleRegion;
     // vector<Module *> _outputFF;
     // vector<pair<Module *,Module *>> _outputFF;  //first: Gate; second: ouput FF
 };
