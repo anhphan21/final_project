@@ -629,56 +629,56 @@ void Placement::constructGraph()
 
 double Placement::cal_cost(Module *ffN, Module *ff0) // ffN is primary
 {
-    // initail cost
-    double initial_cost = 0;
-    double initial_TNS_cost = 0;
-    if (ffN->InPin(0)->slack() < 0)
-        initial_TNS_cost += ffN->InPin(0)->slack();
-    if (ff0->InPin(0)->slack() < 0)
-        initial_TNS_cost += ff0->InPin(0)->slack();
-    double initial_Power_cost = 0;
-    initial_Power_cost = _dataBase->getBeta() * ffN->getPower() + _dataBase->getBeta() * ff0->getPower();
-    double initial_Area_cost = 0;
-    initial_Area_cost = _dataBase->getGamma() * ffN->area() + _dataBase->getGamma() * ff0->area();
+    // // initail cost
+    // double initial_cost = 0;
+    // double initial_TNS_cost = 0;
+    // if (ffN->InPin(0)->slack() < 0)
+    //     initial_TNS_cost += ffN->InPin(0)->slack();
+    // if (ff0->InPin(0)->slack() < 0)
+    //     initial_TNS_cost += ff0->InPin(0)->slack();
+    // double initial_Power_cost = 0;
+    // initial_Power_cost = _dataBase->getBeta() * ffN->getPower() + _dataBase->getBeta() * ff0->getPower();
+    // double initial_Area_cost = 0;
+    // initial_Area_cost = _dataBase->getGamma() * ffN->area() + _dataBase->getGamma() * ff0->area();
 
-    //
-    double TNS_cost = 0;
+    // //
+    // double TNS_cost = 0;
 
-    for (int i = 0; i < ffN->numInPins() - 1 /*the last Inpin is CLK*/; ++i) // ffN and ff0 numInPins must be equal
-    {
-        double old_slack1 = ffN->InPin(i)->slack();
-        double old_slack2 = ff0->InPin(i)->slack();
-        Rhombus r1(ffN->InPin(i)->net()->OutputPin()->x(), ffN->InPin(i)->net()->OutputPin()->y(), ffN->radius());
-        Rhombus r2(ff0->InPin(i)->net()->OutputPin()->x(), ffN->InPin(i)->net()->OutputPin()->y(), ff0->radius());
-        pair<double, double> new_location = Rhombus::findCentroidIntersect(r1, r2);
-        ffN->setPosition(new_location.first, new_location.second);
-        ff0->setPosition(new_location.first, new_location.second);
-        // cout<<ffN->InPin(i)->slack()
-        _dataBase->updateSlack(ffN->InPin(i));
-        _dataBase->updateSlack(ff0->InPin(i));
-        if (ffN->InPin(i)->slack() < 0)
-            TNS_cost += ffN->InPin(i)->slack();
-        if (ff0->InPin(i)->slack() < 0)
-            TNS_cost += ff0->InPin(i)->slack();
-        // turn back
-        ffN->setPosition(ffN->InPin(i)->oldX(), ffN->InPin(i)->oldY());
-        ff0->setPosition(ff0->InPin(i)->oldX(), ff0->InPin(i)->oldY());
-        ffN->InPin(i)->setSlack(old_slack1);
-        ff0->InPin(i)->setSlack(old_slack2);
-    }
-    _dataBase->totalCost(1);
-    _dataBase->unMarkedDPin();
-    int next_level_FF = 0;
-    next_level_FF = pow(2, log2(ffN->cellType()->numBit()) + 1);
-    double Power_cost = 0;
-    Power_cost = _dataBase->getBeta() * _dataBase->getFFlib(next_level_FF)->getPower();
-    double Area_cost = 0;
-    Area_cost = _dataBase->getGamma() * _dataBase->getFFlib(next_level_FF)->getArea();
+    // for (int i = 0; i < ffN->numInPins() - 1 /*the last Inpin is CLK*/; ++i) // ffN and ff0 numInPins must be equal
+    // {
+    //     double old_slack1 = ffN->InPin(i)->slack();
+    //     double old_slack2 = ff0->InPin(i)->slack();
+    //     Rhombus r1(ffN->InPin(i)->net()->OutputPin()->x(), ffN->InPin(i)->net()->OutputPin()->y(), ffN->radius());
+    //     Rhombus r2(ff0->InPin(i)->net()->OutputPin()->x(), ffN->InPin(i)->net()->OutputPin()->y(), ff0->radius());
+    //     pair<double, double> new_location = Rhombus::findCentroidIntersect(r1, r2);
+    //     ffN->setPosition(new_location.first, new_location.second);
+    //     ff0->setPosition(new_location.first, new_location.second);
+    //     // cout<<ffN->InPin(i)->slack()
+    //     _dataBase->updateSlack(ffN->InPin(i));
+    //     _dataBase->updateSlack(ff0->InPin(i));
+    //     if (ffN->InPin(i)->slack() < 0)
+    //         TNS_cost += ffN->InPin(i)->slack();
+    //     if (ff0->InPin(i)->slack() < 0)
+    //         TNS_cost += ff0->InPin(i)->slack();
+    //     // turn back
+    //     ffN->setPosition(ffN->InPin(i)->oldX(), ffN->InPin(i)->oldY());
+    //     ff0->setPosition(ff0->InPin(i)->oldX(), ff0->InPin(i)->oldY());
+    //     ffN->InPin(i)->setSlack(old_slack1);
+    //     ff0->InPin(i)->setSlack(old_slack2);
+    // }
+    // _dataBase->totalCost(1);
+    // _dataBase->unMarkedDPin();
+    // int next_level_FF = 0;
+    // next_level_FF = pow(2, log2(ffN->cellType()->numBit()) + 1);
+    // double Power_cost = 0;
+    // Power_cost = _dataBase->getBeta() * _dataBase->getFFlib(next_level_FF)->getPower();
+    // double Area_cost = 0;
+    // Area_cost = _dataBase->getGamma() * _dataBase->getFFlib(next_level_FF)->getArea();
 
-    initial_cost = initial_TNS_cost + initial_Power_cost + initial_Area_cost;
-    double new_cost = TNS_cost + Power_cost + Area_cost;
-    // cout << ffN->name() << " " << ff0->name() << " ,cost: " << initial_cost << " " << new_cost << endl;
-    return (new_cost - initial_cost);
+    // initial_cost = initial_TNS_cost + initial_Power_cost + initial_Area_cost;
+    // double new_cost = TNS_cost + Power_cost + Area_cost;
+    // // cout << ffN->name() << " " << ff0->name() << " ,cost: " << initial_cost << " " << new_cost << endl;
+    // return (new_cost - initial_cost);
 }
 
 Rhombus Placement::findInputRegion(Module *ff)

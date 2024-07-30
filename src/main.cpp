@@ -8,10 +8,13 @@ int main(int argc, char **argv)
     Database testDTB;
     testDTB.parser(argv[1]);
     cout << "Done parser!!!" << endl;
-    if (testDTB.input(4)->net() == nullptr)
-    {
-        cout << "I'm pig Lily" << endl;
-    }
+    testDTB.setPositive_slack();
+    // for(int i =0;i<testDTB.getNegative_slack().size();i++)
+    //     cout << testDTB.getNegative_slack()[i]->slack()<<endl;
+    // if (testDTB.input(4)->net() == nullptr)
+    // {
+    //     cout << "I'm pig Lily" << endl;
+    // }
 
     // Module* ptrM = testDTB.module(2);
     // Pin* currentPin = nullptr;
@@ -32,9 +35,11 @@ int main(int argc, char **argv)
     // for(int i=0;i<testDTB.getNumFF();++i)
   /*  testDTB.updateRadius();
     testDTB.updateInitialSlackInfo();*/
+
     Placement testGraph;
     testGraph.setDatabase(&testDTB);
     testGraph.netListGraph();
+
     /*testGraph.constructGraph();*/
     //cout << testDTB.totalCost(1) << endl;
 

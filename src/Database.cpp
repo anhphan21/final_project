@@ -31,10 +31,12 @@ Database::Database()
       _beta(-1),
       _gamma(-1),
       _lambda(-1) {}
+
 void Database::parser(const string &filename)
 {
     ifstream file(filename);
     string line;
+
     while (getline(file, line))
     {
         auto _pos = filename.find_last_of("/");
@@ -101,7 +103,6 @@ void Database::parser(const string &filename)
                 {
                     type = "CLK";
                 }
-                cout << type << endl;
                 IODesign.insert({type, pinptr});
                 // IODesignPin.insert({type, pinptr});
             }
@@ -197,9 +198,7 @@ void Database::parser(const string &filename)
                 //     bptr->setPinOffset(name, pair<double, double>(x, y));
                 // }
                 if (name.size() >= 3)
-                {
-                    _check = ((name.substr(0, 3) == "Out") || ((name.substr(0, 3) == "OUT"))) ? true : false;
-                }
+                    _check = (name.substr(0, 3) == "Out") ? true : false;
                 bptr->setPin(name, make_pair(width, height), _check);
             }
             // cout << "Gate" << " " << id << " " << width << " " << height <<
@@ -229,26 +228,21 @@ void Database::parser(const string &filename)
                 auto it = CellType2Ptr.find(type);
                 map<string, Pin *> PinOfM;
                 if (it == CellType2Ptr.end())
-
                 {
                     // can't find Standard Cell
                     // Comment: Nice idea for checking error of input file
                     // cout << "Test error" << type << endl;
                 }
-
                 else
-
                 {
                     _type = CellType2Ptr[type];
                     PinOfMnum = _type->pinNum();
                     currentM = new Module(name, _type, x, y);
                     ModuleName2Ptr[name] = currentM;
-                    currentM->No = i;
                     addModule(currentM);
                     if (_type->isFF())
                         addFF(currentM);
                     for (int i = 0; i < PinOfMnum; ++i)
-
                     {
                         string PinName = _type->pinName(i);
                         Pin *pinptr = new Pin();
@@ -264,9 +258,7 @@ void Database::parser(const string &filename)
                 }
             }
         }
-
         else if (keyword == "NumNets")
-
         {
             int PinNum;
             string temp, Netname;
@@ -283,32 +275,25 @@ void Database::parser(const string &filename)
             {
                 Isclk = false; // 定義這個Net是clkNet!!!每一條定義一個
                 getline(file, line);
-                // getline(file, line);
                 istringstream iss(line);
 
                 iss >> temp >> Netname >> PinNum;
-
-                /* cout << temp << endl;
-                 cout << Netname << endl;
-                 cout << PinNum << endl;*/
                 netptr = new Net();
                 netptr->setName(Netname);
 
                 for (int j = 0; j < PinNum; j++)
-
                 {
                     getline(file, line);
                     istringstream piniss(line);
                     piniss >> temp >> type;
                     auto pos = type.find("/");
                     if (pos == type.npos)
-
                     {
                         // 如果沒有'/'的Net pin角 代表會再IODesign  this is
                         // design pin
                         auto it = IODesign.find(type);
-                        if (it == IODesign.end())
 
+                        if (it == IODesign.end())
                         {
                             // IODesignPin腳 處理跟FF不一樣
                             cout << "No match pin!!" << endl;
@@ -410,6 +395,8 @@ void Database::parser(const string &filename)
             CellType *_type = _tModule->cellType();
             Pin *_tDPin = _tModule->pin(_type->getPinIdxFromName(Dpin));
             _tDPin->setSlack(slack);
+            if (slack < 0)
+                _initial_negSlack.push_back(_tDPin);
         }
         else if (keyword == "GatePower")
         {
@@ -437,7 +424,6 @@ void Database::parser(const string &filename)
         }
     }
 }
-
 void Database::initialBinArray()
 {
     // Initial Die Boundary
@@ -810,4 +796,55 @@ double Database::totalCost(double _denThrs) const
     }
 
     return _alpha * _tnsCost + _beta * _powerCost + _gamma * _areaCost + _lambda * getDen(_denThrs);
+}
+void Database::setPositive_slack()
+{
+    for (int i = 0; i < _initial_negSlack.size(); ++i)
+    {
+        double ff_original_slack = _initial_negSlack[i]->getSlackInfor()->slack();
+        double dis_delay = getDisplacementDelay();
+        double initial_dist = abs(_initial_negSlack[i]->net()->OutputPin()->x() - _initial_negSlack[i]->x()) + abs(_initial_negSlack[i]->net()->OutputPin()->y() - _initial_negSlack[i]->y());
+        double radius = (ff_original_slack + dis_delay * initial_dist) / dis_delay;
+        adjust_position(_initial_negSlack[i]->net()->OutputPin(), _initial_negSlack[i], radius, row(0)->width(), row(0)->height());
+        
+        // update slack
+        double new_dist = abs(_initial_negSlack[i]->net()->OutputPin()->x() - _initial_negSlack[i]->x()) + abs(_initial_negSlack[i]->net()->OutputPin()->y() - _initial_negSlack[i]->y());
+        double new_slack = (initial_dist - new_dist) * dis_delay + ff_original_slack;
+        if(abs(new_slack) < pow(10,-10))    //floating 誤差值
+            new_slack = 0;
+        _initial_negSlack[i]->getSlackInfor()->setSlack(new_slack);
+            
+    }
+}
+
+void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, double grid_width, double grid_height)
+{
+    double deltaX = abs(fix_pin->x() - adjust_pin->x());
+    double deltaY = abs(fix_pin->y() - adjust_pin->y());
+    double initial_dist = deltaX + deltaY;
+    if (initial_dist <= radius)
+        return ; // don't have to adjust
+    double reduceBy = initial_dist - radius;
+    if (deltaX > deltaY)
+        deltaX = max(deltaX - reduceBy, 0.0);
+    else
+        deltaY = max(deltaY - reduceBy, 0.0);
+
+    adjust_pin->setPosition((fix_pin->x() + deltaX * (adjust_pin->x() > fix_pin->x() ? 1 : -1)), (fix_pin->y() + deltaY * (adjust_pin->y() > fix_pin->y() ? 1 : -1)));
+    // snap to grid
+    adjust_pin->setPosition((((adjust_pin->x() + grid_width ) / grid_width) * grid_width), (((adjust_pin->y() + grid_height ) / grid_height) * grid_height));
+    double new_dist = abs(fix_pin->x() - adjust_pin->x()) + abs(fix_pin->y() - adjust_pin->y());
+    if (new_dist <= radius)
+        return;
+    else
+    {
+        if(adjust_pin->x() < fix_pin->x())
+            adjust_pin->setPosition(adjust_pin->x() + grid_width, adjust_pin->y());
+        else if(adjust_pin->x() > fix_pin->x())
+            adjust_pin->setPosition(adjust_pin->x() - grid_width, adjust_pin->y());
+        if(adjust_pin->y() < fix_pin->y())
+            adjust_pin->setPosition(adjust_pin->x() , adjust_pin->y() + grid_height);
+        else if(adjust_pin->y() > fix_pin->y())
+            adjust_pin->setPosition(adjust_pin->x() , adjust_pin->y() - grid_height);
+    }
 }
