@@ -25,6 +25,7 @@ public:
     double cal_cost(Module *ff1, Module *ff2);
     NodeList findMST();
     void netListGraph();
+    void netListGraph(Module* moduleptr);
     // methods for design (hyper-graph) construction
     void addNode(Node *node) { _nodes.push_back(node); }
     unsigned getNumNode() { return _nodes.size(); }

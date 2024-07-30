@@ -655,130 +655,155 @@ void Placement::netListGraph()
 {
 
     int count=0;
-    deque< pair<Pin*, vector<int>>> que;
-    for (int i = 0; i < this->_dataBase->getNumInputs(); i++) //抓取每一個IO
+    for (int i = 0; i < this->_dataBase->getNumFF() ; i++) //抓取每一個IO
     {
-        Net * netptr = this->_dataBase->input(i)->net();
-        if (netptr == nullptr || netptr->clkFlag() == 1) //
+        deque< pair<Pin*, vector<int>>> que;
+        for (int j = 0; j < this->_dataBase->ff(i)->numOutPins(); j++)
         {
-            continue;
+            vector<int> a;
+            a.push_back(this->_dataBase->ff(i)->No);
+            que.push_back({ this->_dataBase->ff(i)->OutPin(j),a });
         }
-        for (int j = 0; j < netptr->pinNum();  j++)
+        while (!que.empty())
         {
-           /* cout << "HI"<<que.size() << endl;
-            cout << "j " << j << "  /" << netptr->getOutIdx() << endl;*/
-            if (j == netptr->getOutIdx()) //如果取到Output Pin就跳過 我不用往會指
-            {  
+            Module* moduleptr = que.front().first->module();
+            if (moduleptr->isFF() && moduleptr->name() != this->_dataBase->ff(i)->name())
+            {
+                this->_dataBase->ff(i)->_outputFF.insert(moduleptr);
+                que.front().second.clear();
+                que.front().second.shrink_to_fit();
+                que.pop_front();
                 continue;
             }
-            else
+            if (moduleptr == nullptr)
             {
-                vector<int> a;
-                a.push_back(netptr->pin(j)->module()->No);/*
-                cout << netptr->pin(j)->module()->name() << endl;*/
-                que.push_back({ netptr->pin(j) ,a});
+                cout << "BUG" << endl;
+                exit(0);
             }
-        }
-    }
-    while (!que.empty())
-    {
-
-        Module* moduleptr = que.front().first->module();
-        if (moduleptr->isFF())
-        {
-            for (int i= que.front().second.size()-1 ; i >= 0 ; i--)
+            for (int j = 0; j < moduleptr->numOutPins(); j++)
             {
-                auto it = this->_dataBase->module(que.front().second[i]);
-                if (it->isFF() && it->name()!=moduleptr->name())
+                for (int z = 0; z < moduleptr->OutPin(j)->net()->numPins(); z++)
                 {
                     
-                    moduleptr->_outputFF.push_back(it);
-                    que.front().second.clear();
-                    que.front().second.shrink_to_fit();
-                    que.front().second.push_back(moduleptr->No);
-                    break;
-                }
-            }
-        }
-        auto it = this->ModuleTraverseN.find(moduleptr->name());
-        if (it == ModuleTraverseN.end())
-        {
-            /*cout << moduleptr->name() << " " << ModuleTraverseN.size() << endl;*/
-            ModuleTraverseN.insert({ moduleptr->name() , 1 });
-        }
-        else
-        {
-            it->second++;
-        }
-        if (moduleptr == nullptr)
-        {
-            cout << "EEEEE" << endl;
-        }
-        for (int j = 0; j < moduleptr->numOutPins(); j++)
-        {
-
-            /*cout<< "Module Name: "<<moduleptr->name() << endl;*/
-             /*cout << "FINAL " << moduleptr->OutPin(j)->net()->numPins() - 1 << endl;*/
-            for (int z = 0; z < moduleptr->OutPin(j)->net()->numPins(); z++)
-            {
-                bool IO_Design = 0;
-                if (moduleptr->OutPin(j)->net()->pin(z)->module() == nullptr) //如果今天pin沒任何的module 就不要用
-                {
-                    ;
-                    if (this->_dataBase->IODesign.find(moduleptr->OutPin(j)->net()->pin(z)->name()) != this->_dataBase->IODesign.end()) //pin 沒有module可能是IO Design
-                    {/*
-                        cout << "I'm IODesign: " << moduleptr->OutPin(j)->net()->pin(z)->name() << endl;*/
-                        continue; //如果是IO Desgin 就不要繼續traverse
+                    bool IO_Design = 0;
+                    if (moduleptr->OutPin(j)->net()->pin(z)->module() == nullptr) //如果今天pin沒任何的module 就不要用
+                    {
+                        if (this->_dataBase->IODesign.find(moduleptr->OutPin(j)->net()->pin(z)->name()) != this->_dataBase->IODesign.end()) //pin 沒有module可能是IO Design
+                        {/*
+                            cout << "I'm IODesign: " << moduleptr->OutPin(j)->net()->pin(z)->name() << endl;*/
+                            continue; //如果是IO Desgin 就不要繼續traverse
+                        }
+                        else
+                        {
+                            exit(0);
+                        }
+                    }
+                    auto it = std::find(que.front().second.begin(), que.front().second.end(), moduleptr->OutPin(j)->net()->pin(z)->module()->No);
+                    if (z == moduleptr->OutPin(j)->net()->getOutIdx() || it != que.front().second.end()) //為輸入端 抑或是有 Latch
+                    {
+                        if (it != que.front().second.end() && moduleptr->OutPin(j)->net()->pin(z)->module()->name() == "C101355")
+                        {
+                            /*cout << endl << endl;
+                            cout << "---------------------" << endl;
+                            cout << "Latch" << endl;*/
+                        }
                     }
                     else
                     {
-                        exit(0);
+                        /* cout << "HE" << endl;*/
+                         /*cout << "Drop IN " << moduleptr->OutPin(j)->net()->pin(z)->module()->name()<< endl;*/
+                        que.push_back({ moduleptr->OutPin(j)->net()->pin(z), que.front().second });
+                        que.front().second.push_back(moduleptr->OutPin(j)->net()->pin(z)->module()->No);
                     }
-                }
-                auto it = std::find(que.front().second.begin(), que.front().second.end(), moduleptr->OutPin(j)->net()->pin(z)->module()->No);
-                if (z == moduleptr->OutPin(j)->net()->getOutIdx() || it != que.front().second.end() || IO_Design)
-                {
-                    if (it != que.front().second.end() && moduleptr->OutPin(j)->net()->pin(z)->module()->name() == "C101355")
-                    {
-                        /*cout << endl << endl;
-                        cout << "---------------------" << endl;
-                        cout << "Latch" << endl;*/
-                    }
-                }
-                else
-                {
-                   /* cout << "HE" << endl;*/
-                    /*cout << "Drop IN " << moduleptr->OutPin(j)->net()->pin(z)->module()->name()<< endl;*/
-                    que.push_back({ moduleptr->OutPin(j)->net()->pin(z), que.front().second });
-                    que.back().second.push_back(moduleptr->OutPin(j)->net()->pin(z)->module()->No);
                 }
             }
+            que.front().second.clear();
+            que.front().second.shrink_to_fit();
+            que.pop_front();
+        }
+        if (i % 1000 == 0 )
+        {
+            cout << i << endl;
 
         }
-        que.front().second.clear();
-        que.front().second.shrink_to_fit();
-        que.pop_front();
-
-	//	if(que.size()>1000000)
-	//	{
-	//		for(auto a:que)
-	//		{
-	//			cout<<a.first->module()->name()<<" ";
-	//		} 
-	//	}
-    //    if (ModuleTraverseN.size() > 100000)
-    //     {
-    //     	cout<<que.size()<<endl;
-    //     }
-        /* cout << "QUE 內容: ";
-         for (auto& a : que)
-         {
-
-             cout << a.first->module()->name() << " ";
-         }
-         cout << endl;*/
 
     }
-    cout << count << endl;
+    
+}
+
+
+
+void Placement::netListGraph(Module* moduleOrigin)
+{
+    
+        deque< pair<Pin*, vector<int>>> que;
+        for (int j = 0; j < moduleOrigin->numOutPins(); j++)
+        {
+            vector<int> a;
+            a.push_back(moduleOrigin->No);
+            que.push_back({ moduleOrigin->OutPin(j),a });
+        }
+        while (!que.empty())
+        {
+            Module* moduleptr = que.front().first->module();
+            if (moduleptr->isFF() && moduleptr->name() != moduleOrigin->name())
+            {
+                moduleOrigin->_outputFF.insert(moduleptr);
+                que.front().second.clear();
+                que.front().second.shrink_to_fit();
+                que.pop_front();
+                continue;
+            }
+            if (moduleptr == nullptr)
+            {
+                cout << "BUG" << endl;
+                exit(0);
+            }
+            for (int j = 0; j < moduleptr->numOutPins(); j++)
+            {
+                for (int z = 0; z < moduleptr->OutPin(j)->net()->numPins(); z++)
+                {
+
+                    bool IO_Design = 0;
+                    if (moduleptr->OutPin(j)->net()->pin(z)->module() == nullptr) //如果今天pin沒任何的module 就不要用
+                    {
+                        if (this->_dataBase->IODesign.find(moduleptr->OutPin(j)->net()->pin(z)->name()) != this->_dataBase->IODesign.end()) //pin 沒有module可能是IO Design
+                        {/*
+                            cout << "I'm IODesign: " << moduleptr->OutPin(j)->net()->pin(z)->name() << endl;*/
+                            continue; //如果是IO Desgin 就不要繼續traverse
+                        }
+                        else
+                        {
+                            exit(0);
+                        }
+                    }
+                    auto it = std::find(que.front().second.begin(), que.front().second.end(), moduleptr->OutPin(j)->net()->pin(z)->module()->No);
+                    if (z == moduleptr->OutPin(j)->net()->getOutIdx() || it != que.front().second.end()) //為輸入端 抑或是有 Latch
+                    {
+                        if (it != que.front().second.end() && moduleptr->OutPin(j)->net()->pin(z)->module()->name() == "C101355")
+                        {
+                            /*cout << endl << endl;
+                            cout << "---------------------" << endl;
+                            cout << "Latch" << endl;*/
+                        }
+                    }
+                    else
+                    {
+                        /* cout << "HE" << endl;*/
+                         /*cout << "Drop IN " << moduleptr->OutPin(j)->net()->pin(z)->module()->name()<< endl;*/
+                        que.push_back({ moduleptr->OutPin(j)->net()->pin(z), que.front().second });
+                        que.front().second.push_back(moduleptr->OutPin(j)->net()->pin(z)->module()->No);
+                    }
+                }
+            }
+            que.front().second.clear();
+            que.front().second.shrink_to_fit();
+            que.pop_front();
+        }
+        for (auto a: moduleOrigin->_outputFF)
+        {
+            cout << a->name() << " ";
+        }
+
 
 }

@@ -9,7 +9,7 @@ int main(int argc, char **argv)
     cout << "Done parser!!!" << endl;
     if (testDTB.input(4)->net() == nullptr)
     {
-        cout << "I'm pig Lily" << endl;
+        cout << "EEEEE" << endl;
     }
 
     // Module* ptrM = testDTB.module(2);
@@ -33,7 +33,16 @@ int main(int argc, char **argv)
     testDTB.updateInitialSlackInfo();*/
     Placement testGraph;
     testGraph.setDatabase(&testDTB);
-    testGraph.netListGraph();
+
+    
+    Module* test = testDTB.getStringModule("C65638"); //use C65638 FF be a testcase,should be print C65638 Next level FF
+    testGraph.netListGraph(test); //Only find NextFF of argument FF 
+
+
+
+    testGraph.netListGraph();     //all find NextFF
+
+
     /*testGraph.constructGraph();*/
     //cout << testDTB.totalCost(1) << endl;
 
