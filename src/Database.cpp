@@ -243,6 +243,7 @@ void Database::parser(const string &filename)
                     currentM = new Module(name, _type, x, y);
                     ModuleName2Ptr[name] = currentM;
                     currentM->No = i;
+                    ModuleNo2Ptr[i] = currentM;
                     addModule(currentM);
                     if (_type->isFF())
                         addFF(currentM);
@@ -329,6 +330,15 @@ void Database::parser(const string &filename)
                         FFname = type.substr(0, pos);
                         TargetPin = type.substr(pos + 1);
                         auto it = ModuleName2Ptr.find(FFname);
+                        auto it2 = OriginModuleN.find(FFname);
+                        if (it2 == OriginModuleN.end())
+                        {
+                            OriginModuleN.insert({ FFname , 1 });
+                        }
+                        else
+                        {
+                            it2->second++;
+                        }
                         if (it == ModuleName2Ptr.end())
                         {
                             cout << "can't find correspoding module" << endl;

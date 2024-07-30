@@ -35,8 +35,8 @@ int main(int argc, char **argv)
     testGraph.setDatabase(&testDTB);
 
     
-    Module* test = testDTB.getStringModule("C65638"); //use C65638 FF be a testcase,should be print C65638 Next level FF
-    testGraph.netListGraph(test); //Only find NextFF of argument FF 
+    //Module* test = testDTB.getStringModule("C65638"); //use C65638 FF be a testcase,should be print C65638 Next level FF
+    //testGraph.netListGraph(test); //Only find NextFF of argument FF 
 
 
 
