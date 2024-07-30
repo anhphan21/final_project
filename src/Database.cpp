@@ -280,7 +280,7 @@ void Database::parser(const string &filename)
             {
                 Isclk = false; // 定義這個Net是clkNet!!!每一條定義一個
                 getline(file, line);
-                //getline(file, line);
+                // getline(file, line);
                 istringstream iss(line);
 
                 iss >> temp >> Netname >> PinNum;
