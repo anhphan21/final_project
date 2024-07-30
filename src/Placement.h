@@ -27,10 +27,8 @@ public:
     Rhombus findInputRegion(Module *ff);
     vector<Rhombus > findOutputRegion(Module *ff);
 
-    void netListGraph();
     void constructGraph();
     double cal_cost(Module *ff1, Module *ff2);
-
 
 
     NodeList findMST();

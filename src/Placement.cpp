@@ -703,28 +703,28 @@ Rhombus Placement::findInputRegion(Module *ff)
 vector<Rhombus> Placement::findOutputRegion(Module *ff)
 {
     // ff must be 1 bit FF
-    vector<Rhombus> multi_region;
-    for (int i = 0; i < ff->get_outputFF().size(); ++i)
-    {
-        double slack = ff->get_outputFF()[i].second->InPin(0)->slack();
-        double dis_delay = _dataBase->getDisplacementDelay();
-        double WL_Q_0;
-        if (ff->get_outputFF()[i].first == nullptr)
-        {
-            WL_Q_0 = abs(ff->OutPin(0)->x() - ff->get_outputFF()[i].second->InPin(0)->x()) + abs(ff->OutPin(0)->y() - ff->get_outputFF()[i].second->InPin(0)->y());
-            double radius = (slack + dis_delay * WL_Q_0) / dis_delay;
-            Rhombus ans(ff->get_outputFF()[i].second->InPin(0)->x(), ff->get_outputFF()[i].second->InPin(0)->y(), radius);
-            multi_region.push_back(ans);
-        }
-        else // curr_FF 和 out_FF 之間有gate
-        {
-            WL_Q_0 = abs(ff->OutPin(0)->x() - ff->get_outputFF()[i].first->InPin(0)->x()) + abs(ff->OutPin(0)->y() - ff->get_outputFF()[i].first->InPin(0)->y());
-            double radius = (slack + dis_delay * WL_Q_0) / dis_delay;
-            Rhombus ans(ff->get_outputFF()[i].first->InPin(0)->x(), ff->get_outputFF()[i].first->InPin(0)->y(), radius);
-            multi_region.push_back(ans);
-        }
-    }
-    return multi_region;
+    // vector<Rhombus> multi_region;
+    // for (int i = 0; i < ff->get_outputFF().size(); ++i)
+    // {
+    //     double slack = ff->get_outputFF()[i].second->InPin(0)->slack();
+    //     double dis_delay = _dataBase->getDisplacementDelay();
+    //     double WL_Q_0;
+    //     if (ff->get_outputFF()[i].first == nullptr)
+    //     {
+    //         WL_Q_0 = abs(ff->OutPin(0)->x() - ff->get_outputFF()[i].second->InPin(0)->x()) + abs(ff->OutPin(0)->y() - ff->get_outputFF()[i].second->InPin(0)->y());
+    //         double radius = (slack + dis_delay * WL_Q_0) / dis_delay;
+    //         Rhombus ans(ff->get_outputFF()[i].second->InPin(0)->x(), ff->get_outputFF()[i].second->InPin(0)->y(), radius);
+    //         multi_region.push_back(ans);
+    //     }
+    //     else // curr_FF 和 out_FF 之間有gate
+    //     {
+    //         WL_Q_0 = abs(ff->OutPin(0)->x() - ff->get_outputFF()[i].first->InPin(0)->x()) + abs(ff->OutPin(0)->y() - ff->get_outputFF()[i].first->InPin(0)->y());
+    //         double radius = (slack + dis_delay * WL_Q_0) / dis_delay;
+    //         Rhombus ans(ff->get_outputFF()[i].first->InPin(0)->x(), ff->get_outputFF()[i].first->InPin(0)->y(), radius);
+    //         multi_region.push_back(ans);
+    //     }
+    // }
+    // return multi_region;
 }
 void Placement::constructFeasible(Module *ff, Rhombus in, vector<Rhombus> out)
 {
