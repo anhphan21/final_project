@@ -2,7 +2,7 @@
 #define RECTANGLE_H
 
 #include <algorithm>
-
+#include <cmath>
 #include "DatabaseDef.h"
 using namespace std;
 
@@ -49,8 +49,8 @@ class Rectangle {
         _y1 = y1;
         _x2 = x2;
         _y2 = y2;
-        _width = abs(x2 - x1);
-        _height = abs(y2 - y1);
+        _width = fabs(x2 - x1);
+        _height = fabs(y2 - y1);
     }
    
     /////////////////////////////////////////////

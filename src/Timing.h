@@ -9,7 +9,7 @@ using namespace std;
 
 class Timing {
    public:
-    Timing() : _slack(0), _preFFPin(nullptr), _oldPos(make_pair(0, 0)), _oldQ(0) {}
+    Timing() : _slack(0), _preFFPin(NULL), _oldPos(make_pair(0, 0)), _oldQ(0) {}
     ~Timing() {}
 
     void setSlack(double slack) { _slack = slack; }

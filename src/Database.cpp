@@ -1,7 +1,7 @@
 #include "Database.h"
 
 #include <float.h>
-
+#include <stdlib.h>
 #include <fstream>
 #include <queue>
 #include <sstream>
@@ -9,7 +9,7 @@
 #include <math.h>
 #include "Pin.h"
 #include "Row.h"
-
+#include <iomanip>
 using namespace std;
 
 Database::Database()
@@ -34,11 +34,11 @@ Database::Database()
 
 void Database::parser(const string &filename)
 {
-    ifstream file(filename);
+    ifstream file(filename.c_str());
     string line;
     while (getline(file, line))
     {
-        auto _pos = filename.find_last_of("/");
+        size_t _pos = filename.find_last_of("/");
         if (_pos != string::npos)
             _name = filename.substr(_pos + 1);
         else
@@ -96,7 +96,7 @@ void Database::parser(const string &filename)
 
                 pinptr->setPinName(type);
                 pinptr->setPosition(x, y);
-                pinptr->setModulePtr(nullptr);
+                pinptr->setModulePtr(NULL);
                 _pins.push_back(pinptr);
                 if (type == "clk" || type.find("C") != string::npos)
                 {
@@ -124,7 +124,7 @@ void Database::parser(const string &filename)
                 IODesign.insert({type, pinptr});
                 pinptr->setPinName(type);
                 pinptr->setPosition(x, y);
-                pinptr->setModulePtr(nullptr);
+                pinptr->setModulePtr(NULL);
                 _pins.push_back(pinptr);
                 // IODesignPin.insert({type, pinptr});
                 IODesign.insert({type, pinptr});
@@ -224,7 +224,7 @@ void Database::parser(const string &filename)
                 // auto it = CellType2Ptr.find(type);
                 // if (type.find("G") != string::npos) {
                 // cout << "this is Gate type" << endl;
-                auto it = CellType2Ptr.find(type);
+                std::map<std::string, BaseCell*>::iterator it = CellType2Ptr.find(type);
                 map<string, Pin *> PinOfM;
                 if (it == CellType2Ptr.end())
                 {
@@ -237,7 +237,7 @@ void Database::parser(const string &filename)
                     _type = CellType2Ptr[type];
                     PinOfMnum = _type->pinNum();
                     currentM = new Module(name, _type, x, y);
-                    ModuleName2Ptr[name] = currentM;
+                    // ModuleName2Ptr[name] = currentM;
                     currentM->No = i;
                     ModuleNo2Ptr[i] = currentM;
                     addModule(currentM);
@@ -287,12 +287,12 @@ void Database::parser(const string &filename)
                     getline(file, line);
                     istringstream piniss(line);
                     piniss >> temp >> type;
-                    auto pos = type.find("/");
+                    size_t pos = type.find("/");
                     if (pos == type.npos)
                     {
                         // 如果沒有'/'的Net pin角 代表會再IODesign  this is
                         // design pin
-                        auto it = IODesign.find(type);
+                        std::map<std::string, Pin*>::iterator it = IODesign.find(type);
 
                         if (it == IODesign.end())
                         {
@@ -320,11 +320,11 @@ void Database::parser(const string &filename)
                         // cout << "有'/'切割的Net Pin" << endl;
                         FFname = type.substr(0, pos);
                         TargetPin = type.substr(pos + 1);
-                        auto it = ModuleName2Ptr.find(FFname);
-                        auto it2 = OriginModuleN.find(FFname);
+                        std::map<std::string, Module*>::iterator it = ModuleName2Ptr.find(FFname);
+                        std::map<std::string, int>::iterator it2 = OriginModuleN.find(FFname);
                         if (it2 == OriginModuleN.end())
                         {
-                            OriginModuleN.insert({ FFname , 1 });
+                            OriginModuleN.insert({FFname, 1});
                         }
                         else
                         {
@@ -422,7 +422,7 @@ void Database::parser(const string &filename)
     _his.resize(_pins.size());
     for (size_t i = 0; i < _pins.size(); i++)
     {
-        if (_pins[i]->module() != nullptr)
+        if (_pins[i]->module() != NULL)
         {
             _his[i] = new History();
             _pins[i]->setHistory(_his[i]);
@@ -560,12 +560,12 @@ void Database::updateSlack(Pin *ffpin)
     if (!ffpin->isVisited())
     { // Check if we need to update or not ?
         double _displacement = 0;
-        Pin *_tPin = nullptr;
+        Pin *_tPin = NULL;
         Net *_preNet;
 
         _preFFPin = FindPrePin(ffpin);
         ffpin->setPreFFPin(_preFFPin);
-        if (_preFFPin != nullptr)
+        if (_preFFPin != NULL)
         { // If the previous pin != null -> there is a FF before the current FF
             if (!_preFFPin->isVisited())
             { // If the pre ff pin didn't update slack, then update it before update this FF
@@ -670,7 +670,7 @@ void Database::printResult()
 {
     string _tmp = _name + ".out";
     fstream _outFile;
-    _outFile.open(_tmp);
+    _outFile.open(_tmp.c_str(), ios::out);
 
     // if (!_outFile.is_open())
     //     cout << "Cannot open output file !!!" << endl;
@@ -700,10 +700,10 @@ Pin *Database::FindPrePin(Pin *inputPin)
     Module *currentM = inputPin->module();
     string originFF = currentM->name();
     queue<Pin *> que;
-    Net *OriginalCLKNet = nullptr;
-    Net *CurrentCLKNet = nullptr;
-    Net *currentnet = nullptr;
-    Pin *currentPin = nullptr;
+    Net *OriginalCLKNet = NULL;
+    Net *CurrentCLKNet = NULL;
+    Net *currentnet = NULL;
+    Pin *currentPin = NULL;
     if (currentM->isFF() == 0)
     {
         cout << "please put FF in the argumemt!!! bad guy" << endl;
@@ -728,17 +728,17 @@ Pin *Database::FindPrePin(Pin *inputPin)
         if (que.empty())
         {
             // If it cannot be found, it may be received by IOdesign and will return Nullptr
-            return nullptr;
+            return NULL;
         }
-        while (currentPin->name() == "CLK" || currentPin->net()->getOutputPin()->module() == nullptr)
+        while (currentPin->name() == "CLK" || currentPin->net()->getOutputPin()->module() == NULL)
         {
-            // Exclude finding IOdesign Module will be nullptr
+            // Exclude finding IOdesign Module will be NULL
             currentPin = que.front();
             que.pop();
             if (que.empty())
             {
                 // If it cannot be found, it may be received by IOdesign and will return Nullptr
-                return nullptr;
+                return NULL;
             }
         }
         currentM = currentPin->net()->getOutputPin()->module();
@@ -815,14 +815,13 @@ void Database::setPositive_slack()
         double initial_dist = abs(_initial_negSlack[i]->net()->OutputPin()->x() - _initial_negSlack[i]->x()) + abs(_initial_negSlack[i]->net()->OutputPin()->y() - _initial_negSlack[i]->y());
         double radius = (ff_original_slack + dis_delay * initial_dist) / dis_delay;
         adjust_position(_initial_negSlack[i]->net()->OutputPin(), _initial_negSlack[i], radius, row(0)->width(), row(0)->height());
-        
+
         // update slack
         double new_dist = abs(_initial_negSlack[i]->net()->OutputPin()->x() - _initial_negSlack[i]->x()) + abs(_initial_negSlack[i]->net()->OutputPin()->y() - _initial_negSlack[i]->y());
         double new_slack = (initial_dist - new_dist) * dis_delay + ff_original_slack;
-        if(abs(new_slack) < pow(10,-10))    //floating 誤差值
+        if (abs(new_slack) < pow(10, -10)) // floating 誤差值
             new_slack = 0;
         _initial_negSlack[i]->getSlackInfor()->setSlack(new_slack);
-            
     }
 }
 
@@ -832,7 +831,7 @@ void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, dou
     double deltaY = abs(fix_pin->y() - adjust_pin->y());
     double initial_dist = deltaX + deltaY;
     if (initial_dist <= radius)
-        return ; // don't have to adjust
+        return; // don't have to adjust
     double reduceBy = initial_dist - radius;
     if (deltaX > deltaY)
         deltaX = max(deltaX - reduceBy, 0.0);
@@ -841,20 +840,20 @@ void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, dou
 
     adjust_pin->setPosition((fix_pin->x() + deltaX * (adjust_pin->x() > fix_pin->x() ? 1 : -1)), (fix_pin->y() + deltaY * (adjust_pin->y() > fix_pin->y() ? 1 : -1)));
     // snap to grid
-    adjust_pin->setPosition((((adjust_pin->x() + grid_width ) / grid_width) * grid_width), (((adjust_pin->y() + grid_height ) / grid_height) * grid_height));
+    adjust_pin->setPosition((((adjust_pin->x() + grid_width) / grid_width) * grid_width), (((adjust_pin->y() + grid_height) / grid_height) * grid_height));
     double new_dist = abs(fix_pin->x() - adjust_pin->x()) + abs(fix_pin->y() - adjust_pin->y());
     if (new_dist <= radius)
         return;
     else
     {
-        if(adjust_pin->x() < fix_pin->x())
+        if (adjust_pin->x() < fix_pin->x())
             adjust_pin->setPosition(adjust_pin->x() + grid_width, adjust_pin->y());
-        else if(adjust_pin->x() > fix_pin->x())
+        else if (adjust_pin->x() > fix_pin->x())
             adjust_pin->setPosition(adjust_pin->x() - grid_width, adjust_pin->y());
-        if(adjust_pin->y() < fix_pin->y())
-            adjust_pin->setPosition(adjust_pin->x() , adjust_pin->y() + grid_height);
-        else if(adjust_pin->y() > fix_pin->y())
-            adjust_pin->setPosition(adjust_pin->x() , adjust_pin->y() - grid_height);
+        if (adjust_pin->y() < fix_pin->y())
+            adjust_pin->setPosition(adjust_pin->x(), adjust_pin->y() + grid_height);
+        else if (adjust_pin->y() > fix_pin->y())
+            adjust_pin->setPosition(adjust_pin->x(), adjust_pin->y() - grid_height);
     }
 }
 
@@ -903,24 +902,92 @@ void Database::builBestCelltype()
     }
     return;
 }
+
+string itos(int num)
+{
+    string ans = "";
+    while (num)
+    {
+        ans = char((num % 10) + '0') + ans;
+        num /= 10;
+    }
+    return ans;
+}
+
 void Database::outputTofile(const string &filename)
 {
-    ofstream outFile(filename);
+    fstream outFile;
+    outFile.open(filename.c_str(), ios::out);
     if (!outFile.is_open())
     {
         cerr << "Error opening file: " << filename << endl;
         exit(1);
     }
-    outFile << "CellInst " << getNumFF() << "/n";
+    outFile << fixed;
+    outFile << "CellInst " << getNumFF() << endl;
+    // temp=============================
+    string nname = _ffModules[_ffModules.size() - 1]->name();
+    string letters;
+    string numbers;
+    for (int i = 0; i < nname.length(); ++i)
+    {
+        if (isdigit(nname[i]))
+            numbers += nname[i];
+        else
+            letters += nname[i];
+    }
+    //for (char c : nname)
+    //{
+    //    if (isdigit(c))
+    //    {
+    //        numbers += c;
+    //    }
+    //    else
+    //    {
+    //        letters += c;
+    //    }
+    //}
+    int num = atoi(numbers.c_str());
+    for (size_t i = 0; i < _ffModules.size(); i++)
+    {
+        nname = _ffModules[i]->name();
+        numbers = "";
+        letters = "";
+        for (int i = 0; i < nname.length(); ++i)
+        {
+            if (isdigit(nname[i]))
+                numbers += nname[i];
+            else
+                letters += nname[i];
+        }
+        //for (char c : nname)
+        //{
+        //    if (isdigit(c))
+        //    {
+        //        numbers += c;
+        //    }
+        //    else
+        //    {
+        //        letters += c;
+        //    }
+        //}
+        num++;
+        nname = letters + itos(num);
+        _ffModules[i]->setName(nname);
+    }
+    // temp=============================
     for (size_t i = 0; i < getNumFF(); i++)
     {
         outFile << "Inst " << _ffModules[i]->name() << " " << _ffModules[i]->cellType()->getName() << " "
-                << _ffModules[i]->x() << " " << _ffModules[i]->y() << "/n";
+                << setprecision(0) << _ffModules[i]->x() << " " << _ffModules[i]->y() << endl;
     }
     for (size_t i = 0; i < getNumPins(); i++)
     {
-        outFile << _pins[i]->history()->oldModuleName() << "/" << _pins[i]->history()->oldPinName()
-                << " map " << _pins[i]->module()->name() << "/" << _pins[i]->name() << "/n";
+        if (_pins[i]->module() != NULL)
+        {
+            outFile << _pins[i]->history()->oldModuleName() << "/" << _pins[i]->history()->oldPinName()
+                    << " map " << _pins[i]->module()->name() << "/" << _pins[i]->name() << endl;
+        }
     }
     return;
 }

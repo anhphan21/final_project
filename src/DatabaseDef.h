@@ -25,13 +25,13 @@ class Database;
 
 typedef BaseCell CellType;
 typedef vector<CellType *> CellLibrary;
-typedef map<unsigned, vector<FFCell *>> FFLLibrary;
+typedef map<unsigned, vector<FFCell *> > FFLLibrary;
 
 typedef vector<Module *> ModuleList;
 typedef vector<Pin *> PinList;
 typedef vector<Net *> NetList;
 typedef vector<Row *> RowList;
-typedef vector<vector<Bin *>> BinList;
+typedef vector<vector<Bin *> > BinList;
 typedef vector<Node *> NodeList;
 
 #endif  // DATABASEDEF_H

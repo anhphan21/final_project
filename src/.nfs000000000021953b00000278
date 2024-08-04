@@ -1,7 +1,4 @@
 #include <iostream>
-#include <string.h>
-#include <cmath>
-#include <stdlib.h>
 #include "Database.h"
 #include "DatabaseDef.h"
 //#include "Placement.h"

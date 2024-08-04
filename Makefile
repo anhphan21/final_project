@@ -1,5 +1,5 @@
 CC=g++
-CXXFLAGS = -std=c++11 -O3 lm -ggdb
+CXXFLAGS = -std=c++11 -O3  
 LDFLAGS = -lpthread
 SOURCES= src/*.cpp
 OBJECTS=$(SOURCES:.c=.o)
