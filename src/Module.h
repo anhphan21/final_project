@@ -15,7 +15,7 @@ using namespace std;
 class Module
 {
 public:
-    Module() : _x(-1), _y(-1), _isFixed(false), _type(nullptr), _radius(0)
+    Module() : _x(-1), _y(-1), _isFixed(false), _type(NULL), _radius(0)
     {
     }
 
@@ -98,12 +98,12 @@ public:
     void setInPin(unsigned idx, Pin *pPin) { _pins[_type->inIdx(idx)] = pPin; }
     void setOutPin(unsigned idx, Pin *pPin) { _pins[_type->outIdx(idx)] = pPin; }
     void setCellType(CellType *type) { _type = type; }
-    set<pair<Module*,Module*>> _outputFF;  //first: Gate; second: ouput FF
+    set<pair<Module*,Module*> > _outputFF;  //first: Gate; second: ouput FF
     int No;
 
     
     // void store_ouputFF(Module *gate,Module *ff){_outputFF.push_back({gate,ff});}
-    // vector<pair<Module *,Module *>> get_outputFF(){return _outputFF;}
+    // vector<pair<Module *,Module *> > get_outputFF(){return _outputFF;}
 
 private:
     // variables from benchmark input
@@ -130,6 +130,6 @@ private:
     // feasible region
     // Rectangle _feasibleRegion;
     // vector<Module *> _outputFF;
-    // vector<pair<Module *,Module *>> _outputFF;  //first: Gate; second: ouput FF
+    // vector<pair<Module *,Module *> > _outputFF;  //first: Gate; second: ouput FF
 };
 #endif

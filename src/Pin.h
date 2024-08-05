@@ -15,12 +15,12 @@ using namespace std;
 class Pin {
    public:
     // Default
-    Pin() : _x(-1), _y(-1), _xOffset(-1), _yOffset(-1), _module(nullptr), _net(nullptr) {
+    Pin() : _x(-1), _y(-1), _xOffset(-1), _yOffset(-1), _module(NULL), _net(NULL) {
     }
     // For input, output Pin
-    Pin(string &name, double x, double y) : _name(name), _x(x), _y(y), _xOffset(0), _yOffset(0), _module(nullptr), _net(nullptr), _marked(0) {}
+    Pin(string &name, double x, double y) : _name(name), _x(x), _y(y), _xOffset(0), _yOffset(0), _module(NULL), _net(NULL), _marked(0) {}
     // For module pin
-    Pin(string name, Module *module, double x, double y, double xOffset, double yOffset) : _name(name), _x(x), _y(y), _xOffset(xOffset), _yOffset(yOffset), _module(module), _net(nullptr), _marked(false) {}
+    Pin(string name, Module *module, double x, double y, double xOffset, double yOffset) : _name(name), _x(x), _y(y), _xOffset(xOffset), _yOffset(yOffset), _module(module), _net(NULL), _marked(false) {}
 
     Pin(Net *net, Module *module, string &pinName, double xOffset, double yOffset) : _net(net), _module(module), _name(pinName), _xOffset(xOffset), _yOffset(yOffset), _x(0), _y(0) {
     }
@@ -34,7 +34,7 @@ class Pin {
     Net *net() const { return _net; }
     History *history() const { return _history; }
     // unsigned pinId() const { return _pinId; }
-    bool isIOdie() const { return (_module == nullptr); }
+    bool isIOdie() const { return (_module == NULL); }
     Timing *getSlackInfor() { return &_slackInfo; }
     bool isVisited() const { return _marked; }
 

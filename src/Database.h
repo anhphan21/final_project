@@ -62,7 +62,8 @@ public:
     void addModule(Module *module)
     {
         _modules.push_back(module);
-        auto iter = ModuleName2Ptr.find(module->name());
+        //auto iter = ModuleName2Ptr.find(module->name());
+        std::map<std::string, Module*>::iterator iter = ModuleName2Ptr.find(module->name());
         assert(iter == ModuleName2Ptr.end());
         ModuleName2Ptr[module->name()] = module;
     }
@@ -139,7 +140,7 @@ public:
     double getBoundaryLeft() const { return _boundaryLeft; }
     double getBoundaryBottom() const { return _boundaryBottom; }
     double getBoundaryRight() const { return _boundaryRight; }
-    FFCell *ffLib(unsigned bitNum, unsigned idx)
+   FFCell *ffLib(unsigned bitNum, unsigned idx)
     {
         auto it = _ffLib.find(bitNum);
         if (it != _ffLib.end())
@@ -154,7 +155,7 @@ public:
     }
     FFCell *getBestCelltype(unsigned bitnum) { return _bestCells[bitnum]; }
     unsigned getFFlibBitsize() { return _bestCells.size(); }
-    unsigned getNumfflibBit(unsigned bit)
+   unsigned getNumfflibBit(unsigned bit)
     {
         auto it = _ffLib.find(bit);
         if (it != _ffLib.end())

@@ -9,7 +9,7 @@ using namespace std;
 
 class Node {
    public:
-    Node() : _FF(nullptr) {
+    Node() : _FF(NULL) {
         _neighbor_map.clear();
     };
     Node(Module *FF) : _FF(FF) { _neighbor_map.clear(); }
@@ -35,12 +35,12 @@ class Node {
         assert(_neighbor_map.count(idx));
         return _neighbor_map[idx].second;
     }
-    map<string, pair<Node *, double>> getneighbormap() { return _neighbor_map; }
+    map<string, pair<Node *, double> > getneighbormap() { return _neighbor_map; }
     void eraseNeighbor(string idx) { _neighbor_map.erase(idx); }
     Module *getFFinNode() { return _FF; }
 
    private:
-    map<string, pair<Node *, double>> _neighbor_map;
+    map<string, pair<Node *, double> > _neighbor_map;
     Module *_FF;
     unsigned _heapidx;  // forMST
     bool _isleaf;       // forMST
