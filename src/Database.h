@@ -111,12 +111,12 @@ public:
         return _pins[_numInput + outId];
     }
     // get design property through name
-    /*Module *getModuleByName(string &name)
+    Module *getModuleByName(string &name)
     {
         auto it = ModuleName2Ptr.find(name);
         assert(it != ModuleName2Ptr.end());
         return ModuleName2Ptr[name];
-    }*/
+    }
     unsigned getNumModules() const { return _modules.size(); }
     unsigned getNumFF() const { return _ffModules.size(); }
     unsigned getNumNets() const { return _nets.size(); }
@@ -140,7 +140,7 @@ public:
     double getBoundaryLeft() const { return _boundaryLeft; }
     double getBoundaryBottom() const { return _boundaryBottom; }
     double getBoundaryRight() const { return _boundaryRight; }
-   /* FFCell *ffLib(unsigned bitNum, unsigned idx)
+   FFCell *ffLib(unsigned bitNum, unsigned idx)
     {
         auto it = _ffLib.find(bitNum);
         if (it != _ffLib.end())
@@ -152,10 +152,10 @@ public:
             cout << "Error: FF library not found!" << endl;
             exit(1);
         }
-    }*/
+    }
     FFCell *getBestCelltype(unsigned bitnum) { return _bestCells[bitnum]; }
     unsigned getFFlibBitsize() { return _bestCells.size(); }
- /*   unsigned getNumfflibBit(unsigned bit)
+   unsigned getNumfflibBit(unsigned bit)
     {
         auto it = _ffLib.find(bit);
         if (it != _ffLib.end())
@@ -167,7 +167,7 @@ public:
             cout << "Error: FF library not found!" << endl;
             exit(1);
         }
-    }*/
+    }
     // For slack update
     void sortClkNet();
     void updateSlackAll();
