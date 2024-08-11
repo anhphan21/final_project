@@ -130,7 +130,8 @@ void Placement::eraseEdge(unsigned idx1, unsigned idx2)
    _nodes[idx1]->eraseNeighbor(_nodes[idx2]->getFFinNode()->name());
    _nodes[idx2]->eraseNeighbor(_nodes[idx1]->getFFinNode()->name());
    // delete nodes with no neighbor
-   for (auto it = _nodes.begin(); it != _nodes.end();)
+   vector<Node*>::iterator it = _nodes.begin();
+   for (; it != _nodes.end(); ++it)
    {
        if ((*it)->getNeighborsize() == 0)
        {
@@ -354,7 +355,8 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
    }
 
    // delete nodes with no neighbor
-   for (auto it = _nodes.begin(); it != _nodes.end();)
+   std::vector<Node*>::iterator it = _nodes.begin();
+   for (; it != _nodes.end(); ++it)
    {
        if ((*it)->getNeighborsize() == 0)
        {
@@ -400,7 +402,7 @@ NodeList Placement::findMST()
        _nodes[i]->setNodeidxheap(i);
        qheap[i].first = _nodes[i];
        qheap[i].second.first = __DBL_MAX__;
-       qheap[i].second.second = nullptr;
+       qheap[i].second.second = NULL;
    }
    qheap[0].second.first = 0;
    vector<pair<Node *, pair<double, Node *> >> mstHeap;
@@ -592,14 +594,14 @@ void Placement::constructGraph()
        for (int j = 0; j < _dataBase->getClkNets()[i]->numPins(); ++j)
        {
            Module *currentFF = _dataBase->getClkNets()[i]->pin(j)->module();
-           if (currentFF == nullptr || currentFF->isFF() == 0)
+           if (currentFF == NULL || currentFF->isFF() == 0)
                continue;
            if (currentFF->cellType()->numBit() >= max_BitFF)
                continue;
            for (int k = j + 1; k < _dataBase->getClkNets()[i]->numPins(); ++k)
            {
                Module *compareFF = _dataBase->getClkNets()[i]->pin(k)->module();
-               if (compareFF == nullptr || compareFF->isFF() == 0)
+               if (compareFF == NULL || compareFF->isFF() == 0)
                    continue;
                if (compareFF->cellType()->numBit() >= max_BitFF || compareFF->cellType()->numBit() != currentFF->cellType()->numBit())
                    continue;
@@ -614,7 +616,7 @@ void Placement::constructGraph()
                // }
            }
 
-           // if (_dataBase->getClkNets()[i]->pin(j)->module() != nullptr && _dataBase->getClkNets()[i]->pin(j)->module()->isFF() && _dataBase->getClkNets()[i]->pin(j)->module()->cellType()->numBit() < max_BitFF)
+           // if (_dataBase->getClkNets()[i]->pin(j)->module() != NULL && _dataBase->getClkNets()[i]->pin(j)->module()->isFF() && _dataBase->getClkNets()[i]->pin(j)->module()->cellType()->numBit() < max_BitFF)
            // {
            //     Module *module_i_j = _dataBase->getClkNets()[i]->pin(j)->module();
            //     for (int k = j + 1; k < _dataBase->getClkNets()[i]->numPins(); ++k)
@@ -623,7 +625,7 @@ void Placement::constructGraph()
            //         Rhombus r_i_j(_dataBase->getClkNets()[i]->pin(j)->net()->OutputPin()->x(), _dataBase->getClkNets()[i]->pin(j)->net()->OutputPin()->y(), module_i_j->radius());
            //         Rhombus r_i_k(_dataBase->getClkNets()[i]->pin(k)->net()->OutputPin()->x(), _dataBase->getClkNets()[i]->pin(k)->net()->OutputPin()->y(), module_i_k->radius());
 
-           //         if (module_i_k == nullptr || module_i_k->isFF() == 0 || module_i_k->cellType()->numBit() >= max_BitFF)
+           //         if (module_i_k == NULL || module_i_k->isFF() == 0 || module_i_k->cellType()->numBit() >= max_BitFF)
            //             continue;
            //         else if (overlap_ornot(r_i_j, r_i_k) && module_i_j->cellType()->numBit() == module_i_k->cellType()->numBit()) // they are overlapping ,in the same clknet,have the same bit FF and both of them are not larger than max_BitFF
            //         {
@@ -695,7 +697,7 @@ double Placement::cal_cost(Module *ffN, Module *ff0) // ffN is primary
 Rhombus Placement::findInputRegion(Module *ff)
 {
    // ff must be 1 bit FF
-   if (ff->InPin(0)->net()->OutputPin()->module() == nullptr) // directory to input pin
+   if (ff->InPin(0)->net()->OutputPin()->module() == NULL) // directory to input pin
    {
        Rhombus ans(ff->InPin(0)->net()->OutputPin()->x(), ff->InPin(0)->net()->OutputPin()->y(), 0);
        return ans;
@@ -722,7 +724,7 @@ vector<Rhombus> Placement::findOutputRegion(Module *ff)
        double dis_delay = _dataBase->getDisplacementDelay();
        double WL_Q_0;
 
-       if (it->first == nullptr)
+       if (it->first == NULL)
        {
            WL_Q_0 = abs(ff->OutPin(0)->x() - it->second->InPin(0)->x()) +
                     abs(ff->OutPin(0)->y() - it->second->InPin(0)->y());
@@ -776,7 +778,7 @@ void Placement::netListGraph()
                Module* PreModule = this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 2]);
                if (PreModule->isFF())
                {
-                   this->_dataBase->ff(i)->_outputFF.insert({ nullptr,moduleptr });
+                   this->_dataBase->ff(i)->_outputFF.insert({ NULL,moduleptr });
                }
                if (!PreModule->isFF())
                {
@@ -787,7 +789,7 @@ void Placement::netListGraph()
                que.pop_front();
                continue;
            }
-           if (moduleptr == nullptr)
+           if (moduleptr == NULL)
            {
                cout << "BUG" << endl;
                exit(0);
@@ -795,7 +797,7 @@ void Placement::netListGraph()
            for (int j = 0; j < moduleptr->numOutPins(); j++) {
                for (int z = 0; z < moduleptr->OutPin(j)->net()->numPins(); z++) {
                    bool IO_Design = 0;
-                   if (moduleptr->OutPin(j)->net()->pin(z)->module() == nullptr) {
+                   if (moduleptr->OutPin(j)->net()->pin(z)->module() == NULL) {
                        if (this->_dataBase->IODesign.find(moduleptr->OutPin(j)->net()->pin(z)->name()) != this->_dataBase->IODesign.end()) {
                            continue;
                        }
@@ -831,9 +833,9 @@ void Placement::netListGraph()
            cout << this->getDatabase()->ff(i)->name() << endl;
            for (auto it = this->getDatabase()->ff(i)->_outputFF.begin(); it != this->getDatabase()->ff(i)->_outputFF.end(); it++)
            {
-               if (it->first == nullptr)
+               if (it->first == NULL)
                {
-                   cout << "Gate: nullptr   FF:" << it->second->name() << endl;
+                   cout << "Gate: NULL   FF:" << it->second->name() << endl;
                }
                else
                {
@@ -865,7 +867,7 @@ void Placement::netListGraph(Module *moduleOrigin)
            Module *PreModule = this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 2]);
            if (PreModule->isFF())
            {
-               moduleOrigin->_outputFF.insert({nullptr, moduleptr});
+               moduleOrigin->_outputFF.insert({NULL, moduleptr});
            }
            if (!PreModule->isFF())
            {
@@ -876,7 +878,7 @@ void Placement::netListGraph(Module *moduleOrigin)
            que.pop_front();
            continue;
        }
-       if (moduleptr == nullptr)
+       if (moduleptr == NULL)
        {
            cout << "BUG" << endl;
            exit(0);
@@ -887,7 +889,7 @@ void Placement::netListGraph(Module *moduleOrigin)
            {
 
                bool IO_Design = 0;
-               if (moduleptr->OutPin(j)->net()->pin(z)->module() == nullptr) // 如果今天pin沒任何的module 就不要用
+               if (moduleptr->OutPin(j)->net()->pin(z)->module() == NULL) // 如果今天pin沒任何的module 就不要用
                {
                    if (this->_dataBase->IODesign.find(moduleptr->OutPin(j)->net()->pin(z)->name()) != this->_dataBase->IODesign.end()) // pin 沒有module可能是IO Design
                    {                                                                                                                   /*

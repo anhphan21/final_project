@@ -17,7 +17,7 @@ public:
    Placement()
    {
        _nodes.resize(1);
-       _nodes[0] = nullptr;
+       _nodes[0] = NULL;
    };
    void mainLoop();
    void constructFeasible(Module *ff,Rhombus in,vector<Rhombus > out);
