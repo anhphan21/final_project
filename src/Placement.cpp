@@ -130,7 +130,8 @@ void Placement::eraseEdge(unsigned idx1, unsigned idx2)
    _nodes[idx1]->eraseNeighbor(_nodes[idx2]->getFFinNode()->name());
    _nodes[idx2]->eraseNeighbor(_nodes[idx1]->getFFinNode()->name());
    // delete nodes with no neighbor
-   for (auto it = _nodes.begin(); it != _nodes.end();)
+   vector<Node*>::iterator it = _nodes.begin();
+   for (; it != _nodes.end(); ++it)
    {
        if ((*it)->getNeighborsize() == 0)
        {
@@ -354,7 +355,8 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
    }
 
    // delete nodes with no neighbor
-   for (auto it = _nodes.begin(); it != _nodes.end();)
+   std::vector<Node*>::iterator it = _nodes.begin();
+   for (; it != _nodes.end(); ++it)
    {
        if ((*it)->getNeighborsize() == 0)
        {
@@ -400,7 +402,7 @@ NodeList Placement::findMST()
        _nodes[i]->setNodeidxheap(i);
        qheap[i].first = _nodes[i];
        qheap[i].second.first = __DBL_MAX__;
-       qheap[i].second.second = nullptr;
+       qheap[i].second.second = NULL;
    }
    qheap[0].second.first = 0;
    vector<pair<Node *, pair<double, Node *> >> mstHeap;
@@ -592,14 +594,14 @@ void Placement::constructGraph()
        for (int j = 0; j < _dataBase->getClkNets()[i]->numPins(); ++j)
        {
            Module *currentFF = _dataBase->getClkNets()[i]->pin(j)->module();
-           if (currentFF == nullptr || currentFF->isFF() == 0)
+           if (currentFF == NULL || currentFF->isFF() == 0)
                continue;
            if (currentFF->cellType()->numBit() >= max_BitFF)
                continue;
            for (int k = j + 1; k < _dataBase->getClkNets()[i]->numPins(); ++k)
            {
                Module *compareFF = _dataBase->getClkNets()[i]->pin(k)->module();
-               if (compareFF == nullptr || compareFF->isFF() == 0)
+               if (compareFF == NULL || compareFF->isFF() == 0)
                    continue;
                if (compareFF->cellType()->numBit() >= max_BitFF || compareFF->cellType()->numBit() != currentFF->cellType()->numBit())
                    continue;
@@ -614,7 +616,7 @@ void Placement::constructGraph()
                // }
            }
 
-           // if (_dataBase->getClkNets()[i]->pin(j)->module() != nullptr && _dataBase->getClkNets()[i]->pin(j)->module()->isFF() && _dataBase->getClkNets()[i]->pin(j)->module()->cellType()->numBit() < max_BitFF)
+           // if (_dataBase->getClkNets()[i]->pin(j)->module() != NULL && _dataBase->getClkNets()[i]->pin(j)->module()->isFF() && _dataBase->getClkNets()[i]->pin(j)->module()->cellType()->numBit() < max_BitFF)
            // {
            //     Module *module_i_j = _dataBase->getClkNets()[i]->pin(j)->module();
            //     for (int k = j + 1; k < _dataBase->getClkNets()[i]->numPins(); ++k)
@@ -623,7 +625,7 @@ void Placement::constructGraph()
            //         Rhombus r_i_j(_dataBase->getClkNets()[i]->pin(j)->net()->OutputPin()->x(), _dataBase->getClkNets()[i]->pin(j)->net()->OutputPin()->y(), module_i_j->radius());
            //         Rhombus r_i_k(_dataBase->getClkNets()[i]->pin(k)->net()->OutputPin()->x(), _dataBase->getClkNets()[i]->pin(k)->net()->OutputPin()->y(), module_i_k->radius());
 
-           //         if (module_i_k == nullptr || module_i_k->isFF() == 0 || module_i_k->cellType()->numBit() >= max_BitFF)
+           //         if (module_i_k == NULL || module_i_k->isFF() == 0 || module_i_k->cellType()->numBit() >= max_BitFF)
            //             continue;
            //         else if (overlap_ornot(r_i_j, r_i_k) && module_i_j->cellType()->numBit() == module_i_k->cellType()->numBit()) // they are overlapping ,in the same clknet,have the same bit FF and both of them are not larger than max_BitFF
            //         {
@@ -695,7 +697,7 @@ double Placement::cal_cost(Module *ffN, Module *ff0) // ffN is primary
 Rhombus Placement::findInputRegion(Module *ff)
 {
    // ff must be 1 bit FF
-   if (ff->InPin(0)->net()->OutputPin()->module() == nullptr) // directory to input pin
+   if (ff->InPin(0)->net()->OutputPin()->module() == NULL) // directory to input pin
    {
        Rhombus ans(ff->InPin(0)->net()->OutputPin()->x(), ff->InPin(0)->net()->OutputPin()->y(), 0);
        return ans;
@@ -722,7 +724,7 @@ vector<Rhombus> Placement::findOutputRegion(Module *ff)
        double dis_delay = _dataBase->getDisplacementDelay();
        double WL_Q_0;
 
-       if (it->first == nullptr)
+       if (it->first == NULL)
        {
            WL_Q_0 = abs(ff->OutPin(0)->x() - it->second->InPin(0)->x()) +
                     abs(ff->OutPin(0)->y() - it->second->InPin(0)->y());
@@ -776,7 +778,7 @@ void Placement::netListGraph()
                Module* PreModule = this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 2]);
                if (PreModule->isFF())
                {
-                   this->_dataBase->ff(i)->_outputFF.insert({ nullptr,moduleptr });
+                   this->_dataBase->ff(i)->_outputFF.insert({ NULL,moduleptr });
                }
                if (!PreModule->isFF())
                {
@@ -787,7 +789,7 @@ void Placement::netListGraph()
                que.pop_front();
                continue;
            }
-           if (moduleptr == nullptr)
+           if (moduleptr == NULL)
            {
                cout << "BUG" << endl;
                exit(0);
@@ -795,7 +797,7 @@ void Placement::netListGraph()
            for (int j = 0; j < moduleptr->numOutPins(); j++) {
                for (int z = 0; z < moduleptr->OutPin(j)->net()->numPins(); z++) {
                    bool IO_Design = 0;
-                   if (moduleptr->OutPin(j)->net()->pin(z)->module() == nullptr) {
+                   if (moduleptr->OutPin(j)->net()->pin(z)->module() == NULL) {
                        if (this->_dataBase->IODesign.find(moduleptr->OutPin(j)->net()->pin(z)->name()) != this->_dataBase->IODesign.end()) {
                            continue;
                        }
@@ -831,9 +833,9 @@ void Placement::netListGraph()
            cout << this->getDatabase()->ff(i)->name() << endl;
            for (auto it = this->getDatabase()->ff(i)->_outputFF.begin(); it != this->getDatabase()->ff(i)->_outputFF.end(); it++)
            {
-               if (it->first == nullptr)
+               if (it->first == NULL)
                {
-                   cout << "Gate: nullptr   FF:" << it->second->name() << endl;
+                   cout << "Gate: NULL   FF:" << it->second->name() << endl;
                }
                else
                {
@@ -865,7 +867,7 @@ void Placement::netListGraph(Module *moduleOrigin)
            Module *PreModule = this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 2]);
            if (PreModule->isFF())
            {
-               moduleOrigin->_outputFF.insert({nullptr, moduleptr});
+               moduleOrigin->_outputFF.insert({NULL, moduleptr});
            }
            if (!PreModule->isFF())
            {
@@ -876,7 +878,7 @@ void Placement::netListGraph(Module *moduleOrigin)
            que.pop_front();
            continue;
        }
-       if (moduleptr == nullptr)
+       if (moduleptr == NULL)
        {
            cout << "BUG" << endl;
            exit(0);
@@ -887,7 +889,7 @@ void Placement::netListGraph(Module *moduleOrigin)
            {
 
                bool IO_Design = 0;
-               if (moduleptr->OutPin(j)->net()->pin(z)->module() == nullptr) // 如果今天pin沒任何的module 就不要用
+               if (moduleptr->OutPin(j)->net()->pin(z)->module() == NULL) // 如果今天pin沒任何的module 就不要用
                {
                    if (this->_dataBase->IODesign.find(moduleptr->OutPin(j)->net()->pin(z)->name()) != this->_dataBase->IODesign.end()) // pin 沒有module可能是IO Design
                    {                                                                                                                   /*
@@ -1046,149 +1048,266 @@ bool compareFirst(const Edge &a,
 {
    return a.y < b.y;
 }
-
-// set<set<Module *> > Placement::calMaxClique(unsigned clkidx)
+// void Placement::debankFFto1bit(string ffname)
 // {
-//     // input : clk net id
-//     // output : maximal clique(without proper subset)
-//     Net *targetNet = _dataBase->net(clkidx);
-//     if (targetNet->clkFlag() == false)
+//     // TODO: need to know which FF should be chosed
+//     // TODO: Each FF position after debanking
+//     int celltypeID = 0;
+//     Module *target = _dataBase->getModuleByName(ffname);
+//     int ffbit = target->cellType()->getnumBit();
+//     vector<Module *> newfflist;
+//     newfflist.clear();
+//     string pinName;
+//     // TODO:radius
+//     vector<pair<double, double>> newPos;
+//     for (size_t i = 0; i < ffbit; i++)
 //     {
-//         cout << "error: input isn't a clk" << endl;
-//         return;
-//     }
-//     ModuleList targetFFs;
-//     vector<double> strip; // start pos of every part of strip
-//     set<Edge> edgesSet;
-//     vector<Edge> edges; // Module, y , start x , end x
-//     edges.clear();
-//     edgesSet.clear();
-//     strip.clear();
-//     targetFFs.clear();
-//     for (size_t i = 0; i < targetNet->numPins(); i++)
-//     {
-//         targetFFs.push_back(targetNet->pin(i)->module());
-//         strip.push_back(targetFFs[i]->getFeasibleRegion()->left());
-//         strip.push_back(targetFFs[i]->getFeasibleRegion()->right());
-//         Edge ee;
-//         ee.ff = targetFFs[i];
-//         ee.y = targetFFs[i]->getFeasibleRegion()->top();
-//         ee.isIN = true;
-//         ee.startx = targetFFs[i]->getFeasibleRegion()->left();
-//         ee.endx = targetFFs[i]->getFeasibleRegion()->right();
-//         edgesSet.insert(ee);
-//         Edge ee1;
-//         ee1.ff = targetFFs[i];
-//         ee1.y = targetFFs[i]->getFeasibleRegion()->bottom();
-//         ee1.isIN = false;
-//         ee1.startx = targetFFs[i]->getFeasibleRegion()->left();
-//         ee1.endx = targetFFs[i]->getFeasibleRegion()->right();
-//         edgesSet.insert(ee1);
-//     }
-//     sort(strip.begin(), strip.end());
-//     strip.erase(unique(strip.begin(), strip.end()), strip.end());
-//     edges.assign(edgesSet.begin(), edgesSet.end());
-//     sort(edges.begin(), edges.end(), compareFirst);
-//     set<set<Module *> > maxClique;
-//     vector<set<Module *> > tempClique; // size == 3 , for checking greater than above and below
-//     maxClique.clear();
-//     int counter = 0;
-//     // TODO: currently traverse every edge per strip, maybe a better O() way to implement
-//     for (size_t i = 0; i < strip.size() - 1; i++)
-//     {
-//         counter = 0;
-//         tempClique.clear();
-//         tempClique.resize(3);
-//         for (size_t j = 0; j < edges.size(); j++)
-//         {
-//             // sweep line
-//             if ((edges[j].startx == strip[i] && edges[j].endx >= strip[i + 1]) ||
-//                 (edges[j].startx <= strip[i] && edges[j].endx == strip[i + 1]) ||
-//                 (edges[j].startx < strip[i] && edges[j].endx > strip[i + 1]))
-//             {
-//                 if (counter == 0)
-//                 {
-//                     // check if Module is in the set
+//         newPos.push_back(make_pair(target->x(), target->y()));
+//         newfflist.push_back(new Module());
+//         cout << newfflist.size() << endl;
+//         newfflist[i]->setCellType(_dataBase->ffLib(1, celltypeID));
+//         newfflist[i]->setPinsize(3);
+//         newfflist[i]->setInPin(0, target->InPin(i));
+//         newfflist[i]->InPin(0)->setOffset(newfflist[i]->cellType()->pinOffsetX(1), newfflist[i]->cellType()->pinOffsetY(1));
+//         newfflist[i]->InPin(0)->setPosition(newfflist[i]->cellType()->pinOffsetX(1) + newPos[i].first,
+//                                             newfflist[i]->cellType()->pinOffsetY(1) + newPos[i].second);
+//         pinName = "D";
+//         newfflist[i]->InPin(0)->setPinName(pinName);
+//         newfflist[i]->InPin(0)->setModulePtr(newfflist[i]);
 
-//                     counter++;
-//                     if (edges[j].isIN == false)
-//                     {
-//                         cout << "error" << endl;
-//                     }
-//                     else
-//                     {
-//                         tempClique[0].insert(edges[j].ff);
-//                     }
-//                 }
-//                 else if (counter == 1)
-//                 {
-//                     counter++;
-//                     if (edges[j].isIN == false)
-//                     {
-//                         tempClique[1] = tempClique[0];
-//                         tempClique[1].erase(edges[j].ff);
-//                         if (tempClique[1].size() > 0)
-//                         {
-//                             cout << "error" << endl;
-//                         }
-//                     }
-//                 }
-//                 else if (counter == 2)
-//                 {
-//                     counter++;
-//                     tempClique[2] = tempClique[1];
-//                     if (edges[j].isIN == false)
-//                     {
-//                         tempClique[2].erase(edges[j].ff);
-//                     }
-//                     else
-//                     {
-//                         tempClique[2].insert(edges[j].ff);
-//                     }
-//                 }
-//                 else
-//                 {
-//                     // move tempClique
-//                     if (tempClique[1].size() > tempClique[0].size() &&
-//                         tempClique[1].size() > tempClique[2].size() &&
-//                         tempClique[1].size() > 1)
-//                     {
-//                         maxClique.insert(tempClique[1]);
-//                     }
-//                     tempClique[0] = tempClique[1];
-//                     tempClique[1] = tempClique[2];
-//                     if (edges[j].isIN == false)
-//                     {
-//                         tempClique[2].erase(edges[j].ff);
-//                     }
-//                     else
-//                     {
-//                         tempClique[2].insert(edges[j].ff);
-//                     }
-//                 }
-//             }
-//             else
-//             {
-//                 continue;
-//             }
-//         }
+//         newfflist[i]->setOutPin(0, target->OutPin(i));
+//         newfflist[i]->OutPin(0)->setOffset(newfflist[i]->cellType()->pinOffsetX(0), newfflist[i]->cellType()->pinOffsetY(0));
+//         newfflist[i]->OutPin(0)->setPosition(newfflist[i]->cellType()->pinOffsetX(0) + newPos[i].first,
+//                                              newfflist[i]->cellType()->pinOffsetY(0) + newPos[i].second);
+//         pinName = "Q";
+//         newfflist[i]->OutPin(0)->setPinName(pinName);
+//         newfflist[i]->OutPin(0)->setModulePtr(newfflist[i]);
 //     }
-//     // TODO: remove proper subset
-//     vector<set<Module *> > toRemove;
-//     for (auto it1 = maxClique.begin(); it1 != maxClique.end(); ++it1)
+//     newfflist[ffbit - 1]->setName(ffname);
+//     // naming =================================================================
+//     string nname = _dataBase->module(_dataBase->getNumModules() - 1)->name();
+//     string letters;
+//     string numbers;
+//     for (char c : nname)
 //     {
-//         for (auto it2 = maxClique.begin(); it2 != maxClique.end(); ++it2)
+//         if (isdigit(c))
 //         {
-//             if (it1 != it2 && isStrictSubset(*it1, *it2))
-//             {
-//                 toRemove.push_back(*it1);
-//                 break;
-//             }
+//             numbers += c;
+//         }
+//         else
+//         {
+//             letters += c;
 //         }
 //     }
-//     for (const auto &subset : toRemove)
+//     int num = stoi(numbers);
+//     for (size_t i = 0; i < ffbit - 1; i++)
 //     {
-//         maxClique.erase(subset);
+//         num++;
+//         nname = letters + to_string(num);
+//         newfflist[i]->setName(nname);
 //     }
-//     return maxClique;
+//     // naming =================================================================
+//     newfflist[ffbit - 1]->setInPin(newfflist[ffbit - 1]->cellType()->clkPinIdx(), target->InPin(target->cellType()->clkPinIdx()));
+//     newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->setModulePtr(newfflist[ffbit - 1]);
+//     for (size_t i = 0; i < ffbit - 1; i++)
+//     {
+//         Pin *newCLK = new Pin();
+//         string n = "CLK";
+//         newCLK->setPinName(n);
+//         newCLK->setOffset(newfflist[i]->cellType()->pinOffsetX(newfflist[i]->cellType()->clkPinIdx()), newfflist[i]->cellType()->pinOffsetY(newfflist[i]->cellType()->clkPinIdx()));
+//         newCLK->setPosition(newfflist[i]->x() + newCLK->x(), newfflist[i]->y() + newCLK->y());
+//         newCLK->setModulePtr(newfflist[i]);
+//         newfflist[i]->setInPin(newfflist[i]->cellType()->clkPinIdx(), newCLK);
+//         // connecting pin to net
+//         newCLK->setNetPtr(newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->net());
+//         newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->net()->addPin(newCLK);
+//         History *newH = new History();
+//         newH->setNewPin(newCLK);
+//         newH->setOldPinName(n);
+//         newH->setOldModuleName(ffname);
+//         // add pin into database
+//         _dataBase->addPin(newCLK);
+//     }
+//     for (size_t i = 0; i < ffbit; i++)
+//     {
+//         newfflist[i]->setPosition(newPos[i].first, newPos[i].second);
+//     }
+//     for (size_t i = 0; i < _dataBase->getNumModules(); i++)
+//     {
+//         if (_dataBase->module(i) == target)
+//         {
+//             _dataBase->setModule(i, newfflist[ffbit - 1]);
+//             break;
+//         }
+//     }
+//     for (size_t i = 0; i < _dataBase->getNumFF(); i++)
+//     {
+//         if (_dataBase->ff(i) == target)
+//         {
+//             _dataBase->setFF(i, newfflist[ffbit - 1]);
+//             break;
+//         }
+//     }
+//     free(target);
+//     for (size_t i = 0; i < ffbit - 1; i++)
+//     {
+//         _dataBase->addFF(newfflist[i]);
+//         _dataBase->addModule(newfflist[i]);
+//     }
+//     return;
+// }
+// // set<set<Module *>> Placement::calMaxClique(unsigned clkidx)
+// // {
+// //     // input : clk net id
+// //     // output : maximal clique(without proper subset)
+// //     Net *targetNet = _dataBase->net(clkidx);
+// //     if (targetNet->clkFlag() == false)
+// //     {
+// //         cout << "error: input isn't a clk" << endl;
+// //         return;
+// //     }
+// //     ModuleList targetFFs;
+// //     vector<double> strip; // start pos of every part of strip
+// //     set<Edge> edgesSet;
+// //     vector<Edge> edges; // Module, y , start x , end x
+// //     edges.clear();
+// //     edgesSet.clear();
+// //     strip.clear();
+// //     targetFFs.clear();
+// //     for (size_t i = 0; i < targetNet->numPins(); i++)
+// //     {
+// //         targetFFs.push_back(targetNet->pin(i)->module());
+// //         strip.push_back(targetFFs[i]->getFeasibleRegion()->left());
+// //         strip.push_back(targetFFs[i]->getFeasibleRegion()->right());
+// //         Edge ee;
+// //         ee.ff = targetFFs[i];
+// //         ee.y = targetFFs[i]->getFeasibleRegion()->top();
+// //         ee.isIN = true;
+// //         ee.startx = targetFFs[i]->getFeasibleRegion()->left();
+// //         ee.endx = targetFFs[i]->getFeasibleRegion()->right();
+// //         edgesSet.insert(ee);
+// //         Edge ee1;
+// //         ee1.ff = targetFFs[i];
+// //         ee1.y = targetFFs[i]->getFeasibleRegion()->bottom();
+// //         ee1.isIN = false;
+// //         ee1.startx = targetFFs[i]->getFeasibleRegion()->left();
+// //         ee1.endx = targetFFs[i]->getFeasibleRegion()->right();
+// //         edgesSet.insert(ee1);
+// //     }
+// //     sort(strip.begin(), strip.end());
+// //     strip.erase(unique(strip.begin(), strip.end()), strip.end());
+// //     edges.assign(edgesSet.begin(), edgesSet.end());
+// //     sort(edges.begin(), edges.end(), compareFirst);
+// //     set<set<Module *> > maxClique;
+// //     vector<set<Module *> > tempClique; // size == 3 , for checking greater than above and below
+// //     maxClique.clear();
+// //     int counter = 0;
+// //     // TODO: currently traverse every edge per strip, maybe a better O() way to implement
+// //     for (size_t i = 0; i < strip.size() - 1; i++)
+// //     {
+// //         counter = 0;
+// //         tempClique.clear();
+// //         tempClique.resize(3);
+// //         for (size_t j = 0; j < edges.size(); j++)
+// //         {
+// //             // sweep line
+// //             if ((edges[j].startx == strip[i] && edges[j].endx >= strip[i + 1]) ||
+// //                 (edges[j].startx <= strip[i] && edges[j].endx == strip[i + 1]) ||
+// //                 (edges[j].startx < strip[i] && edges[j].endx > strip[i + 1]))
+// //             {
+// //                 if (counter == 0)
+// //                 {
+// //                     // check if Module is in the set
+
+// //                     counter++;
+// //                     if (edges[j].isIN == false)
+// //                     {
+// //                         cout << "error" << endl;
+// //                     }
+// //                     else
+// //                     {
+// //                         tempClique[0].insert(edges[j].ff);
+// //                     }
+// //                 }
+// //                 else if (counter == 1)
+// //                 {
+// //                     counter++;
+// //                     if (edges[j].isIN == false)
+// //                     {
+// //                         tempClique[1] = tempClique[0];
+// //                         tempClique[1].erase(edges[j].ff);
+// //                         if (tempClique[1].size() > 0)
+// //                         {
+// //                             cout << "error" << endl;
+// //                         }
+// //                     }
+// //                 }
+// //                 else if (counter == 2)
+// //                 {
+// //                     counter++;
+// //                     tempClique[2] = tempClique[1];
+// //                     if (edges[j].isIN == false)
+// //                     {
+// //                         tempClique[2].erase(edges[j].ff);
+// //                     }
+// //                     else
+// //                     {
+// //                         tempClique[2].insert(edges[j].ff);
+// //                     }
+// //                 }
+// //                 else
+// //                 {
+// //                     // move tempClique
+// //                     if (tempClique[1].size() > tempClique[0].size() &&
+// //                         tempClique[1].size() > tempClique[2].size() &&
+// //                         tempClique[1].size() > 1)
+// //                     {
+// //                         maxClique.insert(tempClique[1]);
+// //                     }
+// //                     tempClique[0] = tempClique[1];
+// //                     tempClique[1] = tempClique[2];
+// //                     if (edges[j].isIN == false)
+// //                     {
+// //                         tempClique[2].erase(edges[j].ff);
+// //                     }
+// //                     else
+// //                     {
+// //                         tempClique[2].insert(edges[j].ff);
+// //                     }
+// //                 }
+// //             }
+// //             else
+// //             {
+// //                 continue;
+// //             }
+// //         }
+// //     }
+// //     // TODO: remove proper subset
+// //     vector<set<Module *> > toRemove;
+// //     for (auto it1 = maxClique.begin(); it1 != maxClique.end(); ++it1)
+// //     {
+// //         for (auto it2 = maxClique.begin(); it2 != maxClique.end(); ++it2)
+// //         {
+// //             if (it1 != it2 && isStrictSubset(*it1, *it2))
+// //             {
+// //                 toRemove.push_back(*it1);
+// //                 break;
+// //             }
+// //         }
+// //     }
+// //     for (const auto &subset : toRemove)
+// //     {
+// //         maxClique.erase(subset);
+// //     }
+// //     return maxClique;
+// // }
+// bool isStrictSubset(const set<Module *> &a, const set<Module *> &b)
+// {
+//     return includes(b.begin(), b.end(), a.begin(), a.end());
+// }
+
+// bool compareFirst(const Edge &a,
+//                   const Edge &b)
+// {
+//     return a.y < b.y;
 // }
