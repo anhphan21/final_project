@@ -8,9 +8,11 @@
 #include "CellLibrary.h"
 #include "DatabaseDef.h"
 #include "History.h"
-#include "Module.h"
+//#include "Module.h"
 #include "Timing.h"
 using namespace std;
+
+class Module;
 
 class Pin {
    public:
@@ -102,4 +104,4 @@ class Pin {
     History *_history;
 };
 
-#endif  // PIN_H`
+#endif  // PIN_H

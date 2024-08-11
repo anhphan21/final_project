@@ -1,5 +1,4 @@
 #include "Database.h"
-
 #include <float.h>
 #include <stdlib.h>
 #include <fstream>
@@ -30,7 +29,10 @@ Database::Database()
       _alpha(-1),
       _beta(-1),
       _gamma(-1),
-      _lambda(-1) {}
+      _lambda(-1),
+      record(0) {}
+
+Database::~Database(){}
 
 void Database::parser(const string &filename)
 {
