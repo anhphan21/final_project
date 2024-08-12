@@ -1,6 +1,6 @@
 #ifndef MODULE_H
 #define MODULE_H
-
+#include "Pin.h"
 #include <cassert>
 #include <iostream>
 #include <string>
@@ -8,7 +8,6 @@
 #include <set>
 #include "CellLibrary.h"
 #include "DatabaseDef.h"
-#include "Pin.h"
 #include "Rectangle.h"
 using namespace std;
 
@@ -39,7 +38,8 @@ public:
     double centerY() const { return _y + height() / 2; }
     double area() const { return _type->getArea(); }
 
-    Rectangle rectangle() const { return {_x, _y, _x + width(), _y + height()}; }
+    Rectangle rectangle() const { return Rectangle(_x, _y, _x + width(), _y + height()); }
+
 
     double getPower() const { return _type->getPower(); }
     double getQdelay() const { return _type->getQdelay(); }
@@ -100,7 +100,6 @@ public:
     void setCellType(CellType *type) { _type = type; }
     set<pair<Module*,Module*> > _outputFF;  //first: Gate; second: ouput FF
     int No;
-
     
     double getTNS()
     {

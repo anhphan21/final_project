@@ -15,8 +15,8 @@
 #include <utility>
 using namespace std;
 
-#define leafthresold 0.75                   // TODO: can be changed
-#define __DBL_MAX__ 1.7976931348623158e+308 /* max value */
+#define leafthresold 0.75 // TODO: can be changed
+// #define __DBL_MAX__ 1.7976931348623158e+308 /* max value */
 struct Edges
 {
     Module *ff;
@@ -35,7 +35,7 @@ void Placement::mainLoop()
     for (size_t i = 0; i < mst.size(); i++)
     {
         cout << "Node " << mst[i]->getFFinNode()->name() << " has neighbor: ";
-        map<string, pair<Node *, double> > neighbor = mst[i]->getneighbormap();
+        map<string, pair<Node *, double>> neighbor = mst[i]->getneighbormap();
         for (const auto &pair : neighbor)
         {
             cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
@@ -807,9 +807,32 @@ Rhombus Placement::findInputRegion(Module *ff)
         Rhombus ans(ff->InPin(0)->net()->OutputPin()->x(), ff->InPin(0)->net()->OutputPin()->y(), radius);
         return ans;
     }
+    // ff must be 1 bit FF
+    if (ff->InPin(0)->net()->OutputPin()->module() == NULL) // directory to input pin
+    {
+        Rhombus ans(ff->InPin(0)->net()->OutputPin()->x(), ff->InPin(0)->net()->OutputPin()->y(), 0);
+        return ans;
+    }
+    else
+    {
+        double ff_original_slack = ff->InPin(0)->getSlackInfor()->slack();
+        double dis_delay = _dataBase->getDisplacementDelay();
+        double WL_D_N = abs(ff->InPin(0)->net()->OutputPin()->x() - ff->InPin(0)->x()) + abs(ff->InPin(0)->net()->OutputPin()->y() - ff->InPin(0)->y());
+        double radius = (ff_original_slack + dis_delay * WL_D_N) / dis_delay;
+        Rhombus ans(ff->InPin(0)->net()->OutputPin()->x(), ff->InPin(0)->net()->OutputPin()->y(), radius);
+        return ans;
+    }
 }
 vector<Rhombus> Placement::findOutputRegion(Module *ff)
 {
+    // ff must be 1 bit FF
+    /*by GPT , must check */
+    vector<Rhombus> multi_region;
+    for (auto it = ff->_outputFF.begin(); it != ff->_outputFF.end(); ++it)
+    {
+        double slack = it->second->InPin(0)->slack();
+        double dis_delay = _dataBase->getDisplacementDelay();
+        double WL_Q_0;
     // ff must be 1 bit FF
     /*by GPT , must check */
     vector<Rhombus> multi_region;
@@ -1036,7 +1059,6 @@ void Placement::netListGraph(Module *moduleOrigin)
 }
 void Placement::debankFFto1bit(string ffname)
 {
-    // TODO: need to know which FF should be chosed
     // TODO: Each FF position after debanking
     int celltypeID = 0;
     Module *target = _dataBase->getModuleByName(ffname);
@@ -1046,12 +1068,12 @@ void Placement::debankFFto1bit(string ffname)
     string pinName;
     // TODO:radius
     vector<pair<double, double>> newPos;
+    newPos.clear();
     for (size_t i = 0; i < ffbit; i++)
     {
         newPos.push_back(make_pair(target->x(), target->y()));
         newfflist.push_back(new Module());
-        cout << newfflist.size() << endl;
-        newfflist[i]->setCellType(_dataBase->ffLib(1, celltypeID));
+        newfflist[i]->setCellType(_dataBase->getBestCelltype(1));
         newfflist[i]->setPinsize(3);
         newfflist[i]->setInPin(0, target->InPin(i));
         newfflist[i]->InPin(0)->setOffset(newfflist[i]->cellType()->pinOffsetX(1), newfflist[i]->cellType()->pinOffsetY(1));
@@ -1069,7 +1091,6 @@ void Placement::debankFFto1bit(string ffname)
         newfflist[i]->OutPin(0)->setPinName(pinName);
         newfflist[i]->OutPin(0)->setModulePtr(newfflist[i]);
     }
-    newfflist[ffbit - 1]->setName(ffname);
     // naming =================================================================
     string nname = _dataBase->module(_dataBase->getNumModules() - 1)->name();
     string letters;
@@ -1086,7 +1107,7 @@ void Placement::debankFFto1bit(string ffname)
         }
     }
     int num = stoi(numbers);
-    for (size_t i = 0; i < ffbit - 1; i++)
+    for (size_t i = 0; i < ffbit; i++)
     {
         num++;
         nname = letters + to_string(num);
@@ -1100,8 +1121,9 @@ void Placement::debankFFto1bit(string ffname)
         Pin *newCLK = new Pin();
         string n = "CLK";
         newCLK->setPinName(n);
-        newCLK->setOffset(newfflist[i]->cellType()->pinOffsetX(newfflist[i]->cellType()->clkPinIdx()), newfflist[i]->cellType()->pinOffsetY(newfflist[i]->cellType()->clkPinIdx()));
-        newCLK->setPosition(newfflist[i]->x() + newCLK->x(), newfflist[i]->y() + newCLK->y());
+        newCLK->setOffset(newfflist[i]->cellType()->pinOffsetX(2),
+                          newfflist[i]->cellType()->pinOffsetY(2));
+        newCLK->setPosition(newPos[i].first + newCLK->x(), newPos[i].second + newCLK->y());
         newCLK->setModulePtr(newfflist[i]);
         newfflist[i]->setInPin(newfflist[i]->cellType()->clkPinIdx(), newCLK);
         // connecting pin to net
@@ -1111,6 +1133,7 @@ void Placement::debankFFto1bit(string ffname)
         newH->setNewPin(newCLK);
         newH->setOldPinName(n);
         newH->setOldModuleName(ffname);
+        newCLK->setHistory(newH);
         // add pin into database
         _dataBase->addPin(newCLK);
     }
@@ -1134,6 +1157,7 @@ void Placement::debankFFto1bit(string ffname)
             break;
         }
     }
+    free(target->getFeasibleRegion());
     free(target);
     for (size_t i = 0; i < ffbit - 1; i++)
     {

@@ -2,7 +2,7 @@
 #define TIMING_H
 
 #include <utility>
-
+#include <cstddef> // 為了使用 NULL
 #include "DatabaseDef.h"
 //#include "Pin.h"
 using namespace std;
