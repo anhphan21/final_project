@@ -28,6 +28,8 @@ public:
    void constructGraph();
    set<set<Module *> > calMaxClique(unsigned clkidx);
    double cal_cost(Module *ff1, Module *ff2);
+   double cal_total_cost();
+   double getDen();
 
 
    NodeList findMST();

@@ -797,7 +797,6 @@ double Database::totalCost(double _denThrs) const
     double _areaCost = 0;
     double _powerCost = 0;
     double _tnsCost = getTNS();
-
     for (size_t i = 0, endi = _ffModules.size(); i < endi; i++)
     {
         _powerCost += _ffModules[i]->getPower();

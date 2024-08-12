@@ -12,7 +12,7 @@
 #include <set>
 #include <cfloat>
 #include <queue>
-#include <utility>  
+#include <utility>
 using namespace std;
 
 #define leafthresold 0.75                   // TODO: can be changed
@@ -577,19 +577,19 @@ bool overlap_ornot(vector<Rhombus> &input_rhombus, double &leftBound, double &ri
         return true;
     }
 }
-bool feasibleRegion_overlap(const Rectangle *a,const Rectangle *b)
+bool feasibleRegion_overlap(const Rectangle *a, const Rectangle *b)
 {
-    bool xoverlap = abs(a->getX1() - b->getX1()) < (a->getWidth()/2 + b->getWidth()/2);
-    bool yoverlap = abs(a->getY1() - b->getY1()) < (a->getHeight()/2 + b->getHeight()/2);
+    bool xoverlap = abs(a->getX1() - b->getX1()) < (a->getWidth() / 2 + b->getWidth() / 2);
+    bool yoverlap = abs(a->getY1() - b->getY1()) < (a->getHeight() / 2 + b->getHeight() / 2);
     return xoverlap && yoverlap;
 }
-void Placement::windows()   //construct weilun graph
+void Placement::windows() // construct weilun graph
 {
     double chip_L = _dataBase->getBoundaryLeft();
     double chip_R = _dataBase->getBoundaryRight();
     double chip_B = _dataBase->getBoundaryBottom();
     double chip_T = _dataBase->getBoundaryTop();
-    double window_size = sqrt((chip_T-chip_B)*(chip_L-chip_R));     // we can adjust window size
+    double window_size = sqrt((chip_T - chip_B) * (chip_L - chip_R)); // we can adjust window size
     // double step_size = window_size / 2;
     map<pair<double, double>, vector<Module *>> window_idx2FF;
     _nodes.clear();
@@ -600,7 +600,7 @@ void Placement::windows()   //construct weilun graph
         Node *n = new Node;
         n->setFFinNode(_dataBase->ff(i));
         _name2Node[n->getFFinNode()->name()] = n;
-        _nodes.push_back(n);
+        // _nodes.push_back(n);
 
         // Assign a window index to the current FF.
         double idx_x = _dataBase->ff(i)->x() / window_size;
@@ -621,18 +621,57 @@ void Placement::windows()   //construct weilun graph
             double length = window_idx2FF[{x, y}].size();
             for (int i = 0; i < length; ++i)
             {
-                for(int j = i+1; j < length; ++j)
+                for (int j = i + 1; j < length; ++j)
                 {
-                    if(feasibleRegion_overlap(window_idx2FF[{x, y}][i]->getFeasibleRegion(),window_idx2FF[{x, y}][j]->getFeasibleRegion()))
+                    if (feasibleRegion_overlap(window_idx2FF[{x, y}][i]->getFeasibleRegion(), window_idx2FF[{x, y}][j]->getFeasibleRegion()))
                     {
-                        _name2Node[window_idx2FF[{x, y}][i]->name()]->addNeighborPair({_name2Node[window_idx2FF[{x, y}][j]->name()],0});    //without cost
-                        _name2Node[window_idx2FF[{x, y}][j]->name()]->addNeighborPair({_name2Node[window_idx2FF[{x, y}][i]->name()],0});    //two directions
+                        _name2Node[window_idx2FF[{x, y}][i]->name()]->addNeighborPair({_name2Node[window_idx2FF[{x, y}][j]->name()], 0}); // without cost
+                        _name2Node[window_idx2FF[{x, y}][j]->name()]->addNeighborPair({_name2Node[window_idx2FF[{x, y}][i]->name()], 0}); // two directions
                     }
                 }
             }
         }
     }
 }
+// double Placement::getDen()
+// {
+//     double den = 0;
+//     for(int i = 0;i<_dataBase->getbincol();++i)
+//     {
+//         for(int j = 0;j<_dataBase->getbinrow();++j)
+//         {
+//             _dataBase->bin(i,j)
+//         }
+//     }
+// }
+double Placement::cal_total_cost()
+{
+    double cost = 0;
+    double alpha = _dataBase->getAlpha();
+    double beta = _dataBase->getBeta();
+    double gamma = _dataBase->getGamma();
+    double lambda = _dataBase->getLambda();
+
+    double tns = 0;
+    double power = 0;
+    double area = 0;
+    
+    for (int i = 0; i < _dataBase->getNumFF(); ++i)
+    {
+        tns = _dataBase->ff(i)->getTNS();
+        power = _dataBase->ff(i)->getPower();
+        area = _dataBase->ff(i)->area();
+        
+        cost += alpha * tns + beta * power + gamma * area;
+        tns = 0;
+        power = 0;
+        area = 0;
+    }
+    //cost += lambda * binutil;
+
+    return cost;
+}
+
 void Placement::constructGraph()
 {
     // int num_FF = _dataBase->getNumFF();
