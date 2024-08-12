@@ -1,6 +1,6 @@
 #include "Placement.h"
 //#include <mutex> // threads header file but cannot use in C++98
-#include <thread>
+//#include <thread>
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
@@ -166,7 +166,7 @@ void Placement::eraseEdge(unsigned idx1, unsigned idx2)
    return;
 }
 
-int stoi(const std::string& str) {
+int my_stoi(const string& str) {
     int num = 0;
     for (size_t i = 0; i < str.length(); ++i) {
         if (str[i] >= '0' && str[i] <= '9') {
@@ -179,7 +179,7 @@ int stoi(const std::string& str) {
     return num;
 }
 
-string itos(int num)
+string my_itos(int num)
 {
     string ans = "";
     while (num)
@@ -240,19 +240,27 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
    string m3name = _dataBase->module(_dataBase->getNumModules() - 1)->name();
    string letters;
    string numbers;
-   for (char c : m3name)
-   {
-       if (std::isdigit(c))
-       {
-           numbers += c;
-       }
-       else
-       {
-           letters += c;
-       }
-   }
-   int num = stoi(numbers);
-   m3name = letters + itos(num + 1);
+//    for (char c : m3name)
+//    {
+//        if (std::isdigit(c))
+//        {
+//            numbers += c;
+//        }
+//        else
+//        {
+//            letters += c;
+//        }S
+//    }
+    for (string::size_type i = 0; i < m3name.size(); ++i) {
+        char c = m3name[i];
+        if (std::isdigit(static_cast<unsigned char>(c))) {
+            numbers += c;
+        } else {
+            letters += c;
+        }
+    }
+   int num = my_stoi(numbers);
+   m3name = letters + my_itos(num + 1);
    random_device rd;
    mt19937 generator(rd());
    uniform_int_distribution<unsigned> distribution(0, _dataBase->getNumfflibBit((m1->cellType()->getnumBit()) * 2) - 1);
@@ -266,7 +274,7 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
        if (m1->InPin(i)->name() != "CLK" && m1->OutPin(i)->name() != "clk")
        {
            string str = "D";
-           str = str + itos(pinid);
+           str = str + my_itos(pinid);
            m1->InPin(i)->setPinName(str);
            pinid++;
        }
@@ -276,7 +284,7 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
        if (m2->InPin(i)->name() != "CLK" && m2->OutPin(i)->name() != "clk")
        {
            string str = "D";
-           str = str + itos(pinid);
+           str = str + my_itos(pinid);
            m2->InPin(i)->setPinName(str);
            pinid++;
        }
@@ -287,7 +295,7 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
        if (m1->OutPin(i)->name() != "CLK" && m1->OutPin(i)->name() != "clk")
        {
            string str = "Q";
-           str = str + itos(pinid);
+           str = str + my_itos(pinid);
            m1->OutPin(i)->setPinName(str);
            pinid++;
        }
@@ -297,7 +305,7 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
        if (m2->OutPin(i)->name() != "CLK" && m2->OutPin(i)->name() != "clk")
        {
            string str = "Q";
-           str = str + itos(pinid);
+           str = str + my_itos(pinid);
            m2->OutPin(i)->setPinName(str);
            pinid++;
        }
@@ -1093,11 +1101,11 @@ void Placement::debankFFto1bit(string ffname)
            letters += c;
        }
    }
-   int num = stoi(numbers);
+   int num = my_stoi(numbers);
    for (size_t i = 0; i < ffbit - 1; i++)
    {
        num++;
-       nname = letters + itos(num);
+       nname = letters + my_itos(num);
        newfflist[i]->setName(nname);
    }
    // naming =================================================================
