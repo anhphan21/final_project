@@ -15,8 +15,8 @@
 #include <utility>
 using namespace std;
 
-#define leafthresold 0.75 // TODO: can be changed
-// #define __DBL_MAX__ 1.7976931348623158e+308 /* max value */
+#define leafthresold 0.75                   // TODO: can be changed
+#define __DBL_MAX__ 1.7976931348623158e+308 /* max value */
 struct Edges
 {
     Module *ff;
@@ -655,19 +655,19 @@ double Placement::cal_total_cost()
     double tns = 0;
     double power = 0;
     double area = 0;
-    
+
     for (int i = 0; i < _dataBase->getNumFF(); ++i)
     {
         tns = _dataBase->ff(i)->getTNS();
         power = _dataBase->ff(i)->getPower();
         area = _dataBase->ff(i)->area();
-        
+
         cost += alpha * tns + beta * power + gamma * area;
         tns = 0;
         power = 0;
         area = 0;
     }
-    //cost += lambda * binutil;
+    // cost += lambda * binutil;
 
     return cost;
 }
@@ -833,34 +833,34 @@ vector<Rhombus> Placement::findOutputRegion(Module *ff)
         double slack = it->second->InPin(0)->slack();
         double dis_delay = _dataBase->getDisplacementDelay();
         double WL_Q_0;
-    // ff must be 1 bit FF
-    /*by GPT , must check */
-    vector<Rhombus> multi_region;
-    for (auto it = ff->_outputFF.begin(); it != ff->_outputFF.end(); ++it)
-    {
-        double slack = it->second->InPin(0)->slack();
-        double dis_delay = _dataBase->getDisplacementDelay();
-        double WL_Q_0;
-
-        if (it->first == NULL)
+        // ff must be 1 bit FF
+        /*by GPT , must check */
+        vector<Rhombus> multi_region;
+        for (auto it = ff->_outputFF.begin(); it != ff->_outputFF.end(); ++it)
         {
-            WL_Q_0 = abs(ff->OutPin(0)->x() - it->second->InPin(0)->x()) +
-                     abs(ff->OutPin(0)->y() - it->second->InPin(0)->y());
-            double radius = (slack + dis_delay * WL_Q_0) / dis_delay;
-            Rhombus ans(it->second->InPin(0)->x(), it->second->InPin(0)->y(), radius);
-            multi_region.push_back(ans);
-        }
-        else
-        { // curr_FF 和 out_FF 之間有 gate
-            WL_Q_0 = abs(ff->OutPin(0)->x() - it->first->InPin(0)->x()) +
-                     abs(ff->OutPin(0)->y() - it->first->InPin(0)->y());
-            double radius = (slack + dis_delay * WL_Q_0) / dis_delay;
-            Rhombus ans(it->first->InPin(0)->x(), it->first->InPin(0)->y(), radius);
-            multi_region.push_back(ans);
-        }
-    }
+            double slack = it->second->InPin(0)->slack();
+            double dis_delay = _dataBase->getDisplacementDelay();
+            double WL_Q_0;
 
-    return multi_region;
+            if (it->first == NULL)
+            {
+                WL_Q_0 = abs(ff->OutPin(0)->x() - it->second->InPin(0)->x()) +
+                         abs(ff->OutPin(0)->y() - it->second->InPin(0)->y());
+                double radius = (slack + dis_delay * WL_Q_0) / dis_delay;
+                Rhombus ans(it->second->InPin(0)->x(), it->second->InPin(0)->y(), radius);
+                multi_region.push_back(ans);
+            }
+            else
+            { // curr_FF 和 out_FF 之間有 gate
+                WL_Q_0 = abs(ff->OutPin(0)->x() - it->first->InPin(0)->x()) +
+                         abs(ff->OutPin(0)->y() - it->first->InPin(0)->y());
+                double radius = (slack + dis_delay * WL_Q_0) / dis_delay;
+                Rhombus ans(it->first->InPin(0)->x(), it->first->InPin(0)->y(), radius);
+                multi_region.push_back(ans);
+            }
+        }
+        return multi_region;
+    }
 }
 void Placement::constructFeasible(Module *ff)
 {
