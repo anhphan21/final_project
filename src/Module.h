@@ -102,8 +102,16 @@ public:
     int No;
 
     
-    // void store_ouputFF(Module *gate,Module *ff){_outputFF.push_back({gate,ff});}
-    // vector<pair<Module *,Module *> > get_outputFF(){return _outputFF;}
+    double getTNS()
+    {
+        double tns=0;
+        for(int i=0;i<numOutPins();++i)          //output pin
+        {
+            if(OutPin(i)->getSlackInfor()->slack()<0)
+                tns+=OutPin(i)->getSlackInfor()->slack();
+        }
+        return tns;
+    }
 
 private:
     // variables from benchmark input
