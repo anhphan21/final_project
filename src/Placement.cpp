@@ -1,5 +1,5 @@
 #include "Placement.h"
-//#include <mutex> //多核心功能
+//#include <mutex> // threads header file but cannot use in C++98
 #include <thread>
 #include <cctype>
 #include <cmath>
