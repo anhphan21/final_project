@@ -1,17 +1,19 @@
 CC=g++
-CXXFLAGS = -std=c++11 -O3  
+CXXFLAGS = -std=c++98 -O3  
 LDFLAGS = -lpthread
-SOURCES= src/*.cpp
-OBJECTS=$(SOURCES:.c=.o)
-EXECUTABLE=fp
-INCLUDES=src/Bin.h src/Node.h src/Module.h src/Net.h src/Pin.h src/Placement.h src/Rectangle.h src/Row.h src/CellLibrary.h src/Database.h src/DatabaseDef.h 
-all: $(SOURCES) bin/$(EXECUTABLE)
+SOURCES = $(wildcard src/*.cpp)
+OBJECTS = $(SOURCES:src/%.cpp=bin/%.o)
+EXECUTABLE = bin/fp
+INCLUDES = src/Bin.h src/Node.h src/Module.h src/Net.h src/Pin.h src/Placement.h src/Rectangle.h src/Row.h src/CellLibrary.h src/Database.h src/DatabaseDef.h 
 
-bin/$(EXECUTABLE): $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@ $(LDFLAGS)
+all: $(EXECUTABLE)
 
-%.o:  %.cpp  ${INCLUDES}
-	$(CC) $(CFLAGS) -c $< -o $@
+$(EXECUTABLE): $(OBJECTS)
+	$(CC) $(CXXFLAGS) $(OBJECTS) -o $@ $(LDFLAGS)
+
+bin/%.o: src/%.cpp $(INCLUDES)
+	@mkdir -p bin
+	$(CC) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -rf *.o bin/$(EXECUTABLE)
+	rm -rf bin/*.o $(EXECUTABLE)

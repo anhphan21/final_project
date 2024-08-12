@@ -22,7 +22,7 @@ class Database
 {
 public:
     Database();
-    ~Database(){}
+    ~Database();
 
     void parser(const string &filename);
     void outputTofile(const string &filename);
