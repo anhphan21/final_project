@@ -87,7 +87,7 @@ class Pin {
     static double calHPWL(const Pin &pin0, const Pin &pin1) {
         return abs(pin0.x() - pin1.x()) + abs(pin0.y() - pin1.y());
     }
-
+    Timing _slackInfo;
    private:
     // variables from benchmark input
     string _name;
@@ -97,7 +97,7 @@ class Pin {
     Net *_net;                  // ptr to the associated net
 
     bool _marked;  // use for checking the flipflop timing
-    Timing _slackInfo;
+    //Timing _slackInfo;
 
     History *_history;
 };

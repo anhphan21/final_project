@@ -17,13 +17,14 @@ public:
    Placement()
    {
        _nodes.resize(1);
-       _nodes[0] = nullptr;
+       _nodes[0] = NULL;
    };
    void mainLoop();
-   void constructFeasible(Module *ff,Rhombus in,vector<Rhombus > out);
+   void constructFeasible(Module *ff);
    Rhombus findInputRegion(Module *ff);
    vector<Rhombus > findOutputRegion(Module *ff);
 
+   void windows();
    void constructGraph();
    set<set<Module *> > calMaxClique(unsigned clkidx);
    double cal_cost(Module *ff1, Module *ff2);

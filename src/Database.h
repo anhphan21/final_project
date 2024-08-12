@@ -22,7 +22,7 @@ class Database
 {
 public:
     Database();
-    ~Database() = default;
+    ~Database();
 
     void parser(const string &filename);
     void outputTofile(const string &filename);
@@ -113,7 +113,7 @@ public:
     // get design property through name
     Module *getModuleByName(string &name)
     {
-        auto it = ModuleName2Ptr.find(name);
+        map<string, Module*>::iterator it = ModuleName2Ptr.find(name);
         assert(it != ModuleName2Ptr.end());
         return ModuleName2Ptr[name];
     }
@@ -142,7 +142,7 @@ public:
     double getBoundaryRight() const { return _boundaryRight; }
    FFCell *ffLib(unsigned bitNum, unsigned idx)
     {
-        auto it = _ffLib.find(bitNum);
+       std::map<unsigned, std::vector<FFCell*> >::iterator it = _ffLib.find(bitNum);
         if (it != _ffLib.end())
         {
             return _ffLib[bitNum][idx];
@@ -157,7 +157,7 @@ public:
     unsigned getFFlibBitsize() { return _bestCells.size(); }
    unsigned getNumfflibBit(unsigned bit)
     {
-        auto it = _ffLib.find(bit);
+       std::map<unsigned, std::vector<FFCell*> >::iterator it = _ffLib.find(bit);
         if (it != _ffLib.end())
         {
             return _ffLib[bit].size();
