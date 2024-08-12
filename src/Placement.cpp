@@ -12,6 +12,7 @@
 #include <set>
 #include <cfloat>
 #include <queue>
+#include <sstream>
 using namespace std;
 
 #define leafthresold 0.75 // TODO: can be changed
@@ -253,7 +254,8 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
             letters += c;
         }
     }
-    int num = stoi(numbers);
+    int num;
+    stringstream(numbers) >> num;
     m3name = letters + itos(num + 1);
     random_device rd;
     mt19937 generator(rd());
@@ -1093,7 +1095,8 @@ void Placement::debankFFto1bit(string ffname)
             letters += c;
         }
     }
-    int num = stoi(numbers);
+    int num;
+    stringstream(numbers) >> num;
     for (size_t i = 0; i < ffbit; i++)
     {
         num++;
