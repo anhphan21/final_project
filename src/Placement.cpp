@@ -12,7 +12,6 @@
 #include <set>
 #include <cfloat>
 #include <queue>
-#include <sstream>
 #include <utility>
 using namespace std;
 
@@ -170,10 +169,6 @@ void Placement::eraseEdge(unsigned idx1, unsigned idx2)
 int my_stoi(const std::string &str)
 {
     int num = 0;
-    for (size_t i = 0; i < str.length(); ++i)
-    {
-        if (str[i] >= '0' && str[i] <= '9')
-        {
     for (size_t i = 0; i < str.length(); ++i)
     {
         if (str[i] >= '0' && str[i] <= '9')
@@ -627,38 +622,37 @@ double cal_distance(pair<double, double> A, pair<double, double> B)
     return (abs(A.first - B.first) + abs(A.second - B.second));
 }
 
-bool overlap_ornot(vector<Rhombus> &input_rhombus, double &leftBound, double &rightBound, double &botBound, double &topBound)
+bool overlap_ornot(std::vector<Rhombus *> &input_rhombus, double &leftBound, double &rightBound, double &botBound, double &topBound)
 {
     if (input_rhombus.empty())
         return false;
-    leftBound = -DBL_MAX; // 使用 -DBL_MAX 來表示最低的可能值
-    rightBound = DBL_MAX; // 使用 DBL_MAX 來表示最大的可能值
-    botBound = -DBL_MAX;  // 使用 -DBL_MAX 來表示最低的可能值
-    topBound = DBL_MAX;   // 使用 DBL_MAX 來表示最大的可能值
 
-    // Rotate 45 deg
-    // for (auto &rhombus : input_rhombus)
-    //{
-    //    rhombus.RotatePeak(45);
-    //}
-    for (vector<Rhombus>::iterator it = input_rhombus.begin(); it != input_rhombus.end(); ++it)
+    leftBound = -DBL_MAX; // 使用 -DBL_MAX 表示最小可能值
+    rightBound = DBL_MAX; // 使用 DBL_MAX 表示最大可能值
+    botBound = -DBL_MAX;  // 使用 -DBL_MAX 表示最小可能值
+    topBound = DBL_MAX;   // 使用 DBL_MAX 表示最大可能值
+
+    // 旋转 45 度
+    for (std::vector<Rhombus *>::iterator it = input_rhombus.begin(); it != input_rhombus.end(); ++it)
     {
-        it->RotatePeak(45);
+        (*it)->RotatePeak(45); // 解引用指针调用方法
     }
 
-    for (std::vector<Rhombus>::iterator it = input_rhombus.begin(); it != input_rhombus.end(); ++it)
+    for (std::vector<Rhombus *>::iterator it = input_rhombus.begin(); it != input_rhombus.end(); ++it)
     {
-        leftBound = max(leftBound, it->peak(3).x);
-        rightBound = min(rightBound, it->peak(1).x);
-        botBound = max(botBound, it->peak(3).y);
-        topBound = min(topBound, it->peak(1).y);
+        leftBound = std::max(leftBound, (*it)->peak(3).x);
+        rightBound = std::min(rightBound, (*it)->peak(1).x);
+        botBound = std::max(botBound, (*it)->peak(3).y);
+        topBound = std::min(topBound, (*it)->peak(1).y);
     }
 
-    for (vector<Rhombus>::iterator it = input_rhombus.begin(); it != input_rhombus.end(); ++it)
+    // 旋转回 -45 度
+    for (std::vector<Rhombus *>::iterator it = input_rhombus.begin(); it != input_rhombus.end(); ++it)
     {
-        it->RotatePeak(-45);
+        (*it)->RotatePeak(-45); // 解引用指针调用方法
     }
-    // Check if vec. rhombus are overlap or not ?
+
+    // 检查菱形是否重叠
     if ((leftBound > rightBound) || (botBound > topBound))
     {
         return false;
@@ -693,7 +687,7 @@ void Placement::windows() // construct weilun graph
         Node *n = new Node;
         n->setFFinNode(_dataBase->ff(i));
         _name2Node[n->getFFinNode()->name()] = n;
-        // _nodes.push_back(n);
+        _nodes.push_back(n);
 
         // Assign a window index to the current FF.
         double idx_x = _dataBase->ff(i)->x() / window_size;
@@ -707,24 +701,29 @@ void Placement::windows() // construct weilun graph
     double y_max = chip_T / window_size;
     double x_min = chip_L / window_size;
     double x_max = chip_R / window_size;
-    for (int y = y_min; y <= y_max; ++y)
-    {
-        for (int x = x_min; x <= x_max; ++x)
-        {
-            double length = window_idx2FF[{x, y}].size();
+    // for (int y = y_min; y <= y_max; ++y)
+    // {
+    //     for (int x = x_min; x <= x_max; ++x)
+    //     {
+            // double length = window_idx2FF[{x, y}].size();
+            double length = num_FF;
             for (int i = 0; i < length; ++i)
             {
                 for (int j = i + 1; j < length; ++j)
                 {
-                    if (feasibleRegion_overlap(window_idx2FF[{x, y}][i]->getFeasibleRegion(), window_idx2FF[{x, y}][j]->getFeasibleRegion()))
-                    {
-                        _name2Node[window_idx2FF[{x, y}][i]->name()]->addNeighborPair({_name2Node[window_idx2FF[{x, y}][j]->name()], 0}); // without cost
-                        _name2Node[window_idx2FF[{x, y}][j]->name()]->addNeighborPair({_name2Node[window_idx2FF[{x, y}][i]->name()], 0}); // two directions
+                    if(_dataBase->ff(i)->getFeasibleRegion()==NULL)
+                        continue;
+                    if(_dataBase->ff(j)->getFeasibleRegion()==NULL)
+                        continue;
+                    if (feasibleRegion_overlap(_dataBase->ff(i)->getFeasibleRegion(), _dataBase->ff(j)->getFeasibleRegion()))
+                    {;
+                        _name2Node[_dataBase->ff(i)->name()]->addNeighborPair({_name2Node[_dataBase->ff(j)->name()], 0}); // without cost
+                        _name2Node[_dataBase->ff(j)->name()]->addNeighborPair({_name2Node[_dataBase->ff(i)->name()], 0}); // two directions
                     }
                 }
             }
-        }
-    }
+    //     }
+    // }
 }
 // double Placement::getDen()
 // {
@@ -765,12 +764,12 @@ double Placement::cal_total_cost()
     return cost;
 }
 
-Rhombus Placement::findInputRegion(Module *ff)
+Rhombus *Placement::findInputRegion(Module *ff)
 {
     // ff must be 1 bit FF
     if (ff->InPin(0)->net()->OutputPin()->module() == NULL) // directory to input pin
     {
-        Rhombus ans(ff->InPin(0)->net()->OutputPin()->x(), ff->InPin(0)->net()->OutputPin()->y(), 0);
+        Rhombus *ans = new Rhombus(ff->InPin(0)->net()->OutputPin()->x(), ff->InPin(0)->net()->OutputPin()->y(), 0);
         return ans;
     }
     else
@@ -779,13 +778,13 @@ Rhombus Placement::findInputRegion(Module *ff)
         double dis_delay = _dataBase->getDisplacementDelay();
         double WL_D_N = abs(ff->InPin(0)->net()->OutputPin()->x() - ff->InPin(0)->x()) + abs(ff->InPin(0)->net()->OutputPin()->y() - ff->InPin(0)->y());
         double radius = (ff_original_slack + dis_delay * WL_D_N) / dis_delay;
-        Rhombus ans(ff->InPin(0)->net()->OutputPin()->x(), ff->InPin(0)->net()->OutputPin()->y(), radius);
+        Rhombus *ans = new Rhombus(ff->InPin(0)->net()->OutputPin()->x(), ff->InPin(0)->net()->OutputPin()->y(), radius);
         return ans;
     }
     // ff must be 1 bit FF
     if (ff->InPin(0)->net()->OutputPin()->module() == NULL) // directory to input pin
     {
-        Rhombus ans(ff->InPin(0)->net()->OutputPin()->x(), ff->InPin(0)->net()->OutputPin()->y(), 0);
+        Rhombus *ans = new Rhombus(ff->InPin(0)->net()->OutputPin()->x(), ff->InPin(0)->net()->OutputPin()->y(), 0);
         return ans;
     }
     else
@@ -794,65 +793,60 @@ Rhombus Placement::findInputRegion(Module *ff)
         double dis_delay = _dataBase->getDisplacementDelay();
         double WL_D_N = abs(ff->InPin(0)->net()->OutputPin()->x() - ff->InPin(0)->x()) + abs(ff->InPin(0)->net()->OutputPin()->y() - ff->InPin(0)->y());
         double radius = (ff_original_slack + dis_delay * WL_D_N) / dis_delay;
-        Rhombus ans(ff->InPin(0)->net()->OutputPin()->x(), ff->InPin(0)->net()->OutputPin()->y(), radius);
+        Rhombus *ans = new Rhombus(ff->InPin(0)->net()->OutputPin()->x(), ff->InPin(0)->net()->OutputPin()->y(), radius);
         return ans;
     }
 }
-vector<Rhombus> Placement::findOutputRegion(Module *ff)
+vector<Rhombus *> Placement::findOutputRegion(Module *ff)
 {
     // ff must be 1 bit FF
     /*by GPT , must check */
-    vector<Rhombus> multi_region;
-    for (set<pair<Module*, Module*> >::iterator it = ff->_outputFF.begin(); it != ff->_outputFF.end(); ++it)
+    vector<Rhombus *> multi_region;
+    for (set<pair<Module *, Module *> >::iterator it = ff->_outputFF.begin(); it != ff->_outputFF.end(); ++it)
     {
         double slack = it->second->InPin(0)->slack();
         double dis_delay = _dataBase->getDisplacementDelay();
         double WL_Q_0;
-        // ff must be 1 bit FF
-        /*by GPT , must check */
-        vector<Rhombus> multi_region;
-        for (set<pair<Module*, Module*> >::iterator it = ff->_outputFF.begin(); it != ff->_outputFF.end(); ++it)
-        {
-            double slack = it->second->InPin(0)->slack();
-            double dis_delay = _dataBase->getDisplacementDelay();
-            double WL_Q_0;
 
-            if (it->first == NULL)
-            {
-                WL_Q_0 = abs(ff->OutPin(0)->x() - it->second->InPin(0)->x()) +
-                         abs(ff->OutPin(0)->y() - it->second->InPin(0)->y());
-                double radius = (slack + dis_delay * WL_Q_0) / dis_delay;
-                Rhombus ans(it->second->InPin(0)->x(), it->second->InPin(0)->y(), radius);
-                multi_region.push_back(ans);
-            }
-            else
-            { // curr_FF 和 out_FF 之間有 gate
-                WL_Q_0 = abs(ff->OutPin(0)->x() - it->first->InPin(0)->x()) +
-                         abs(ff->OutPin(0)->y() - it->first->InPin(0)->y());
-                double radius = (slack + dis_delay * WL_Q_0) / dis_delay;
-                Rhombus ans(it->first->InPin(0)->x(), it->first->InPin(0)->y(), radius);
-                multi_region.push_back(ans);
-            }
+        if (it->first == NULL)
+        {
+            WL_Q_0 = abs(ff->OutPin(0)->x() - it->second->InPin(0)->x()) +
+                     abs(ff->OutPin(0)->y() - it->second->InPin(0)->y());
+            double radius = (slack + dis_delay * WL_Q_0) / dis_delay;
+            Rhombus *ans = new Rhombus(it->second->InPin(0)->x(), it->second->InPin(0)->y(), radius);
+            multi_region.push_back(ans);
         }
-        return multi_region;
+        else
+        { // curr_FF 和 out_FF 之間有 gate
+            WL_Q_0 = abs(ff->OutPin(0)->x() - it->first->InPin(0)->x()) +
+                     abs(ff->OutPin(0)->y() - it->first->InPin(0)->y());
+            double radius = (slack + dis_delay * WL_Q_0) / dis_delay;
+            Rhombus *ans = new Rhombus(it->first->InPin(0)->x(), it->first->InPin(0)->y(), radius);
+            multi_region.push_back(ans);
+        }
     }
+    return multi_region;
 }
 void Placement::constructFeasible(Module *ff)
 {
-    Rhombus in = findInputRegion(ff);
-    vector<Rhombus> out = findOutputRegion(ff);
+    Rhombus *in = findInputRegion(ff);
+    vector<Rhombus *> out = findOutputRegion(ff);
     if (out.empty())
+    {
+
         return;
+    }
     out.push_back(in); // in_and_out
     double Feas_x1 = 0, Feas_y1 = 0, Feas_x2 = 0, Feas_y2 = 0;
     if (overlap_ornot(out, Feas_x1, Feas_x2, Feas_y1, Feas_y2) == 1)
-    {                                                                        // if return is true then Feas_x1, Feas_x2, Feas_y1, Feas_y2 have correct value
-        ff->getFeasibleRegion()->setInf(Feas_x1, Feas_y1, Feas_x2, Feas_y2); // feasibleRegion still be retangleable
+    {// if return is true then Feas_x1, Feas_x2, Feas_y1, Feas_y2 have correct value
+        Rectangle *buff = new Rectangle(Feas_x1, Feas_y1, Feas_x2, Feas_y2);
+        ff->setFeasibleRegion(buff); // feasibleRegion still be retangleable
     }
     else
     {
-        cout << ff->name() << " feasibleRegion not found\n"
-             << endl;
+        // cout << ff->name() << " feasibleRegion not found\n"
+        //      << endl;
     }
 }
 
@@ -941,22 +935,39 @@ void Placement::netListGraph()
         }
         if (i % 1000 == 0)
         {
-            cout << i << endl;
-            cout << this->getDatabase()->ff(i)->name() << endl;
+            // cout << i << endl;
+            // cout << this->getDatabase()->ff(i)->name() << endl;
             for (set<std::pair<Module *, Module *> >::iterator it = this->getDatabase()->ff(i)->_outputFF.begin(); it != this->getDatabase()->ff(i)->_outputFF.end(); ++it)
             {
                 if (it->first == NULL)
                 {
-                    cout << "Gate: NULL   FF:" << it->second->name() << endl;
+                    // cout << "Gate: NULL   FF:" << it->second->name() << endl;
                 }
                 else
                 {
-                    cout << "Gate: " << it->first->name() << "   FF:" << it->second->name() << endl;
+                    // cout << "Gate: " << it->first->name() << "   FF:" << it->second->name() << endl;
                 }
             }
         }
 
     } // Inside is gragh Funtion
+}
+
+void Placement::debankAllFF()
+{
+    unsigned initFFnum = _dataBase->getNumFF();
+    // cout << "initFFnum: " << initFFnum << endl;
+    // cout << "module num " << _dataBase->getNumModules() << endl;
+    for (size_t i = 0; i < initFFnum; i++)
+    {
+        if (_dataBase->ff(i)->cellType()->numBit() > 1)
+        {
+            string Dname = _dataBase->ff(i)->name();
+            // cout << "ffname: " << Dname << endl;
+            debankFFto1bit(Dname);
+        }
+    }
+    return;
 }
 
 void Placement::debankFFto1bit(string ffname)
@@ -994,7 +1005,6 @@ void Placement::debankFFto1bit(string ffname)
         newfflist[i]->OutPin(0)->setPinName(pinName);
         newfflist[i]->OutPin(0)->setModulePtr(newfflist[i]);
     }
-    newfflist[ffbit - 1]->setName(ffname);
     // naming =================================================================
     string nname = _dataBase->module(_dataBase->getNumModules() - 1)->name();
     string letters;
@@ -1073,151 +1083,6 @@ void Placement::debankFFto1bit(string ffname)
     }
     return;
 }
-set<set<Module *>> Placement::calMaxClique(unsigned clkidx)
-{
-    // input : clk net id
-    // output : maximal clique(without proper subset)
-    Net *targetNet = _dataBase->net(clkidx);
-    if (targetNet->clkFlag() == false)
-    {
-        cout << "error: input isn't a clk" << endl;
-        return;
-    }
-    ModuleList targetFFs;
-    vector<double> strip; // start pos of every part of strip
-    set<Edge> edgesSet;
-    vector<Edge> edges; // Module, y , start x , end x
-    edges.clear();
-    edgesSet.clear();
-    strip.clear();
-    targetFFs.clear();
-    for (size_t i = 0; i < targetNet->numPins(); i++)
-    {
-        targetFFs.push_back(targetNet->pin(i)->module());
-        strip.push_back(targetFFs[i]->getFeasibleRegion()->left());
-        strip.push_back(targetFFs[i]->getFeasibleRegion()->right());
-        Edge ee;
-        ee.ff = targetFFs[i];
-        ee.y = targetFFs[i]->getFeasibleRegion()->top();
-        ee.isIN = true;
-        ee.startx = targetFFs[i]->getFeasibleRegion()->left();
-        ee.endx = targetFFs[i]->getFeasibleRegion()->right();
-        edgesSet.insert(ee);
-        Edge ee1;
-        ee1.ff = targetFFs[i];
-        ee1.y = targetFFs[i]->getFeasibleRegion()->bottom();
-        ee1.isIN = false;
-        ee1.startx = targetFFs[i]->getFeasibleRegion()->left();
-        ee1.endx = targetFFs[i]->getFeasibleRegion()->right();
-        edgesSet.insert(ee1);
-    }
-    sort(strip.begin(), strip.end());
-    strip.erase(unique(strip.begin(), strip.end()), strip.end());
-    edges.assign(edgesSet.begin(), edgesSet.end());
-    sort(edges.begin(), edges.end(), compareFirst);
-    set<set<Module *>> maxClique;
-    vector<set<Module *>> tempClique; // size == 3 , for checking greater than above and below
-    maxClique.clear();
-    int counter = 0;
-    // TODO: currently traverse every edge per strip, maybe a better O() way to implement
-    for (size_t i = 0; i < strip.size() - 1; i++)
-    {
-        counter = 0;
-        tempClique.clear();
-        tempClique.resize(3);
-        for (size_t j = 0; j < edges.size(); j++)
-        {
-            // sweep line
-            if ((edges[j].startx == strip[i] && edges[j].endx >= strip[i + 1]) ||
-                (edges[j].startx <= strip[i] && edges[j].endx == strip[i + 1]) ||
-                (edges[j].startx < strip[i] && edges[j].endx > strip[i + 1]))
-            {
-                if (counter == 0)
-                {
-                    // check if Module is in the set
-
-                    counter++;
-                    if (edges[j].isIN == false)
-                    {
-                        cout << "error" << endl;
-                    }
-                    else
-                    {
-                        tempClique[0].insert(edges[j].ff);
-                    }
-                }
-                else if (counter == 1)
-                {
-                    counter++;
-                    if (edges[j].isIN == false)
-                    {
-                        tempClique[1] = tempClique[0];
-                        tempClique[1].erase(edges[j].ff);
-                        if (tempClique[1].size() > 0)
-                        {
-                            cout << "error" << endl;
-                        }
-                    }
-                }
-                else if (counter == 2)
-                {
-                    counter++;
-                    tempClique[2] = tempClique[1];
-                    if (edges[j].isIN == false)
-                    {
-                        tempClique[2].erase(edges[j].ff);
-                    }
-                    else
-                    {
-                        tempClique[2].insert(edges[j].ff);
-                    }
-                }
-                else
-                {
-                    // move tempClique
-                    if (tempClique[1].size() > tempClique[0].size() &&
-                        tempClique[1].size() > tempClique[2].size() &&
-                        tempClique[1].size() > 1)
-                    {
-                        maxClique.insert(tempClique[1]);
-                    }
-                    tempClique[0] = tempClique[1];
-                    tempClique[1] = tempClique[2];
-                    if (edges[j].isIN == false)
-                    {
-                        tempClique[2].erase(edges[j].ff);
-                    }
-                    else
-                    {
-                        tempClique[2].insert(edges[j].ff);
-                    }
-                }
-            }
-            else
-            {
-                continue;
-            }
-        }
-    }
-    // TODO: remove proper subset
-    vector<set<Module *>> toRemove;
-    for (auto it1 = maxClique.begin(); it1 != maxClique.end(); ++it1)
-    {
-        for (auto it2 = maxClique.begin(); it2 != maxClique.end(); ++it2)
-        {
-            if (it1 != it2 && isStrictSubset(*it1, *it2))
-            {
-                toRemove.push_back(*it1);
-                break;
-            }
-        }
-    }
-    for (const auto &subset : toRemove)
-    {
-        maxClique.erase(subset);
-    }
-    return maxClique;
-}
 bool isStrictSubset(const set<Module *> &a, const set<Module *> &b)
 {
     return includes(b.begin(), b.end(), a.begin(), a.end());
@@ -1228,3 +1093,158 @@ bool compareFirst(const Edge &a,
 {
     return a.y < b.y;
 }
+// // set<set<Module *> > Placement::calMaxClique(unsigned clkidx)
+// // {
+// //     // input : clk net id
+// //     // output : maximal clique(without proper subset)
+// //     Net *targetNet = _dataBase->net(clkidx);
+// //     if (targetNet->clkFlag() == false)
+// //     {
+// //         cout << "error: input isn't a clk" << endl;
+// //         return;
+// //     }
+// //     ModuleList targetFFs;
+// //     vector<double> strip; // start pos of every part of strip
+// //     set<Edge> edgesSet;
+// //     vector<Edge> edges; // Module, y , start x , end x
+// //     edges.clear();
+// //     edgesSet.clear();
+// //     strip.clear();
+// //     targetFFs.clear();
+// //     for (size_t i = 0; i < targetNet->numPins(); i++)
+// //     {
+// //         targetFFs.push_back(targetNet->pin(i)->module());
+// //         strip.push_back(targetFFs[i]->getFeasibleRegion()->left());
+// //         strip.push_back(targetFFs[i]->getFeasibleRegion()->right());
+// //         Edge ee;
+// //         ee.ff = targetFFs[i];
+// //         ee.y = targetFFs[i]->getFeasibleRegion()->top();
+// //         ee.isIN = true;
+// //         ee.startx = targetFFs[i]->getFeasibleRegion()->left();
+// //         ee.endx = targetFFs[i]->getFeasibleRegion()->right();
+// //         edgesSet.insert(ee);
+// //         Edge ee1;
+// //         ee1.ff = targetFFs[i];
+// //         ee1.y = targetFFs[i]->getFeasibleRegion()->bottom();
+// //         ee1.isIN = false;
+// //         ee1.startx = targetFFs[i]->getFeasibleRegion()->left();
+// //         ee1.endx = targetFFs[i]->getFeasibleRegion()->right();
+// //         edgesSet.insert(ee1);
+// //     }
+// //     sort(strip.begin(), strip.end());
+// //     strip.erase(unique(strip.begin(), strip.end()), strip.end());
+// //     edges.assign(edgesSet.begin(), edgesSet.end());
+// //     sort(edges.begin(), edges.end(), compareFirst);
+// //     set<set<Module *> > maxClique;
+// //     vector<set<Module *> > tempClique; // size == 3 , for checking greater than above and below
+// //     maxClique.clear();
+// //     int counter = 0;
+// //     // TODO: currently traverse every edge per strip, maybe a better O() way to implement
+// //     for (size_t i = 0; i < strip.size() - 1; i++)
+// //     {
+// //         counter = 0;
+// //         tempClique.clear();
+// //         tempClique.resize(3);
+// //         for (size_t j = 0; j < edges.size(); j++)
+// //         {
+// //             // sweep line
+// //             if ((edges[j].startx == strip[i] && edges[j].endx >= strip[i + 1]) ||
+// //                 (edges[j].startx <= strip[i] && edges[j].endx == strip[i + 1]) ||
+// //                 (edges[j].startx < strip[i] && edges[j].endx > strip[i + 1]))
+// //             {
+// //                 if (counter == 0)
+// //                 {
+// //                     // check if Module is in the set
+
+// //                     counter++;
+// //                     if (edges[j].isIN == false)
+// //                     {
+// //                         cout << "error" << endl;
+// //                     }
+// //                     else
+// //                     {
+// //                         tempClique[0].insert(edges[j].ff);
+// //                     }
+// //                 }
+// //                 else if (counter == 1)
+// //                 {
+// //                     counter++;
+// //                     if (edges[j].isIN == false)
+// //                     {
+// //                         tempClique[1] = tempClique[0];
+// //                         tempClique[1].erase(edges[j].ff);
+// //                         if (tempClique[1].size() > 0)
+// //                         {
+// //                             cout << "error" << endl;
+// //                         }
+// //                     }
+// //                 }
+// //                 else if (counter == 2)
+// //                 {
+// //                     counter++;
+// //                     tempClique[2] = tempClique[1];
+// //                     if (edges[j].isIN == false)
+// //                     {
+// //                         tempClique[2].erase(edges[j].ff);
+// //                     }
+// //                     else
+// //                     {
+// //                         tempClique[2].insert(edges[j].ff);
+// //                     }
+// //                 }
+// //                 else
+// //                 {
+// //                     // move tempClique
+// //                     if (tempClique[1].size() > tempClique[0].size() &&
+// //                         tempClique[1].size() > tempClique[2].size() &&
+// //                         tempClique[1].size() > 1)
+// //                     {
+// //                         maxClique.insert(tempClique[1]);
+// //                     }
+// //                     tempClique[0] = tempClique[1];
+// //                     tempClique[1] = tempClique[2];
+// //                     if (edges[j].isIN == false)
+// //                     {
+// //                         tempClique[2].erase(edges[j].ff);
+// //                     }
+// //                     else
+// //                     {
+// //                         tempClique[2].insert(edges[j].ff);
+// //                     }
+// //                 }
+// //             }
+// //             else
+// //             {
+// //                 continue;
+// //             }
+// //         }
+// //     }
+// //     // TODO: remove proper subset
+// //     vector<set<Module *> > toRemove;
+// //     for (auto it1 = maxClique.begin(); it1 != maxClique.end(); ++it1)
+// //     {
+// //         for (auto it2 = maxClique.begin(); it2 != maxClique.end(); ++it2)
+// //         {
+// //             if (it1 != it2 && isStrictSubset(*it1, *it2))
+// //             {
+// //                 toRemove.push_back(*it1);
+// //                 break;
+// //             }
+// //         }
+// //     }
+// //     for (const auto &subset : toRemove)
+// //     {
+// //         maxClique.erase(subset);
+// //     }
+// //     return maxClique;
+// // }
+// bool isStrictSubset(const set<Module *> &a, const set<Module *> &b)
+// {
+//     return includes(b.begin(), b.end(), a.begin(), a.end());
+// }
+
+// bool compareFirst(const Edge &a,
+//                   const Edge &b)
+// {
+//     return a.y < b.y;
+// }

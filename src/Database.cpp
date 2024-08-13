@@ -822,11 +822,6 @@ void Database::setPositive_slack()
         double new_slack = (initial_dist - new_dist) * dis_delay + ff_original_slack;
         if (abs(new_slack) < pow(10, -10)) // floating 誤差值
             new_slack = 0;
-        if (new_slack < 0)
-        {
-            cout << "slack: " << ff_original_slack << " " << new_slack;
-            cout << "\tdistance: " << initial_dist << " " << new_dist << "\tradius: " << radius << endl;
-        }
         _initial_negSlack[i]->getSlackInfor()->setSlack(new_slack);
     }
 }

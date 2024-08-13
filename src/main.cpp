@@ -11,40 +11,24 @@ int main(int argc, char **argv)
   Database testDTB;
   testDTB.parser(argv[1]);
   cout << "Done parser!!!" << endl;
+
+  testDTB.setPositive_slack();
+  cout << "Done positive slack!!!" << endl;
+
   testDTB.builBestCelltype();
   Placement testGraph;
   testGraph.setDatabase(&testDTB);
   testGraph.debankAllFF();
-  for (size_t i = 0; i < testDTB.getNumFF(); i++)
-  {
-    if (testDTB.ff(i)->getTNS() < 0)
-      count++;
-  }
-  // cout << count << endl;
-  testDTB.setPositive_slack();
-  // count = 0;
-  // for (int i = 0; i < testDTB.getNumFF(); ++i)
-  // {
-  //   if (testDTB.ff(i)->getTNS() < 0)
-  //   {
-  //     count++;
-  //   }
-  // }
-  // cout<<testDTB.ff(1518)->getTNS()<<endl;
-  // cout << count << endl;
+  cout << "Done debank!!!" << endl;
 
+  testGraph.netListGraph();
+  cout << "Done Lily Graph!!!" << endl;
 
+  testGraph.windows();
+  cout << "Done Weilun Graph!!!" << endl;
 
-
-
-  // testDTB.builBestCelltype();
-  // Module *testM = testDTB.module(testDTB.getNumModules() - 1);
-  // Placement testGraph;
-  // testGraph.setDatabase(&testDTB);
-  // testGraph.debankFFto1bit(testM->name());
-  // for (size_t i = 0; i < testDTB.getNumFF(); i++)
-  // {
-  // }
+  // for(int i=0;i<testGraph.getNumNode();++i)
+  //   cout<<testGraph.node(i)->getNeighborsize()<<endl;
 
   // testDTB.outputTofile(argv[2]);
   return 0;
