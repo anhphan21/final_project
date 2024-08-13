@@ -11,8 +11,11 @@ int main(int argc, char **argv)
   Database testDTB;
   testDTB.parser(argv[1]);
   cout << "Done parser!!!" << endl;
-  int count = 0;
-  for (int i = 0; i < testDTB.getNumFF(); ++i)
+  testDTB.builBestCelltype();
+  Placement testGraph;
+  testGraph.setDatabase(&testDTB);
+  testGraph.debankAllFF();
+  for (size_t i = 0; i < testDTB.getNumFF(); i++)
   {
     if (testDTB.ff(i)->getTNS() < 0)
       count++;
