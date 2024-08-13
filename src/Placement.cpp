@@ -663,12 +663,14 @@ bool overlap_ornot(vector<Rhombus> &input_rhombus, double &leftBound, double &ri
         return true;
     }
 }
+
 bool feasibleRegion_overlap(const Rectangle *a, const Rectangle *b)
 {
     bool xoverlap = abs(a->getX1() - b->getX1()) < (a->getWidth() / 2 + b->getWidth() / 2);
     bool yoverlap = abs(a->getY1() - b->getY1()) < (a->getHeight() / 2 + b->getHeight() / 2);
     return xoverlap && yoverlap;
 }
+
 void Placement::windows() // construct weilun graph
 {
     double chip_L = _dataBase->getBoundaryLeft();
@@ -848,6 +850,7 @@ void Placement::constructFeasible(Module *ff)
              << endl;
     }
 }
+
 void Placement::netListGraph()
 {
     for (int i = 0; i < this->_dataBase->getNumFF(); i++)

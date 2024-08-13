@@ -104,10 +104,10 @@ public:
     double getTNS()
     {
         double tns=0;
-        for(int i=0;i<numOutPins();++i)          //output pin
+        for(int i=0;i<numInPins();++i)          //input pin
         {
-            if(OutPin(i)->getSlackInfor()->slack()<0)
-                tns+=OutPin(i)->getSlackInfor()->slack();
+            if(InPin(i)->getSlackInfor()->slack()<0)
+                tns+=InPin(i)->getSlackInfor()->slack();
         }
         return tns;
     }

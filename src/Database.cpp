@@ -822,6 +822,11 @@ void Database::setPositive_slack()
         double new_slack = (initial_dist - new_dist) * dis_delay + ff_original_slack;
         if (abs(new_slack) < pow(10, -10)) // floating 誤差值
             new_slack = 0;
+        if (new_slack < 0)
+        {
+            cout << "slack: " << ff_original_slack << " " << new_slack;
+            cout << "\tdistance: " << initial_dist << " " << new_dist << "\tradius: " << radius << endl;
+        }
         _initial_negSlack[i]->getSlackInfor()->setSlack(new_slack);
     }
 }
@@ -833,13 +838,28 @@ void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, dou
     double initial_dist = deltaX + deltaY;
     if (initial_dist <= radius)
         return; // don't have to adjust
+    
     double reduceBy = initial_dist - radius;
     if (deltaX > deltaY)
+    {
+        if(deltaX - reduceBy < 0)
+        {
+            deltaY = max(deltaY - reduceBy, 0.0);
+        }
         deltaX = max(deltaX - reduceBy, 0.0);
+    }
     else
+    {
+        if(deltaY - reduceBy < 0)
+        {
+            deltaX = max(deltaX - reduceBy, 0.0);
+        }
         deltaY = max(deltaY - reduceBy, 0.0);
+    }
+        
 
-    adjust_pin->setPosition((fix_pin->x() + deltaX * (adjust_pin->x() > fix_pin->x() ? 1 : -1)), (fix_pin->y() + deltaY * (adjust_pin->y() > fix_pin->y() ? 1 : -1)));
+    adjust_pin->setPosition((fix_pin->x() + deltaX * (adjust_pin->x() > fix_pin->x() ? 1 : -1)),
+                            (fix_pin->y() + deltaY * (adjust_pin->y() > fix_pin->y() ? 1 : -1)));
     // snap to grid
     adjust_pin->setPosition((((adjust_pin->x() + grid_width) / grid_width) * grid_width), (((adjust_pin->y() + grid_height) / grid_height) * grid_height));
     double new_dist = abs(fix_pin->x() - adjust_pin->x()) + abs(fix_pin->y() - adjust_pin->y());
