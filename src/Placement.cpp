@@ -1,6 +1,6 @@
 #include "Placement.h"
 // #include <mutex> // threads header file but cannot use in C++98
-#include <thread>
+// #include <thread>
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
@@ -165,7 +165,7 @@ void Placement::eraseEdge(unsigned idx1, unsigned idx2)
     return;
 }
 
-int stoi(const std::string &str)
+int my_stoi(const string &str)
 {
     int num = 0;
     for (size_t i = 0; i < str.length(); ++i)
@@ -182,7 +182,7 @@ int stoi(const std::string &str)
     return num;
 }
 
-string itos(int num)
+string my_itos(int num)
 {
     string ans = "";
     while (num)
@@ -243,9 +243,21 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
     string m3name = _dataBase->module(_dataBase->getNumModules() - 1)->name();
     string letters;
     string numbers;
-    for (char c : m3name)
+    //    for (char c : m3name)
+    //    {
+    //        if (std::isdigit(c))
+    //        {
+    //            numbers += c;
+    //        }
+    //        else
+    //        {
+    //            letters += c;
+    //        }S
+    //    }
+    for (string::size_type i = 0; i < m3name.size(); ++i)
     {
-        if (std::isdigit(c))
+        char c = m3name[i];
+        if (std::isdigit(static_cast<unsigned char>(c)))
         {
             numbers += c;
         }
@@ -254,9 +266,8 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
             letters += c;
         }
     }
-    int num;
-    stringstream(numbers) >> num;
-    m3name = letters + itos(num + 1);
+    int num = my_stoi(numbers);
+    m3name = letters + my_itos(num + 1);
     random_device rd;
     mt19937 generator(rd());
     uniform_int_distribution<unsigned> distribution(0, _dataBase->getNumfflibBit((m1->cellType()->getnumBit()) * 2) - 1);
@@ -270,7 +281,7 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
         if (m1->InPin(i)->name() != "CLK" && m1->OutPin(i)->name() != "clk")
         {
             string str = "D";
-            str = str + itos(pinid);
+            str = str + my_itos(pinid);
             m1->InPin(i)->setPinName(str);
             pinid++;
         }
@@ -280,7 +291,7 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
         if (m2->InPin(i)->name() != "CLK" && m2->OutPin(i)->name() != "clk")
         {
             string str = "D";
-            str = str + itos(pinid);
+            str = str + my_itos(pinid);
             m2->InPin(i)->setPinName(str);
             pinid++;
         }
@@ -291,7 +302,7 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
         if (m1->OutPin(i)->name() != "CLK" && m1->OutPin(i)->name() != "clk")
         {
             string str = "Q";
-            str = str + itos(pinid);
+            str = str + my_itos(pinid);
             m1->OutPin(i)->setPinName(str);
             pinid++;
         }
@@ -301,7 +312,7 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
         if (m2->OutPin(i)->name() != "CLK" && m2->OutPin(i)->name() != "clk")
         {
             string str = "Q";
-            str = str + itos(pinid);
+            str = str + my_itos(pinid);
             m2->OutPin(i)->setPinName(str);
             pinid++;
         }
@@ -1046,8 +1057,25 @@ void Placement::netListGraph()
 //    //}
 
 // }
+void Placement::debankAllFF()
+{
+    unsigned initFFnum = _dataBase->getNumFF();
+    cout << "initFFnum: " << initFFnum << endl;
+    cout << "module num " << _dataBase->getNumModules() << endl;
+    for (size_t i = 0; i < initFFnum; i++)
+    {
+        if (_dataBase->ff(i)->cellType()->numBit() > 1)
+        {
+            string Dname = _dataBase->ff(i)->name();
+            cout << "ffname: " << Dname << endl;
+            debankFFto1bit(Dname);
+        }
+    }
+    return;
+}
 void Placement::debankFFto1bit(string ffname)
 {
+    cout << "debank" << endl;
     // TODO: Each FF position after debanking
     int celltypeID = 0;
     Module *target = _dataBase->getModuleByName(ffname);
@@ -1084,9 +1112,10 @@ void Placement::debankFFto1bit(string ffname)
     string nname = _dataBase->module(_dataBase->getNumModules() - 1)->name();
     string letters;
     string numbers;
-    for (char c : nname)
+    for (string::size_type i = 0; i < nname.size(); ++i)
     {
-        if (isdigit(c))
+        char c = nname[i];
+        if (std::isdigit(static_cast<unsigned char>(c)))
         {
             numbers += c;
         }
@@ -1095,17 +1124,17 @@ void Placement::debankFFto1bit(string ffname)
             letters += c;
         }
     }
-    int num;
-    stringstream(numbers) >> num;
-    for (size_t i = 0; i < ffbit; i++)
+    int num = my_stoi(numbers);
+    for (size_t i = 0; i < ffbit - 1; i++)
     {
         num++;
-        nname = letters + to_string(num);
+        nname = letters + my_itos(num);
         newfflist[i]->setName(nname);
     }
     // naming =================================================================
     newfflist[ffbit - 1]->setInPin(newfflist[ffbit - 1]->cellType()->clkPinIdx(), target->InPin(target->cellType()->clkPinIdx()));
     newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->setModulePtr(newfflist[ffbit - 1]);
+    newfflist[ffbit - 1]->setName(target->name());
     for (size_t i = 0; i < ffbit - 1; i++)
     {
         Pin *newCLK = new Pin();
@@ -1152,11 +1181,156 @@ void Placement::debankFFto1bit(string ffname)
     for (size_t i = 0; i < ffbit - 1; i++)
     {
         _dataBase->addFF(newfflist[i]);
+        cout << "module name : " << newfflist[i]->name() << endl;
         _dataBase->addModule(newfflist[i]);
     }
     return;
 }
+set<set<Module *>> Placement::calMaxClique(unsigned clkidx)
+{
+    // input : clk net id
+    // output : maximal clique(without proper subset)
+    Net *targetNet = _dataBase->net(clkidx);
+    if (targetNet->clkFlag() == false)
+    {
+        cout << "error: input isn't a clk" << endl;
+        return;
+    }
+    ModuleList targetFFs;
+    vector<double> strip; // start pos of every part of strip
+    set<Edge> edgesSet;
+    vector<Edge> edges; // Module, y , start x , end x
+    edges.clear();
+    edgesSet.clear();
+    strip.clear();
+    targetFFs.clear();
+    for (size_t i = 0; i < targetNet->numPins(); i++)
+    {
+        targetFFs.push_back(targetNet->pin(i)->module());
+        strip.push_back(targetFFs[i]->getFeasibleRegion()->left());
+        strip.push_back(targetFFs[i]->getFeasibleRegion()->right());
+        Edge ee;
+        ee.ff = targetFFs[i];
+        ee.y = targetFFs[i]->getFeasibleRegion()->top();
+        ee.isIN = true;
+        ee.startx = targetFFs[i]->getFeasibleRegion()->left();
+        ee.endx = targetFFs[i]->getFeasibleRegion()->right();
+        edgesSet.insert(ee);
+        Edge ee1;
+        ee1.ff = targetFFs[i];
+        ee1.y = targetFFs[i]->getFeasibleRegion()->bottom();
+        ee1.isIN = false;
+        ee1.startx = targetFFs[i]->getFeasibleRegion()->left();
+        ee1.endx = targetFFs[i]->getFeasibleRegion()->right();
+        edgesSet.insert(ee1);
+    }
+    sort(strip.begin(), strip.end());
+    strip.erase(unique(strip.begin(), strip.end()), strip.end());
+    edges.assign(edgesSet.begin(), edgesSet.end());
+    sort(edges.begin(), edges.end(), compareFirst);
+    set<set<Module *>> maxClique;
+    vector<set<Module *>> tempClique; // size == 3 , for checking greater than above and below
+    maxClique.clear();
+    int counter = 0;
+    // TODO: currently traverse every edge per strip, maybe a better O() way to implement
+    for (size_t i = 0; i < strip.size() - 1; i++)
+    {
+        counter = 0;
+        tempClique.clear();
+        tempClique.resize(3);
+        for (size_t j = 0; j < edges.size(); j++)
+        {
+            // sweep line
+            if ((edges[j].startx == strip[i] && edges[j].endx >= strip[i + 1]) ||
+                (edges[j].startx <= strip[i] && edges[j].endx == strip[i + 1]) ||
+                (edges[j].startx < strip[i] && edges[j].endx > strip[i + 1]))
+            {
+                if (counter == 0)
+                {
+                    // check if Module is in the set
 
+                    counter++;
+                    if (edges[j].isIN == false)
+                    {
+                        cout << "error" << endl;
+                    }
+                    else
+                    {
+                        tempClique[0].insert(edges[j].ff);
+                    }
+                }
+                else if (counter == 1)
+                {
+                    counter++;
+                    if (edges[j].isIN == false)
+                    {
+                        tempClique[1] = tempClique[0];
+                        tempClique[1].erase(edges[j].ff);
+                        if (tempClique[1].size() > 0)
+                        {
+                            cout << "error" << endl;
+                        }
+                    }
+                }
+                else if (counter == 2)
+                {
+                    counter++;
+                    tempClique[2] = tempClique[1];
+                    if (edges[j].isIN == false)
+                    {
+                        tempClique[2].erase(edges[j].ff);
+                    }
+                    else
+                    {
+                        tempClique[2].insert(edges[j].ff);
+                    }
+                }
+                else
+                {
+                    // move tempClique
+                    if (tempClique[1].size() > tempClique[0].size() &&
+                        tempClique[1].size() > tempClique[2].size() &&
+                        tempClique[1].size() > 1)
+                    {
+                        maxClique.insert(tempClique[1]);
+                    }
+                    tempClique[0] = tempClique[1];
+                    tempClique[1] = tempClique[2];
+                    if (edges[j].isIN == false)
+                    {
+                        tempClique[2].erase(edges[j].ff);
+                    }
+                    else
+                    {
+                        tempClique[2].insert(edges[j].ff);
+                    }
+                }
+            }
+            else
+            {
+                continue;
+            }
+        }
+    }
+    // TODO: remove proper subset
+    vector<set<Module *>> toRemove;
+    for (auto it1 = maxClique.begin(); it1 != maxClique.end(); ++it1)
+    {
+        for (auto it2 = maxClique.begin(); it2 != maxClique.end(); ++it2)
+        {
+            if (it1 != it2 && isStrictSubset(*it1, *it2))
+            {
+                toRemove.push_back(*it1);
+                break;
+            }
+        }
+    }
+    for (const auto &subset : toRemove)
+    {
+        maxClique.erase(subset);
+    }
+    return maxClique;
+}
 bool isStrictSubset(const set<Module *> &a, const set<Module *> &b)
 {
     return includes(b.begin(), b.end(), a.begin(), a.end());
@@ -1167,266 +1341,3 @@ bool compareFirst(const Edge &a,
 {
     return a.y < b.y;
 }
-// void Placement::debankFFto1bit(string ffname)
-// {
-//     // TODO: need to know which FF should be chosed
-//     // TODO: Each FF position after debanking
-//     int celltypeID = 0;
-//     Module *target = _dataBase->getModuleByName(ffname);
-//     int ffbit = target->cellType()->getnumBit();
-//     vector<Module *> newfflist;
-//     newfflist.clear();
-//     string pinName;
-//     // TODO:radius
-//     vector<pair<double, double>> newPos;
-//     for (size_t i = 0; i < ffbit; i++)
-//     {
-//         newPos.push_back(make_pair(target->x(), target->y()));
-//         newfflist.push_back(new Module());
-//         cout << newfflist.size() << endl;
-//         newfflist[i]->setCellType(_dataBase->ffLib(1, celltypeID));
-//         newfflist[i]->setPinsize(3);
-//         newfflist[i]->setInPin(0, target->InPin(i));
-//         newfflist[i]->InPin(0)->setOffset(newfflist[i]->cellType()->pinOffsetX(1), newfflist[i]->cellType()->pinOffsetY(1));
-//         newfflist[i]->InPin(0)->setPosition(newfflist[i]->cellType()->pinOffsetX(1) + newPos[i].first,
-//                                             newfflist[i]->cellType()->pinOffsetY(1) + newPos[i].second);
-//         pinName = "D";
-//         newfflist[i]->InPin(0)->setPinName(pinName);
-//         newfflist[i]->InPin(0)->setModulePtr(newfflist[i]);
-
-//         newfflist[i]->setOutPin(0, target->OutPin(i));
-//         newfflist[i]->OutPin(0)->setOffset(newfflist[i]->cellType()->pinOffsetX(0), newfflist[i]->cellType()->pinOffsetY(0));
-//         newfflist[i]->OutPin(0)->setPosition(newfflist[i]->cellType()->pinOffsetX(0) + newPos[i].first,
-//                                              newfflist[i]->cellType()->pinOffsetY(0) + newPos[i].second);
-//         pinName = "Q";
-//         newfflist[i]->OutPin(0)->setPinName(pinName);
-//         newfflist[i]->OutPin(0)->setModulePtr(newfflist[i]);
-//     }
-//     newfflist[ffbit - 1]->setName(ffname);
-//     // naming =================================================================
-//     string nname = _dataBase->module(_dataBase->getNumModules() - 1)->name();
-//     string letters;
-//     string numbers;
-//     for (char c : nname)
-//     {
-//         if (isdigit(c))
-//         {
-//             numbers += c;
-//         }
-//         else
-//         {
-//             letters += c;
-//         }
-//     }
-//     int num = stoi(numbers);
-//     for (size_t i = 0; i < ffbit - 1; i++)
-//     {
-//         num++;
-//         nname = letters + to_string(num);
-//         newfflist[i]->setName(nname);
-//     }
-//     // naming =================================================================
-//     newfflist[ffbit - 1]->setInPin(newfflist[ffbit - 1]->cellType()->clkPinIdx(), target->InPin(target->cellType()->clkPinIdx()));
-//     newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->setModulePtr(newfflist[ffbit - 1]);
-//     for (size_t i = 0; i < ffbit - 1; i++)
-//     {
-//         Pin *newCLK = new Pin();
-//         string n = "CLK";
-//         newCLK->setPinName(n);
-//         newCLK->setOffset(newfflist[i]->cellType()->pinOffsetX(newfflist[i]->cellType()->clkPinIdx()), newfflist[i]->cellType()->pinOffsetY(newfflist[i]->cellType()->clkPinIdx()));
-//         newCLK->setPosition(newfflist[i]->x() + newCLK->x(), newfflist[i]->y() + newCLK->y());
-//         newCLK->setModulePtr(newfflist[i]);
-//         newfflist[i]->setInPin(newfflist[i]->cellType()->clkPinIdx(), newCLK);
-//         // connecting pin to net
-//         newCLK->setNetPtr(newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->net());
-//         newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->net()->addPin(newCLK);
-//         History *newH = new History();
-//         newH->setNewPin(newCLK);
-//         newH->setOldPinName(n);
-//         newH->setOldModuleName(ffname);
-//         // add pin into database
-//         _dataBase->addPin(newCLK);
-//     }
-//     for (size_t i = 0; i < ffbit; i++)
-//     {
-//         newfflist[i]->setPosition(newPos[i].first, newPos[i].second);
-//     }
-//     for (size_t i = 0; i < _dataBase->getNumModules(); i++)
-//     {
-//         if (_dataBase->module(i) == target)
-//         {
-//             _dataBase->setModule(i, newfflist[ffbit - 1]);
-//             break;
-//         }
-//     }
-//     for (size_t i = 0; i < _dataBase->getNumFF(); i++)
-//     {
-//         if (_dataBase->ff(i) == target)
-//         {
-//             _dataBase->setFF(i, newfflist[ffbit - 1]);
-//             break;
-//         }
-//     }
-//     free(target);
-//     for (size_t i = 0; i < ffbit - 1; i++)
-//     {
-//         _dataBase->addFF(newfflist[i]);
-//         _dataBase->addModule(newfflist[i]);
-//     }
-//     return;
-// }
-// // set<set<Module *>> Placement::calMaxClique(unsigned clkidx)
-// // {
-// //     // input : clk net id
-// //     // output : maximal clique(without proper subset)
-// //     Net *targetNet = _dataBase->net(clkidx);
-// //     if (targetNet->clkFlag() == false)
-// //     {
-// //         cout << "error: input isn't a clk" << endl;
-// //         return;
-// //     }
-// //     ModuleList targetFFs;
-// //     vector<double> strip; // start pos of every part of strip
-// //     set<Edge> edgesSet;
-// //     vector<Edge> edges; // Module, y , start x , end x
-// //     edges.clear();
-// //     edgesSet.clear();
-// //     strip.clear();
-// //     targetFFs.clear();
-// //     for (size_t i = 0; i < targetNet->numPins(); i++)
-// //     {
-// //         targetFFs.push_back(targetNet->pin(i)->module());
-// //         strip.push_back(targetFFs[i]->getFeasibleRegion()->left());
-// //         strip.push_back(targetFFs[i]->getFeasibleRegion()->right());
-// //         Edge ee;
-// //         ee.ff = targetFFs[i];
-// //         ee.y = targetFFs[i]->getFeasibleRegion()->top();
-// //         ee.isIN = true;
-// //         ee.startx = targetFFs[i]->getFeasibleRegion()->left();
-// //         ee.endx = targetFFs[i]->getFeasibleRegion()->right();
-// //         edgesSet.insert(ee);
-// //         Edge ee1;
-// //         ee1.ff = targetFFs[i];
-// //         ee1.y = targetFFs[i]->getFeasibleRegion()->bottom();
-// //         ee1.isIN = false;
-// //         ee1.startx = targetFFs[i]->getFeasibleRegion()->left();
-// //         ee1.endx = targetFFs[i]->getFeasibleRegion()->right();
-// //         edgesSet.insert(ee1);
-// //     }
-// //     sort(strip.begin(), strip.end());
-// //     strip.erase(unique(strip.begin(), strip.end()), strip.end());
-// //     edges.assign(edgesSet.begin(), edgesSet.end());
-// //     sort(edges.begin(), edges.end(), compareFirst);
-// //     set<set<Module *> > maxClique;
-// //     vector<set<Module *> > tempClique; // size == 3 , for checking greater than above and below
-// //     maxClique.clear();
-// //     int counter = 0;
-// //     // TODO: currently traverse every edge per strip, maybe a better O() way to implement
-// //     for (size_t i = 0; i < strip.size() - 1; i++)
-// //     {
-// //         counter = 0;
-// //         tempClique.clear();
-// //         tempClique.resize(3);
-// //         for (size_t j = 0; j < edges.size(); j++)
-// //         {
-// //             // sweep line
-// //             if ((edges[j].startx == strip[i] && edges[j].endx >= strip[i + 1]) ||
-// //                 (edges[j].startx <= strip[i] && edges[j].endx == strip[i + 1]) ||
-// //                 (edges[j].startx < strip[i] && edges[j].endx > strip[i + 1]))
-// //             {
-// //                 if (counter == 0)
-// //                 {
-// //                     // check if Module is in the set
-
-// //                     counter++;
-// //                     if (edges[j].isIN == false)
-// //                     {
-// //                         cout << "error" << endl;
-// //                     }
-// //                     else
-// //                     {
-// //                         tempClique[0].insert(edges[j].ff);
-// //                     }
-// //                 }
-// //                 else if (counter == 1)
-// //                 {
-// //                     counter++;
-// //                     if (edges[j].isIN == false)
-// //                     {
-// //                         tempClique[1] = tempClique[0];
-// //                         tempClique[1].erase(edges[j].ff);
-// //                         if (tempClique[1].size() > 0)
-// //                         {
-// //                             cout << "error" << endl;
-// //                         }
-// //                     }
-// //                 }
-// //                 else if (counter == 2)
-// //                 {
-// //                     counter++;
-// //                     tempClique[2] = tempClique[1];
-// //                     if (edges[j].isIN == false)
-// //                     {
-// //                         tempClique[2].erase(edges[j].ff);
-// //                     }
-// //                     else
-// //                     {
-// //                         tempClique[2].insert(edges[j].ff);
-// //                     }
-// //                 }
-// //                 else
-// //                 {
-// //                     // move tempClique
-// //                     if (tempClique[1].size() > tempClique[0].size() &&
-// //                         tempClique[1].size() > tempClique[2].size() &&
-// //                         tempClique[1].size() > 1)
-// //                     {
-// //                         maxClique.insert(tempClique[1]);
-// //                     }
-// //                     tempClique[0] = tempClique[1];
-// //                     tempClique[1] = tempClique[2];
-// //                     if (edges[j].isIN == false)
-// //                     {
-// //                         tempClique[2].erase(edges[j].ff);
-// //                     }
-// //                     else
-// //                     {
-// //                         tempClique[2].insert(edges[j].ff);
-// //                     }
-// //                 }
-// //             }
-// //             else
-// //             {
-// //                 continue;
-// //             }
-// //         }
-// //     }
-// //     // TODO: remove proper subset
-// //     vector<set<Module *> > toRemove;
-// //     for (auto it1 = maxClique.begin(); it1 != maxClique.end(); ++it1)
-// //     {
-// //         for (auto it2 = maxClique.begin(); it2 != maxClique.end(); ++it2)
-// //         {
-// //             if (it1 != it2 && isStrictSubset(*it1, *it2))
-// //             {
-// //                 toRemove.push_back(*it1);
-// //                 break;
-// //             }
-// //         }
-// //     }
-// //     for (const auto &subset : toRemove)
-// //     {
-// //         maxClique.erase(subset);
-// //     }
-// //     return maxClique;
-// // }
-// bool isStrictSubset(const set<Module *> &a, const set<Module *> &b)
-// {
-//     return includes(b.begin(), b.end(), a.begin(), a.end());
-// }
-
-// bool compareFirst(const Edge &a,
-//                   const Edge &b)
-// {
-//     return a.y < b.y;
-// }

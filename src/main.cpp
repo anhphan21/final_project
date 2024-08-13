@@ -12,10 +12,9 @@ int main(int argc, char **argv)
   testDTB.parser(argv[1]);
   cout << "Done parser!!!" << endl;
   testDTB.builBestCelltype();
-  Module *testM = testDTB.module(testDTB.getNumModules() - 1);
   Placement testGraph;
   testGraph.setDatabase(&testDTB);
-  testGraph.debankFFto1bit(testM->name());
+  testGraph.debankAllFF();
   for (size_t i = 0; i < testDTB.getNumFF(); i++)
   {
   }
