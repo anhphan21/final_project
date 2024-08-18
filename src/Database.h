@@ -186,11 +186,8 @@ public:
     unsigned getDen(double) const;
     double totalCost(double) const;
 
-    //FFlib
-    // int getMaxbit(){return _ffLib.size();}
-    // FFCell *getFFlib(int bit){return _ffLib[bit][0];}
-    // unsigned getMaxBitFFLib() const { return _ffLib.end()->first; }
-
+    int getbincol(){return _numBinCol;}
+    int getbinrow(){return _numBinRow;}
 
     // let all slack be positive
     void setPositive_slack();

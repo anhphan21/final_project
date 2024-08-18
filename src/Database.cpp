@@ -32,7 +32,7 @@ Database::Database()
       _lambda(-1),
       record(0) {}
 
-Database::~Database(){}
+Database::~Database() {}
 
 void Database::parser(const string &filename)
 {
@@ -226,7 +226,7 @@ void Database::parser(const string &filename)
                 // auto it = CellType2Ptr.find(type);
                 // if (type.find("G") != string::npos) {
                 // cout << "this is Gate type" << endl;
-                std::map<std::string, BaseCell*>::iterator it = CellType2Ptr.find(type);
+                std::map<std::string, BaseCell *>::iterator it = CellType2Ptr.find(type);
                 map<string, Pin *> PinOfM;
                 if (it == CellType2Ptr.end())
                 {
@@ -294,7 +294,7 @@ void Database::parser(const string &filename)
                     {
                         // 如果沒有'/'的Net pin角 代表會再IODesign  this is
                         // design pin
-                        std::map<std::string, Pin*>::iterator it = IODesign.find(type);
+                        std::map<std::string, Pin *>::iterator it = IODesign.find(type);
 
                         if (it == IODesign.end())
                         {
@@ -322,7 +322,7 @@ void Database::parser(const string &filename)
                         // cout << "有'/'切割的Net Pin" << endl;
                         FFname = type.substr(0, pos);
                         TargetPin = type.substr(pos + 1);
-                        std::map<std::string, Module*>::iterator it = ModuleName2Ptr.find(FFname);
+                        std::map<std::string, Module *>::iterator it = ModuleName2Ptr.find(FFname);
                         std::map<std::string, int>::iterator it2 = OriginModuleN.find(FFname);
                         if (it2 == OriginModuleN.end())
                         {
@@ -799,7 +799,6 @@ double Database::totalCost(double _denThrs) const
     double _areaCost = 0;
     double _powerCost = 0;
     double _tnsCost = getTNS();
-
     for (size_t i = 0, endi = _ffModules.size(); i < endi; i++)
     {
         _powerCost += _ffModules[i]->getPower();
@@ -834,13 +833,28 @@ void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, dou
     double initial_dist = deltaX + deltaY;
     if (initial_dist <= radius)
         return; // don't have to adjust
+    
     double reduceBy = initial_dist - radius;
     if (deltaX > deltaY)
+    {
+        if(deltaX - reduceBy < 0)
+        {
+            deltaY = max(deltaY - reduceBy, 0.0);
+        }
         deltaX = max(deltaX - reduceBy, 0.0);
+    }
     else
+    {
+        if(deltaY - reduceBy < 0)
+        {
+            deltaX = max(deltaX - reduceBy, 0.0);
+        }
         deltaY = max(deltaY - reduceBy, 0.0);
+    }
+        
 
-    adjust_pin->setPosition((fix_pin->x() + deltaX * (adjust_pin->x() > fix_pin->x() ? 1 : -1)), (fix_pin->y() + deltaY * (adjust_pin->y() > fix_pin->y() ? 1 : -1)));
+    adjust_pin->setPosition((fix_pin->x() + deltaX * (adjust_pin->x() > fix_pin->x() ? 1 : -1)),
+                            (fix_pin->y() + deltaY * (adjust_pin->y() > fix_pin->y() ? 1 : -1)));
     // snap to grid
     adjust_pin->setPosition((((adjust_pin->x() + grid_width) / grid_width) * grid_width), (((adjust_pin->y() + grid_height) / grid_height) * grid_height));
     double new_dist = abs(fix_pin->x() - adjust_pin->x()) + abs(fix_pin->y() - adjust_pin->y());
@@ -892,14 +906,12 @@ void Database::builBestCelltype()
             double totcost = 0;
             totcost += maxCost - disCost[j];
             totcost += cellv[j]->getArea() + cellv[j]->getPower();
-            cout << "total cost of " << cellv[j]->getName() << " is : " << totcost << endl;
             if (totcost < mintotCost)
             {
                 mintotCost = totcost;
                 bestid = j;
             }
         }
-        cout << "best cell type is " << cellv[bestid]->getName() << "cost is : " << mintotCost << endl;
         _bestCells[pow(2, i)] = cellv[bestid];
     }
     return;
@@ -938,17 +950,17 @@ void Database::outputTofile(const string &filename)
         else
             letters += nname[i];
     }
-    //for (char c : nname)
+    // for (char c : nname)
     //{
-    //    if (isdigit(c))
-    //    {
-    //        numbers += c;
-    //    }
-    //    else
-    //    {
-    //        letters += c;
-    //    }
-    //}
+    //     if (isdigit(c))
+    //     {
+    //         numbers += c;
+    //     }
+    //     else
+    //     {
+    //         letters += c;
+    //     }
+    // }
     int num = atoi(numbers.c_str());
     for (size_t i = 0; i < _ffModules.size(); i++)
     {
@@ -962,17 +974,17 @@ void Database::outputTofile(const string &filename)
             else
                 letters += nname[i];
         }
-        //for (char c : nname)
+        // for (char c : nname)
         //{
-        //    if (isdigit(c))
-        //    {
-        //        numbers += c;
-        //    }
-        //    else
-        //    {
-        //        letters += c;
-        //    }
-        //}
+        //     if (isdigit(c))
+        //     {
+        //         numbers += c;
+        //     }
+        //     else
+        //     {
+        //         letters += c;
+        //     }
+        // }
         num++;
         nname = letters + itos(num);
         _ffModules[i]->setName(nname);
@@ -991,5 +1003,6 @@ void Database::outputTofile(const string &filename)
                     << " map " << _pins[i]->module()->name() << "/" << _pins[i]->name() << endl;
         }
     }
+
     return;
 }

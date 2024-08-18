@@ -4,16 +4,13 @@
 #include <stdlib.h>
 #include "Database.h"
 #include "DatabaseDef.h"
-#include "Placement.h"
+//#include "Placement.h"
 
 int main(int argc, char **argv)
 {
     Database testDTB;
     testDTB.parser(argv[1]);
     cout << "Done parser!!!" << endl;
-    Placement testGraph;
-    testGraph.setDatabase(&testDTB);
-    testGraph.netListGraph(); 
     testDTB.outputTofile(argv[2]);
     // testDTB.builBestCelltype();
     // vector<double> PAperbit;

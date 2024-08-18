@@ -20,13 +20,16 @@ public:
        _nodes[0] = NULL;
    };
    void mainLoop();
-   void constructFeasible(Module *ff,Rhombus in,vector<Rhombus > out);
-   Rhombus findInputRegion(Module *ff);
-   vector<Rhombus > findOutputRegion(Module *ff);
+   void constructFeasible(Module *ff);
+   Rhombus *findInputRegion(Module *ff);
+   vector<Rhombus *> findOutputRegion(Module *ff);
 
+   void windows();
    void constructGraph();
    set<set<Module *> > calMaxClique(unsigned clkidx);
    double cal_cost(Module *ff1, Module *ff2);
+   double cal_total_cost();
+   double getDen();
 
 
    NodeList findMST();
@@ -46,6 +49,7 @@ public:
    void mergeFFinG();
    void eraseEdge(unsigned idx1, unsigned idx2);
    void merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx);
+   void debankAllFF();
    void debankFFto1bit(string ffname);
    void whichFFtoChose();
    // get design property
