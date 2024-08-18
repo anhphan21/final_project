@@ -104,7 +104,7 @@ void Database::parser(const string &filename)
                 {
                     type = "CLK";
                 }
-                IODesign.insert({type, pinptr});
+                IODesign.insert(make_pair(type, pinptr));
                 // IODesignPin.insert({type, pinptr});
             }
             // PinName2Ptr.insert({"IODesignIn", IODesignPin});
@@ -123,13 +123,13 @@ void Database::parser(const string &filename)
                 Pin *pinptr = new Pin();
                 // output(num)->name(type);
                 // output(num)->setPosition(x, y);
-                IODesign.insert({type, pinptr});
+                IODesign.insert(make_pair(type, pinptr));
                 pinptr->setPinName(type);
                 pinptr->setPosition(x, y);
                 pinptr->setModulePtr(NULL);
                 _pins.push_back(pinptr);
                 // IODesignPin.insert({type, pinptr});
-                IODesign.insert({type, pinptr});
+                IODesign.insert(make_pair(type, pinptr));
             }
             // PinName2Ptr.insert({"IODesignOut", IODesignPin});
         }
@@ -180,7 +180,7 @@ void Database::parser(const string &filename)
             iss >> id >> width >> height >> pinCount;
             BaseCell *bptr = new BaseCell(id, width, height, pinCount);
             addCellLib(bptr);
-            CellType2Ptr.insert({id, bptr});
+            CellType2Ptr.insert(make_pair(id, bptr));
             string temp, name;
             double x, y;
             bool _check;
@@ -326,7 +326,7 @@ void Database::parser(const string &filename)
                         std::map<std::string, int>::iterator it2 = OriginModuleN.find(FFname);
                         if (it2 == OriginModuleN.end())
                         {
-                            OriginModuleN.insert({FFname, 1});
+                            OriginModuleN.insert(make_pair(FFname, 1));
                         }
                         else
                         {
@@ -349,6 +349,12 @@ void Database::parser(const string &filename)
                             _tPin = _tModule->pin(_type->getPinIdxFromName(TargetPin));
                             _tPin->setNetPtr(netptr);
                             netptr->addPin(_tPin);
+                        }
+                        if (type.find("CLK") != string::npos)
+                        {
+                            // 找到clk
+                            Isclk = true;
+                            netptr->setclkFlag(true);
                         }
                     }
                 }
@@ -833,11 +839,11 @@ void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, dou
     double initial_dist = deltaX + deltaY;
     if (initial_dist <= radius)
         return; // don't have to adjust
-    
+
     double reduceBy = initial_dist - radius;
     if (deltaX > deltaY)
     {
-        if(deltaX - reduceBy < 0)
+        if (deltaX - reduceBy < 0)
         {
             deltaY = max(deltaY - reduceBy, 0.0);
         }
@@ -845,13 +851,12 @@ void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, dou
     }
     else
     {
-        if(deltaY - reduceBy < 0)
+        if (deltaY - reduceBy < 0)
         {
             deltaX = max(deltaX - reduceBy, 0.0);
         }
         deltaY = max(deltaY - reduceBy, 0.0);
     }
-        
 
     adjust_pin->setPosition((fix_pin->x() + deltaX * (adjust_pin->x() > fix_pin->x() ? 1 : -1)),
                             (fix_pin->y() + deltaY * (adjust_pin->y() > fix_pin->y() ? 1 : -1)));
