@@ -9,6 +9,7 @@
 #include "Pin.h"
 #include "Row.h"
 #include <iomanip>
+#include <set>
 using namespace std;
 
 Database::Database()
@@ -407,7 +408,7 @@ void Database::parser(const string &filename)
             Pin *_tDPin = _tModule->pin(_type->getPinIdxFromName(Dpin));
             _tDPin->setSlack(slack);
             if (slack < 0)
-                _initial_negSlack.push_back(_tDPin);
+                _initial_negSlack.insert(_tDPin);
         }
         else if (keyword == "GatePower")
         {
@@ -478,7 +479,7 @@ void Database::resetBin()
     }
 }
 
-void Database::updateBinUtil()
+int Database::updateBinUtil()
 {
     Module *_tmpModule;
     double _tmpCenterX, _tmpCenterY;
@@ -509,6 +510,20 @@ void Database::updateBinUtil()
             }
         }
     }
+
+    //calculate bin density
+    int num_violated_bin = 0;
+    for (size_t i = 0; i < _numBinCol; ++i)
+    {
+        for (size_t j = 0; j < _numBinRow; ++j)
+        {
+            if(_bins[i][j]->getDensity()>getbinutil()*0.01)
+            {
+                num_violated_bin++;
+            }            
+        }
+    }
+    return num_violated_bin;
 }
 
 // For timing slack
@@ -807,24 +822,49 @@ double Database::totalCost(double _denThrs) const
 
     return _alpha * _tnsCost + _beta * _powerCost + _gamma * _areaCost + _lambda * getDen(_denThrs);
 }
-void Database::setPositive_slack()
-{
-    for (int i = 0; i < _initial_negSlack.size(); ++i)
-    {
-        double ff_original_slack = _initial_negSlack[i]->getSlackInfor()->slack();
-        double dis_delay = getDisplacementDelay();
-        double initial_dist = abs(_initial_negSlack[i]->net()->OutputPin()->x() - _initial_negSlack[i]->x()) + abs(_initial_negSlack[i]->net()->OutputPin()->y() - _initial_negSlack[i]->y());
-        double radius = (ff_original_slack + dis_delay * initial_dist) / dis_delay;
-        adjust_position(_initial_negSlack[i]->net()->OutputPin(), _initial_negSlack[i], radius, row(0)->width(), row(0)->height());
+void Database::setPositive_slack() {
+    std::set<Pin *> processedPins; // 用於存儲已處理過的 Pins
 
-        // update slack
-        double new_dist = abs(_initial_negSlack[i]->net()->OutputPin()->x() - _initial_negSlack[i]->x()) + abs(_initial_negSlack[i]->net()->OutputPin()->y() - _initial_negSlack[i]->y());
-        double new_slack = (initial_dist - new_dist) * dis_delay + ff_original_slack;
-        if (abs(new_slack) < pow(10, -10)) // floating 誤差值
-            new_slack = 0;
-        _initial_negSlack[i]->getSlackInfor()->setSlack(new_slack);
+    for (std::set<Pin *>::iterator it = _initial_negSlack.begin(); it != _initial_negSlack.end(); ++it) {
+        Pin* currentPin = *it;
+        
+        if (currentPin->getSlackInfor()->slack() < 0 && currentPin->module() != NULL) {
+            double ff_original_slack = currentPin->getSlackInfor()->slack();
+            double dis_delay = getDisplacementDelay();
+            double initial_dist = std::abs(currentPin->net()->OutputPin()->x() - currentPin->x()) +
+                                  std::abs(currentPin->net()->OutputPin()->y() - currentPin->y());
+            double radius = (ff_original_slack + dis_delay * initial_dist) / dis_delay;
+            adjust_position(currentPin->net()->OutputPin(), currentPin, radius, row(0)->width(), row(0)->height());
+
+            // 更新 slack
+            double new_dist = std::abs(currentPin->net()->OutputPin()->x() - currentPin->x()) +
+                              std::abs(currentPin->net()->OutputPin()->y() - currentPin->y());
+            double new_slack = (initial_dist - new_dist) * dis_delay + ff_original_slack;
+            if (std::abs(new_slack) < std::pow(10, -10)) // 處理浮點誤差
+                new_slack = 0;
+            currentPin->getSlackInfor()->setSlack(new_slack);
+
+            // 更新其它 Pins 的 slack
+            for (int j = 0; j < currentPin->net()->numPins(); ++j) {
+                Pin* otherPin = currentPin->net()->pin(j);
+                if (otherPin == currentPin)
+                    continue;
+
+                double newWL = std::abs(otherPin->x() - currentPin->x()) +
+                               std::abs(otherPin->y() - currentPin->y());
+                double buff = otherPin->getSlackInfor()->slack() + dis_delay * (initial_dist - newWL);
+                otherPin->getSlackInfor()->setSlack(buff);
+
+                if (buff < 0 && processedPins.find(otherPin) == processedPins.end()) {
+                    _initial_negSlack.insert(otherPin);
+                    processedPins.insert(otherPin);
+                }
+            }
+        }
     }
 }
+
+
 
 void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, double grid_width, double grid_height)
 {
@@ -939,8 +979,9 @@ void Database::outputTofile(const string &filename)
     }
     outFile << fixed;
     outFile << "CellInst " << getNumFF() << endl;
+
     // temp=============================
-    string nname = _ffModules[_ffModules.size() - 1]->name();
+    string nname = _modules[_modules.size() - 1]->name();
     string letters;
     string numbers;
     for (int i = 0; i < nname.length(); ++i)
@@ -950,59 +991,28 @@ void Database::outputTofile(const string &filename)
         else
             letters += nname[i];
     }
-    // for (char c : nname)
-    //{
-    //     if (isdigit(c))
-    //     {
-    //         numbers += c;
-    //     }
-    //     else
-    //     {
-    //         letters += c;
-    //     }
-    // }
     int num = atoi(numbers.c_str());
-    for (size_t i = 0; i < _ffModules.size(); i++)
+    for (size_t i = 0; i < _ffModules.size(); ++i)
     {
-        nname = _ffModules[i]->name();
-        numbers = "";
-        letters = "";
-        for (int i = 0; i < nname.length(); ++i)
-        {
-            if (isdigit(nname[i]))
-                numbers += nname[i];
-            else
-                letters += nname[i];
-        }
-        // for (char c : nname)
-        //{
-        //     if (isdigit(c))
-        //     {
-        //         numbers += c;
-        //     }
-        //     else
-        //     {
-        //         letters += c;
-        //     }
-        // }
         num++;
-        nname = letters + itos(num);
+        nname = letters + itos(num);  
         _ffModules[i]->setName(nname);
+        
     }
     // temp=============================
     for (size_t i = 0; i < getNumFF(); i++)
     {
         outFile << "Inst " << _ffModules[i]->name() << " " << _ffModules[i]->cellType()->getName() << " "
-                << setprecision(0) << _ffModules[i]->x() << " " << _ffModules[i]->y() << endl;
+                << setprecision(0) << _ffModules[i]->x() << " " << _ffModules[i]->y() << " " <<endl;
+                //<< _ffModules[i]->width()<< " " << _ffModules[i]->height()<< endl;
     }
-    for (size_t i = 0; i < getNumPins(); i++)
-    {
-        if (_pins[i]->module() != NULL)
-        {
-            outFile << _pins[i]->history()->oldModuleName() << "/" << _pins[i]->history()->oldPinName()
-                    << " map " << _pins[i]->module()->name() << "/" << _pins[i]->name() << endl;
-        }
-    }
-
+    // for (size_t i = 0; i < getNumFF(); ++i)
+    // {
+    //     for(size_t j=0;j<_ffModules[i]->totnumPins(); ++j)
+    //     {
+    //         outFile << _ffModules[i]->pin(j)->history()->oldModuleName() << "/" << _ffModules[i]->pin(j)->history()->oldPinName()
+    //                 << " map " << _ffModules[i]->name() << "/" << _ffModules[i]->pin(j)->name() << endl;
+    //     }   
+    // }
     return;
 }

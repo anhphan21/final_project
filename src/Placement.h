@@ -25,12 +25,8 @@ public:
    vector<Rhombus *> findOutputRegion(Module *ff);
 
    void windows();
-   void constructGraph();
-   set<set<Module *> > calMaxClique(unsigned clkidx);
-   double cal_cost(Module *ff1, Module *ff2);
    double cal_total_cost();
-   double getDen();
-
+   
 
    NodeList findMST();
    void netListGraph();
@@ -65,6 +61,8 @@ private:
    NodeList _nodes;
    map<string, Node *> _name2Node;
    map<string, int> ModuleTraverseN;
+
+   map<double, map<double, double> > _binMap;
 };
 
 #endif // PLACEMENT_H

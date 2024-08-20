@@ -676,7 +676,7 @@ void Placement::windows() // construct weilun graph
     double chip_R = _dataBase->getBoundaryRight();
     double chip_B = _dataBase->getBoundaryBottom();
     double chip_T = _dataBase->getBoundaryTop();
-    double window_size = sqrt((chip_T - chip_B) * (chip_L - chip_R)); // we can adjust window size
+    // double window_size = sqrt((chip_T - chip_B) * (chip_L - chip_R)); // we can adjust window size
     // double step_size = window_size / 2;
     map<pair<double, double>, vector<Module *> > window_idx2FF;
     _nodes.clear();
@@ -690,33 +690,32 @@ void Placement::windows() // construct weilun graph
         _nodes.push_back(n);
 
         // Assign a window index to the current FF.
-        double idx_x = _dataBase->ff(i)->x() / window_size;
-        double idx_y = _dataBase->ff(i)->y() / window_size;
-        window_idx2FF[{idx_x, idx_y}].push_back(_dataBase->ff(i));
+        // double idx_x = _dataBase->ff(i)->x() / window_size;
+        // double idx_y = _dataBase->ff(i)->y() / window_size;
+        // window_idx2FF[{idx_x, idx_y}].push_back(_dataBase->ff(i));
 
         // Construct feasible region for current FF
         constructFeasible(_dataBase->ff(i));
     }
-    double y_min = chip_B / window_size;
-    double y_max = chip_T / window_size;
-    double x_min = chip_L / window_size;
-    double x_max = chip_R / window_size;
+    // double y_min = chip_B / window_size;
+    // double y_max = chip_T / window_size;
+    // double x_min = chip_L / window_size;
+    // double x_max = chip_R / window_size;
     // for (int y = y_min; y <= y_max; ++y)
     // {
     //     for (int x = x_min; x <= x_max; ++x)
     //     {
             // double length = window_idx2FF[{x, y}].size();
-            double length = num_FF;
-            for (int i = 0; i < length; ++i)
+            for (int i = 0; i < num_FF; ++i)
             {
-                for (int j = i + 1; j < length; ++j)
+                for (int j = i + 1; j < num_FF; ++j)
                 {
                     if(_dataBase->ff(i)->getFeasibleRegion()==NULL)
                         continue;
                     if(_dataBase->ff(j)->getFeasibleRegion()==NULL)
                         continue;
                     if (feasibleRegion_overlap(_dataBase->ff(i)->getFeasibleRegion(), _dataBase->ff(j)->getFeasibleRegion()))
-                    {;
+                    {
                         _name2Node[_dataBase->ff(i)->name()]->addNeighborPair({_name2Node[_dataBase->ff(j)->name()], 0}); // without cost
                         _name2Node[_dataBase->ff(j)->name()]->addNeighborPair({_name2Node[_dataBase->ff(i)->name()], 0}); // two directions
                     }
@@ -725,17 +724,7 @@ void Placement::windows() // construct weilun graph
     //     }
     // }
 }
-// double Placement::getDen()
-// {
-//     double den = 0;
-//     for(int i = 0;i<_dataBase->getbincol();++i)
-//     {
-//         for(int j = 0;j<_dataBase->getbinrow();++j)
-//         {
-//             _dataBase->bin(i,j)
-//         }
-//     }
-// }
+
 double Placement::cal_total_cost()
 {
     double cost = 0;
@@ -759,7 +748,7 @@ double Placement::cal_total_cost()
         power = 0;
         area = 0;
     }
-    // cost += lambda * binutil;
+    cost += lambda * _dataBase->updateBinUtil();
 
     return cost;
 }
@@ -1093,158 +1082,3 @@ bool compareFirst(const Edge &a,
 {
     return a.y < b.y;
 }
-// // set<set<Module *> > Placement::calMaxClique(unsigned clkidx)
-// // {
-// //     // input : clk net id
-// //     // output : maximal clique(without proper subset)
-// //     Net *targetNet = _dataBase->net(clkidx);
-// //     if (targetNet->clkFlag() == false)
-// //     {
-// //         cout << "error: input isn't a clk" << endl;
-// //         return;
-// //     }
-// //     ModuleList targetFFs;
-// //     vector<double> strip; // start pos of every part of strip
-// //     set<Edge> edgesSet;
-// //     vector<Edge> edges; // Module, y , start x , end x
-// //     edges.clear();
-// //     edgesSet.clear();
-// //     strip.clear();
-// //     targetFFs.clear();
-// //     for (size_t i = 0; i < targetNet->numPins(); i++)
-// //     {
-// //         targetFFs.push_back(targetNet->pin(i)->module());
-// //         strip.push_back(targetFFs[i]->getFeasibleRegion()->left());
-// //         strip.push_back(targetFFs[i]->getFeasibleRegion()->right());
-// //         Edge ee;
-// //         ee.ff = targetFFs[i];
-// //         ee.y = targetFFs[i]->getFeasibleRegion()->top();
-// //         ee.isIN = true;
-// //         ee.startx = targetFFs[i]->getFeasibleRegion()->left();
-// //         ee.endx = targetFFs[i]->getFeasibleRegion()->right();
-// //         edgesSet.insert(ee);
-// //         Edge ee1;
-// //         ee1.ff = targetFFs[i];
-// //         ee1.y = targetFFs[i]->getFeasibleRegion()->bottom();
-// //         ee1.isIN = false;
-// //         ee1.startx = targetFFs[i]->getFeasibleRegion()->left();
-// //         ee1.endx = targetFFs[i]->getFeasibleRegion()->right();
-// //         edgesSet.insert(ee1);
-// //     }
-// //     sort(strip.begin(), strip.end());
-// //     strip.erase(unique(strip.begin(), strip.end()), strip.end());
-// //     edges.assign(edgesSet.begin(), edgesSet.end());
-// //     sort(edges.begin(), edges.end(), compareFirst);
-// //     set<set<Module *> > maxClique;
-// //     vector<set<Module *> > tempClique; // size == 3 , for checking greater than above and below
-// //     maxClique.clear();
-// //     int counter = 0;
-// //     // TODO: currently traverse every edge per strip, maybe a better O() way to implement
-// //     for (size_t i = 0; i < strip.size() - 1; i++)
-// //     {
-// //         counter = 0;
-// //         tempClique.clear();
-// //         tempClique.resize(3);
-// //         for (size_t j = 0; j < edges.size(); j++)
-// //         {
-// //             // sweep line
-// //             if ((edges[j].startx == strip[i] && edges[j].endx >= strip[i + 1]) ||
-// //                 (edges[j].startx <= strip[i] && edges[j].endx == strip[i + 1]) ||
-// //                 (edges[j].startx < strip[i] && edges[j].endx > strip[i + 1]))
-// //             {
-// //                 if (counter == 0)
-// //                 {
-// //                     // check if Module is in the set
-
-// //                     counter++;
-// //                     if (edges[j].isIN == false)
-// //                     {
-// //                         cout << "error" << endl;
-// //                     }
-// //                     else
-// //                     {
-// //                         tempClique[0].insert(edges[j].ff);
-// //                     }
-// //                 }
-// //                 else if (counter == 1)
-// //                 {
-// //                     counter++;
-// //                     if (edges[j].isIN == false)
-// //                     {
-// //                         tempClique[1] = tempClique[0];
-// //                         tempClique[1].erase(edges[j].ff);
-// //                         if (tempClique[1].size() > 0)
-// //                         {
-// //                             cout << "error" << endl;
-// //                         }
-// //                     }
-// //                 }
-// //                 else if (counter == 2)
-// //                 {
-// //                     counter++;
-// //                     tempClique[2] = tempClique[1];
-// //                     if (edges[j].isIN == false)
-// //                     {
-// //                         tempClique[2].erase(edges[j].ff);
-// //                     }
-// //                     else
-// //                     {
-// //                         tempClique[2].insert(edges[j].ff);
-// //                     }
-// //                 }
-// //                 else
-// //                 {
-// //                     // move tempClique
-// //                     if (tempClique[1].size() > tempClique[0].size() &&
-// //                         tempClique[1].size() > tempClique[2].size() &&
-// //                         tempClique[1].size() > 1)
-// //                     {
-// //                         maxClique.insert(tempClique[1]);
-// //                     }
-// //                     tempClique[0] = tempClique[1];
-// //                     tempClique[1] = tempClique[2];
-// //                     if (edges[j].isIN == false)
-// //                     {
-// //                         tempClique[2].erase(edges[j].ff);
-// //                     }
-// //                     else
-// //                     {
-// //                         tempClique[2].insert(edges[j].ff);
-// //                     }
-// //                 }
-// //             }
-// //             else
-// //             {
-// //                 continue;
-// //             }
-// //         }
-// //     }
-// //     // TODO: remove proper subset
-// //     vector<set<Module *> > toRemove;
-// //     for (auto it1 = maxClique.begin(); it1 != maxClique.end(); ++it1)
-// //     {
-// //         for (auto it2 = maxClique.begin(); it2 != maxClique.end(); ++it2)
-// //         {
-// //             if (it1 != it2 && isStrictSubset(*it1, *it2))
-// //             {
-// //                 toRemove.push_back(*it1);
-// //                 break;
-// //             }
-// //         }
-// //     }
-// //     for (const auto &subset : toRemove)
-// //     {
-// //         maxClique.erase(subset);
-// //     }
-// //     return maxClique;
-// // }
-// bool isStrictSubset(const set<Module *> &a, const set<Module *> &b)
-// {
-//     return includes(b.begin(), b.end(), a.begin(), a.end());
-// }
-
-// bool compareFirst(const Edge &a,
-//                   const Edge &b)
-// {
-//     return a.y < b.y;
-// }
