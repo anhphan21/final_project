@@ -18,7 +18,7 @@ using namespace std;
 
 #define leafthresold 0.75 // TODO: can be changed
 // #define __DBL_MAX__ 1.7976931348623158e+308 /* max value */
-struct Edges
+struct Edges // for calMaxClique
 {
     Module *ff;
     double y;
@@ -193,6 +193,10 @@ int my_stoi(const std::string &str)
 string my_itos(int num)
 {
     string ans = "";
+    if (num == 0)
+    {
+        return "0";
+    }
     while (num)
     {
         ans = char((num % 10) + '0') + ans;
@@ -204,6 +208,7 @@ string my_itos(int num)
 void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
 {
     // // TODO: need to know which FF should be chosed
+    // // TODO: need TO clear net clk pin
     // // ex: merge two 1 bit, which 2 bit FF should be chosed?
     // // erase to FF from graph(_nodes)/////////////////////////////////
     // // clang-format off
@@ -447,7 +452,137 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
     // }
     // return;
 }
-
+void Placement::mergeMulti1bitFF(set<Module *> ffs)
+{
+    // input ffs size must be exactly same as new FF bit size /////////
+    vector<Module *> ffsV;
+    ffsV.assign(ffs.begin(), ffs.end());
+    pair<double, double> ffPos;
+    // temp position/////////////////////////////////////////////////////////////////
+    // TODO: new position
+    ffPos.first = ffsV[0]->x();
+    ffPos.second = ffsV[0]->y();
+    /////////////////////////////////////////////////////////////////////////////////
+    string newFFname = _dataBase->module(_dataBase->getNumModules() - 1)->name();
+    string letters;
+    string numbers;
+    for (string::size_type i = 0; i < newFFname.size(); ++i)
+    {
+        char c = newFFname[i];
+        if (std::isdigit(static_cast<unsigned char>(c)))
+        {
+            numbers += c;
+        }
+        else
+        {
+            letters += c;
+        }
+    }
+    int num = my_stoi(numbers);
+    newFFname = letters + my_itos(num + 1);
+    Module *newMff = new Module(newFFname, _dataBase->getBestCelltype(ffsV.size()), ffPos.first, ffPos.second);
+    newMff->setIsFixed(false);
+    newMff->clearPins();
+    newMff->setPinsize(newMff->cellType()->getnumBit() * 2 + 1);
+    // radius and feasible region will be empty for the new FF
+    // trasplant pins to new ff ///////////////////////////////////////////////////////////////
+    for (size_t i = 0; i < ffsV.size(); i++)
+    {
+        string tempName = "D";
+        tempName = tempName + my_itos(i);
+        newMff->setInPin(i, ffsV[i]->InPin(0));
+        newMff->InPin(i)->setPinName(tempName);
+        newMff->InPin(i)->setModulePtr(newMff);
+        tempName = "Q";
+        tempName = tempName + my_itos(i);
+        newMff->setOutPin(i, ffsV[i]->OutPin(0));
+        newMff->OutPin(i)->setPinName(tempName);
+        newMff->OutPin(i)->setModulePtr(newMff);
+    }
+    // only first FF CLK pin will remain //////////////////////////////////////////////////////////////
+    newMff->setInPin(newMff->cellType()->clkPinIdx(), ffsV[0]->InPin(1));
+    newMff->InPin(newMff->cellType()->clkPinIdx())->setModulePtr(newMff);
+    // update Module in Pin
+    // update pin position and x,y offset
+    for (size_t i = 0; i < newMff->totnumPins(); i++)
+    {
+        newMff->pin(i)->setOffset(newMff->cellType()->pinOffsetX(i), newMff->cellType()->pinOffsetY(i));
+        newMff->pin(i)->setPosition(newMff->x() + newMff->pin(i)->xOffset(), newMff->y() + newMff->pin(i)->yOffset());
+    }
+    for (size_t i = 1; i < ffsV.size(); i++)
+    {
+        Pin *targetclk = ffsV[i]->InPin(1);
+        if (targetclk->name() != "CLK")
+        {
+            cout << "error: target pin isn't CLK" << endl;
+        }
+        else
+        {
+            free(targetclk->history());
+            for (size_t j = 0; j < _dataBase->getNumPins(); j++)
+            {
+                if (_dataBase->pin(j) == targetclk)
+                {
+                    _dataBase->erasePin(j);
+                    break;
+                }
+            }
+            for (size_t j = 0; j < targetclk->net()->numPins(); j++)
+            {
+                if (targetclk->net()->pin(j) == targetclk)
+                {
+                    targetclk->net()->erasePin(j);
+                    break;
+                }
+            }
+            free(targetclk);
+        }
+    }
+    //  clear FFs with no neighbor out of graph(_nodes)/////////////////////////////////
+    // free m1 and m2
+    for (size_t i = 0; i < ffsV.size(); i++)
+    {
+        for (size_t j = 0; j < _dataBase->getNumModules(); j++)
+        {
+            if (_dataBase->module(j) == ffsV[i])
+            {
+                _dataBase->eraseModule(j);
+                break;
+            }
+        }
+        for (size_t j = 0; j < _dataBase->getNumFF(); j++)
+        {
+            if (_dataBase->ff(j) == ffsV[i])
+            {
+                _dataBase->eraseFF(j);
+                break;
+            }
+        }
+        free(ffsV[i]->getFeasibleRegion());
+        free(ffsV[i]);
+    }
+    _dataBase->addModule(newMff);
+    _dataBase->addFF(newMff);
+    newMff->setPosition(ffPos.first, ffPos.second);
+    // check boundary
+    if (newMff->x() < _dataBase->getBoundaryLeft())
+    {
+        newMff->setPosition(_dataBase->getBoundaryLeft(), newMff->y());
+    }
+    if (newMff->y() < _dataBase->getBoundaryBottom())
+    {
+        newMff->setPosition(newMff->x(), _dataBase->getBoundaryBottom());
+    }
+    if (newMff->x() + newMff->width() > _dataBase->getBoundaryRight())
+    {
+        newMff->setPosition(_dataBase->getBoundaryRight() - newMff->width(), newMff->y());
+    }
+    if (newMff->y() + newMff->height() > _dataBase->getBoundaryTop())
+    {
+        newMff->setPosition(newMff->x(), _dataBase->getBoundaryTop() - newMff->height());
+    }
+    return;
+}
 void Placement::setNodesize(unsigned size)
 {
     clearNode();
@@ -994,7 +1129,7 @@ void Placement::debankAllFF()
 
 void Placement::debankFFto1bit(string ffname)
 {
-    cout << "debank" << endl;
+    cout << "debank  " << ffname << endl;
     // TODO: Each FF position after debanking
     int celltypeID = 0;
     Module *target = _dataBase->getModuleByName(ffname);
