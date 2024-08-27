@@ -1204,7 +1204,7 @@ void Placement::construct_DAG()
     _x2_DAG_Node[x].push_back(L);
 
     is_find = false;
-    int i_total_level = (row_top_boundary-row_bottom_boundary)/RowHeight;
+    int i_total_level = row_top_boundary/RowHeight;
     int curr_level =  row_bottom_boundary/RowHeight;
     map<int, vector<DAG_Node*> >::iterator it = _x2_DAG_Node.find(L->getX() / RowWidth);
     for(curr_level; curr_level<=i_total_level; ++curr_level)
@@ -1340,5 +1340,8 @@ void Placement::construct_DAG()
         }
     }
     
+
+    cout<<L->getEdge().size()<<endl;
+    cout<<_dataBase->getNumRows()<<endl;
 }
 
