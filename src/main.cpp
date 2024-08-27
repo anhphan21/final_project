@@ -64,9 +64,13 @@ int main(int argc, char **argv)
   testGraph.windows();
   cout << "Done Weilun Graph!!!" << endl;
 
+  testGraph.construct_DAG();
+  cout << "Done DAG Graph!!!" << endl;
+
+  
   // cout << testGraph.cal_total_cost() << endl;
   // testDTB.outputTofile(argv[2]);
 
-  layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getmodule());
+  // layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getbuffer());
   return 0;
 }

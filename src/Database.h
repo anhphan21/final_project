@@ -203,6 +203,11 @@ public:
     map<string, int > OriginModuleN;
     int record = 0;
 
+
+
+    vector<Module *> getbuffer(){return _buffer;}
+    double getBinHeight(){return _binHeight;}
+    double getBinWidth(){return _binWidth;}
 private:
     string _name; // Design Name
 
@@ -262,6 +267,12 @@ private:
 
     // void updateInitialSlackInfo();
     set<Pin *> _initial_negSlack;
+
+
+
+
+
+    vector<Module *> _buffer;
 };
 
 #endif // DATABASE_H
