@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <limits.h>
 #include <vector>
-// #include <random>
+#include <algorithm>
 #include <set>
 #include <math.h>
 #include <set>
@@ -673,11 +673,11 @@ bool feasibleRegion_overlap(const Rectangle *a, const Rectangle *b)
 
 void Placement::windows() // construct weilun graph
 {
-    double chip_L = _dataBase->getBoundaryLeft();
-    double chip_R = _dataBase->getBoundaryRight();
-    double chip_B = _dataBase->getBoundaryBottom();
-    double chip_T = _dataBase->getBoundaryTop();
-    double window_size = sqrt((chip_T - chip_B) * (chip_L - chip_R)); // we can adjust window size
+    // double chip_L = _dataBase->getBoundaryLeft();
+    // double chip_R = _dataBase->getBoundaryRight();
+    // double chip_B = _dataBase->getBoundaryBottom();
+    // double chip_T = _dataBase->getBoundaryTop();
+    // double window_size = sqrt((chip_T - chip_B) * (chip_L - chip_R)); // we can adjust window size
     // double step_size = window_size / 2;
     map<pair<double, double>, vector<Module *> > window_idx2FF;
     _nodes.clear();
@@ -691,33 +691,32 @@ void Placement::windows() // construct weilun graph
         _nodes.push_back(n);
 
         // Assign a window index to the current FF.
-        double idx_x = _dataBase->ff(i)->x() / window_size;
-        double idx_y = _dataBase->ff(i)->y() / window_size;
-        window_idx2FF[{idx_x, idx_y}].push_back(_dataBase->ff(i));
+        // double idx_x = _dataBase->ff(i)->x() / window_size;
+        // double idx_y = _dataBase->ff(i)->y() / window_size;
+        // window_idx2FF[{idx_x, idx_y}].push_back(_dataBase->ff(i));
 
         // Construct feasible region for current FF
         constructFeasible(_dataBase->ff(i));
     }
-    double y_min = chip_B / window_size;
-    double y_max = chip_T / window_size;
-    double x_min = chip_L / window_size;
-    double x_max = chip_R / window_size;
+    // double y_min = chip_B / window_size;
+    // double y_max = chip_T / window_size;
+    // double x_min = chip_L / window_size;
+    // double x_max = chip_R / window_size;
     // for (int y = y_min; y <= y_max; ++y)
     // {
     //     for (int x = x_min; x <= x_max; ++x)
     //     {
             // double length = window_idx2FF[{x, y}].size();
-            double length = num_FF;
-            for (int i = 0; i < length; ++i)
+            for (int i = 0; i < num_FF; ++i)
             {
-                for (int j = i + 1; j < length; ++j)
+                for (int j = i + 1; j < num_FF; ++j)
                 {
                     if(_dataBase->ff(i)->getFeasibleRegion()==NULL)
                         continue;
                     if(_dataBase->ff(j)->getFeasibleRegion()==NULL)
                         continue;
                     if (feasibleRegion_overlap(_dataBase->ff(i)->getFeasibleRegion(), _dataBase->ff(j)->getFeasibleRegion()))
-                    {;
+                    {
                         _name2Node[_dataBase->ff(i)->name()]->addNeighborPair({_name2Node[_dataBase->ff(j)->name()], 0}); // without cost
                         _name2Node[_dataBase->ff(j)->name()]->addNeighborPair({_name2Node[_dataBase->ff(i)->name()], 0}); // two directions
                     }
@@ -726,17 +725,7 @@ void Placement::windows() // construct weilun graph
     //     }
     // }
 }
-// double Placement::getDen()
-// {
-//     double den = 0;
-//     for(int i = 0;i<_dataBase->getbincol();++i)
-//     {
-//         for(int j = 0;j<_dataBase->getbinrow();++j)
-//         {
-//             _dataBase->bin(i,j)
-//         }
-//     }
-// }
+
 double Placement::cal_total_cost()
 {
     double cost = 0;
@@ -760,10 +749,13 @@ double Placement::cal_total_cost()
         power = 0;
         area = 0;
     }
-    // cost += lambda * binutil;
+    cost += lambda * _dataBase->updateBinUtil();
 
     return cost;
 }
+
+
+
 
 Rhombus *Placement::findInputRegion(Module *ff)
 {
@@ -1169,158 +1161,263 @@ bool compareFirst(const Edge &a,
 {
     return a.y < b.y;
 }
-// // set<set<Module *> > Placement::calMaxClique(unsigned clkidx)
-// // {
-// //     // input : clk net id
-// //     // output : maximal clique(without proper subset)
-// //     Net *targetNet = _dataBase->net(clkidx);
-// //     if (targetNet->clkFlag() == false)
-// //     {
-// //         cout << "error: input isn't a clk" << endl;
-// //         return;
-// //     }
-// //     ModuleList targetFFs;
-// //     vector<double> strip; // start pos of every part of strip
-// //     set<Edge> edgesSet;
-// //     vector<Edge> edges; // Module, y , start x , end x
-// //     edges.clear();
-// //     edgesSet.clear();
-// //     strip.clear();
-// //     targetFFs.clear();
-// //     for (size_t i = 0; i < targetNet->numPins(); i++)
-// //     {
-// //         targetFFs.push_back(targetNet->pin(i)->module());
-// //         strip.push_back(targetFFs[i]->getFeasibleRegion()->left());
-// //         strip.push_back(targetFFs[i]->getFeasibleRegion()->right());
-// //         Edge ee;
-// //         ee.ff = targetFFs[i];
-// //         ee.y = targetFFs[i]->getFeasibleRegion()->top();
-// //         ee.isIN = true;
-// //         ee.startx = targetFFs[i]->getFeasibleRegion()->left();
-// //         ee.endx = targetFFs[i]->getFeasibleRegion()->right();
-// //         edgesSet.insert(ee);
-// //         Edge ee1;
-// //         ee1.ff = targetFFs[i];
-// //         ee1.y = targetFFs[i]->getFeasibleRegion()->bottom();
-// //         ee1.isIN = false;
-// //         ee1.startx = targetFFs[i]->getFeasibleRegion()->left();
-// //         ee1.endx = targetFFs[i]->getFeasibleRegion()->right();
-// //         edgesSet.insert(ee1);
-// //     }
-// //     sort(strip.begin(), strip.end());
-// //     strip.erase(unique(strip.begin(), strip.end()), strip.end());
-// //     edges.assign(edgesSet.begin(), edgesSet.end());
-// //     sort(edges.begin(), edges.end(), compareFirst);
-// //     set<set<Module *> > maxClique;
-// //     vector<set<Module *> > tempClique; // size == 3 , for checking greater than above and below
-// //     maxClique.clear();
-// //     int counter = 0;
-// //     // TODO: currently traverse every edge per strip, maybe a better O() way to implement
-// //     for (size_t i = 0; i < strip.size() - 1; i++)
-// //     {
-// //         counter = 0;
-// //         tempClique.clear();
-// //         tempClique.resize(3);
-// //         for (size_t j = 0; j < edges.size(); j++)
-// //         {
-// //             // sweep line
-// //             if ((edges[j].startx == strip[i] && edges[j].endx >= strip[i + 1]) ||
-// //                 (edges[j].startx <= strip[i] && edges[j].endx == strip[i + 1]) ||
-// //                 (edges[j].startx < strip[i] && edges[j].endx > strip[i + 1]))
-// //             {
-// //                 if (counter == 0)
-// //                 {
-// //                     // check if Module is in the set
 
-// //                     counter++;
-// //                     if (edges[j].isIN == false)
-// //                     {
-// //                         cout << "error" << endl;
-// //                     }
-// //                     else
-// //                     {
-// //                         tempClique[0].insert(edges[j].ff);
-// //                     }
-// //                 }
-// //                 else if (counter == 1)
-// //                 {
-// //                     counter++;
-// //                     if (edges[j].isIN == false)
-// //                     {
-// //                         tempClique[1] = tempClique[0];
-// //                         tempClique[1].erase(edges[j].ff);
-// //                         if (tempClique[1].size() > 0)
-// //                         {
-// //                             cout << "error" << endl;
-// //                         }
-// //                     }
-// //                 }
-// //                 else if (counter == 2)
-// //                 {
-// //                     counter++;
-// //                     tempClique[2] = tempClique[1];
-// //                     if (edges[j].isIN == false)
-// //                     {
-// //                         tempClique[2].erase(edges[j].ff);
-// //                     }
-// //                     else
-// //                     {
-// //                         tempClique[2].insert(edges[j].ff);
-// //                     }
-// //                 }
-// //                 else
-// //                 {
-// //                     // move tempClique
-// //                     if (tempClique[1].size() > tempClique[0].size() &&
-// //                         tempClique[1].size() > tempClique[2].size() &&
-// //                         tempClique[1].size() > 1)
-// //                     {
-// //                         maxClique.insert(tempClique[1]);
-// //                     }
-// //                     tempClique[0] = tempClique[1];
-// //                     tempClique[1] = tempClique[2];
-// //                     if (edges[j].isIN == false)
-// //                     {
-// //                         tempClique[2].erase(edges[j].ff);
-// //                     }
-// //                     else
-// //                     {
-// //                         tempClique[2].insert(edges[j].ff);
-// //                     }
-// //                 }
-// //             }
-// //             else
-// //             {
-// //                 continue;
-// //             }
-// //         }
-// //     }
-// //     // TODO: remove proper subset
-// //     vector<set<Module *> > toRemove;
-// //     for (auto it1 = maxClique.begin(); it1 != maxClique.end(); ++it1)
-// //     {
-// //         for (auto it2 = maxClique.begin(); it2 != maxClique.end(); ++it2)
-// //         {
-// //             if (it1 != it2 && isStrictSubset(*it1, *it2))
-// //             {
-// //                 toRemove.push_back(*it1);
-// //                 break;
-// //             }
-// //         }
-// //     }
-// //     for (const auto &subset : toRemove)
-// //     {
-// //         maxClique.erase(subset);
-// //     }
-// //     return maxClique;
-// // }
-// bool isStrictSubset(const set<Module *> &a, const set<Module *> &b)
-// {
-//     return includes(b.begin(), b.end(), a.begin(), a.end());
-// }
 
-// bool compareFirst(const Edge &a,
-//                   const Edge &b)
-// {
-//     return a.y < b.y;
-// }
+//Leagalize - DAG
+
+bool compareModules(const Module* a, const Module* b) {
+    if (a->x() == b->x()) {
+        return a->y() < b->y();
+    }
+    return a->x() < b->x();
+}
+int partition(std::vector<Module*>& modules, int low, int high) {
+    Module* pivot = modules[high];  
+    int i = low - 1;  
+
+    for (int j = low; j < high; ++j) {
+        if (compareModules(modules[j], pivot)) {  
+            i++;
+            std::swap(modules[i], modules[j]);  
+        }
+    }
+    std::swap(modules[i + 1], modules[high]);  
+    return i + 1;  
+}
+void quickSort(std::vector<Module*>& modules, int low, int high) {
+    if (low < high) {
+        int pi = partition(modules, low, high);  
+
+        quickSort(modules, low, pi - 1);  
+        quickSort(modules, pi + 1, high); 
+    }
+}
+double moduleOverlap_X(Module *a,Module *b)
+{
+    double L=max(a->x(),b->x());
+    double R=min(a->x()+a->width(),b->x()+ b->width());
+    return (R-L);
+}
+
+bool compareNodes(const pair<DAG_Node *, double>& a, const pair<DAG_Node *, double>& b) {
+    return a.first == b.first;
+}
+
+struct CompareDAGNodePtr {
+    bool operator()(const pair<DAG_Node *, double>& a, const pair<DAG_Node *, double>& b) const {
+        return a.first < b.first;
+    }
+};
+
+bool isDuplicate(vector<pair<DAG_Node *, double> > edges, const pair<DAG_Node *, double>& newPair) {
+    for (size_t i = 0; i < edges.size(); ++i) {
+        if (compareNodes(edges[i], newPair)) {
+            return true;
+        }
+    }
+    return false;
+}
+void Placement::construct_DAG()
+{
+    int row_left_boundary = _dataBase->row(0)->x();
+    int row_right_boundary = _dataBase->row(0)->x() + _dataBase->row(0)->numSites()*_dataBase->row(0)->width();
+    int row_top_boundary = _dataBase->row(_dataBase->getNumRows()-1)->y();
+    int row_bottom_boundary = _dataBase->row(0)->y();
+
+    DAG_Node *L = new DAG_Node();
+    L->setName("Left_boundary");
+    L->setX(row_left_boundary);
+    L->setY(row_top_boundary);
+    DAG_Node *R = new DAG_Node();
+    R->setName("Right_boundary");
+    R->setX(row_right_boundary);
+    R->setY(row_top_boundary);
+
+    vector<Module*> modules = _dataBase->getmodule();
+    quickSort(modules, 0, modules.size() - 1);
+
+    for (size_t i = 0; i < modules.size(); ++i) 
+    {
+        if(modules[i]->isFF())
+        {
+            DAG_Node *dag_node = new DAG_Node;
+            dag_node->setModule(modules[i]);
+            dag_node->setX(modules[i]->x());
+            dag_node->setY(modules[i]->y());
+            dag_node->set_isFF(true);
+            _DAG_nodes.push_back(dag_node);
+        }
+        else
+        {//gate devide left and right
+            DAG_Node *dag_node_L = new DAG_Node;
+            DAG_Node *dag_node_R = new DAG_Node;
+
+            dag_node_L->setModule(modules[i]);
+            dag_node_L->setX(modules[i]->x());
+            dag_node_L->setY(modules[i]->y());
+            dag_node_L->set_isFF(false);
+
+            dag_node_R->setModule(modules[i]);
+            dag_node_R->setX(modules[i]->x() + modules[i]->width());
+            dag_node_R->setY(modules[i]->y());
+            dag_node_R->set_isFF(false);
+
+            _DAG_nodes.push_back(dag_node_L);
+            _DAG_nodes.push_back(dag_node_R);
+        }
+    }
+    double RowWidth = _dataBase->row(0)->width();
+    double RowHeight = _dataBase->row(0)->height();
+    bool is_find = false;
+    for (size_t i = 0, sizetmp= _DAG_nodes.size(); i < sizetmp; ++i)
+    {
+        int x=static_cast<int>(_DAG_nodes[i]->getX()/RowWidth);
+        _x2_DAG_Node[x].push_back(_DAG_nodes[i]);
+    }
+
+    //L to immediate right cell
+    int x=static_cast<int>(L->getX()/RowWidth);
+    _x2_DAG_Node[x].push_back(L);
+
+    is_find = false;
+    int i_total_level = row_top_boundary/RowHeight;
+    int curr_level =  row_bottom_boundary/RowHeight;
+    map<int, vector<DAG_Node*> >::iterator it = _x2_DAG_Node.find(L->getX() / RowWidth);
+    for(curr_level; curr_level<=i_total_level; ++curr_level)
+    {
+        if(it!= _x2_DAG_Node.end())
+        {
+            for (int k = 0, sizetmp = it->second.size(); k < sizetmp; ++k) 
+            {
+                if ((it->second[k]->getY() / RowHeight == curr_level) && (it->second[k] != L)) 
+                {
+                    double weight = L->getX() - it->second[k]->getX();
+                    if(isDuplicate(L->getEdge(),{it->second[k], weight})==0)
+                    {
+                        L->addEdge(it->second[k], weight);
+                    }
+                    is_find = true;
+                    break;            
+                }
+            }
+        }
+        if(is_find)
+        {
+            it = _x2_DAG_Node.find(L->getX() / RowWidth);
+            is_find = false;
+        }
+        else
+        {//這層y沒找到
+            ++it;    
+            if (it == _x2_DAG_Node.end() || (it->first)*RowWidth >= row_right_boundary) 
+            {//L直接到R
+                is_find = true;
+            }
+            --curr_level;
+        }
+    }
+    //END: L to immediate right cell 
+
+    for (size_t i = 0, sizetmp= _DAG_nodes.size(); i < sizetmp; ++i)
+    {
+        is_find = false;
+        if(_DAG_nodes[i]->getModule()->isFF())
+        {
+            int i_total_level = (_DAG_nodes[i]->getY()+_DAG_nodes[i]->getModule()->height())/RowHeight;
+            if((int)_DAG_nodes[i]->getModule()->height()%(int)RowHeight != 0)
+                i_total_level++;
+            int curr_level = _DAG_nodes[i]->getY()/RowHeight;
+            map<int, vector<DAG_Node*> >::iterator it = _x2_DAG_Node.find(_DAG_nodes[i]->getX() / RowWidth);
+            for(curr_level; curr_level<=i_total_level; ++curr_level)
+            {
+                if(it!= _x2_DAG_Node.end())
+                {
+                    for (int k = 0, sizetmp = it->second.size(); k < sizetmp; ++k) 
+                    {
+                        if ((it->second[k]->getY() / RowHeight == curr_level) && (it->second[k] != _DAG_nodes[i])) 
+                        {
+                            double weight = moduleOverlap_X(_DAG_nodes[i]->getModule(), it->second[k]->getModule());
+                            if(isDuplicate(_DAG_nodes[i]->getEdge(),{it->second[k], weight})==0)
+                            {
+                                _DAG_nodes[i]->addEdge(it->second[k], weight);
+                            }
+                            is_find = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if(is_find)
+                {
+                    it = _x2_DAG_Node.find(_DAG_nodes[i]->getX() / RowWidth);
+                    is_find = false;
+                }
+                else
+                {//這層y沒找到
+                    ++it;
+                    if (it == _x2_DAG_Node.end() || (it->first)*RowWidth >= row_right_boundary) 
+                    {
+                        double weight = _DAG_nodes[i]->getX()+ _DAG_nodes[i]->getModule()->width() - R->getX();
+                        _DAG_nodes[i]->addEdge(R, weight);
+                        is_find = true;
+                    }
+                    --curr_level; 
+
+                }
+            }
+        }
+        else
+        {//gate
+            double weight = _DAG_nodes[i]->getX() - _DAG_nodes[i+1]->getX();
+            _DAG_nodes[i]->addEdge(_DAG_nodes[i+1], weight);//L -> R
+
+            int curr_level = _DAG_nodes[i]->getY()/RowHeight;
+            int i_total_level = (_DAG_nodes[i]->getY()+_DAG_nodes[i]->getModule()->height())/RowHeight;
+            if((int)_DAG_nodes[i]->getModule()->height()%(int)RowHeight != 0)
+                i_total_level++;
+
+            map<int, vector<DAG_Node*> >::iterator it = _x2_DAG_Node.find(_DAG_nodes[i]->getX() / RowWidth);
+            for(curr_level; curr_level<=i_total_level; ++curr_level)
+            {
+                if (it != _x2_DAG_Node.end()) 
+                {
+                    for (int k = 0, sizetmp = it->second.size(); k < sizetmp; ++k) 
+                    {
+                        if ((it->second[k]->getY() / RowHeight == curr_level) && (it->second[k] != _DAG_nodes[i])) 
+                        {
+                            double weight = moduleOverlap_X(_DAG_nodes[i]->getModule(), it->second[k]->getModule());
+                            if(isDuplicate(_DAG_nodes[i]->getEdge(),{it->second[k], weight})==0)
+                            {
+                                _DAG_nodes[i + 1]->addEdge(it->second[k], weight); // R連接
+                            }
+                            is_find = true;
+                            break;
+                        }
+                    }
+                }
+                if(is_find)
+                {
+                    it = _x2_DAG_Node.find(_DAG_nodes[i]->getX() / RowWidth);
+                    is_find = false;
+                }
+                else
+                {//這層y沒找到
+                    ++it; 
+                    if (it == _x2_DAG_Node.end() || (it->first)*RowWidth >= row_right_boundary) 
+                    {
+                        double weight = _DAG_nodes[i]->getX() + _DAG_nodes[i]->getModule()->width() - R->getX();
+                        _DAG_nodes[i+1]->addEdge(R, weight); // R連接
+                        is_find = true;
+                    }
+                    --curr_level; 
+                }
+            }
+            ++i;    //BL後面一定是BR，跳過BR
+        }
+    }
+    
+
+    cout<<L->getEdge().size()<<endl;
+    cout<<_dataBase->getNumRows()<<endl;
+}
+
