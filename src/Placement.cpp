@@ -844,21 +844,30 @@ void Placement::constructFeasible(Module *ff)
 
 void Placement::netListGraph()
 {
+
+
     int test = 0;
-    //cout <<"LINE: "<< __LINE__ << endl;
+    cout <<"LINE: "<< __LINE__ << endl;
     for (int i = 0; i < this->_dataBase->getNumFF(); i++)
     {
-        //cout <<"LINE: "<< __LINE__ << endl;
+        cout <<"LINE: "<< __LINE__ << endl;
         deque<pair<Pin *, vector<int> > > que;
+
         for (int j = 0; j < this->_dataBase->ff(i)->numOutPins(); j++)
         {
-            //cout <<"test: " <<test <<endl;
-            //cout <<"LINE: " << j << " "<< __LINE__ << endl;
+           
             vector<int> a;
             a.push_back(this->_dataBase->ff(i)->No);
+            cout<<i<<endl;
+            cout <<"LINE: "<< __LINE__ << endl;
+            cout<<this->_dataBase->ff(i)->name()<<endl;
+            cout <<"LINE: "<< __LINE__ << endl;
+            cout<<this->_dataBase->ff(i)->name()<<endl;
+            cout <<"LINE: "<< __LINE__ << endl;
+            cout<<this->_dataBase->ff(i)->numOutPins()<<endl;
             que.push_back({this->_dataBase->ff(i)->OutPin(j), a});
-            //cout <<"push back in a/que: " << j << " "<< __LINE__ << endl;
-            //test++;
+            cout <<"push back in a/que: " << j << " "<< __LINE__ << endl;
+            test++;
         }
         while (!que.empty())
         {
@@ -967,6 +976,14 @@ void Placement::debankAllFF()
             debankFFto1bit(Dname);
         }
     }
+
+    for(int i=0;this->_dataBase->getNumFF();i++)
+    {
+        cout<<_dataBase->ff(i)->name()<<endl;
+        cout<<_dataBase->ff(i)->numOutPins()<<endl;
+    }
+
+
     return;
 }
 

@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 
   
   // cout << testGraph.cal_total_cost() << endl;
-  // testDTB.outputTofile(argv[2]);
+  //testDTB.outputTofile(argv[2]);
 
   // layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getbuffer());
   return 0;
