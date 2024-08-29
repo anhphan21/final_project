@@ -48,30 +48,31 @@ int main(int argc, char **argv)
 {
   Database testDTB;
   testDTB.parser(argv[1]);
+  cout<<testDTB.getNumClkNets()<<endl;
   cout << "Done parser!!!" << endl;
-  testDTB.setPositive_slack();
-  cout << "Done positive slack!!!" << endl;
+  // testDTB.setPositive_slack();
+  // cout << "Done positive slack!!!" << endl;
 
-  testDTB.builBestCelltype();
-  Placement testGraph;
-  testGraph.setDatabase(&testDTB);
-  testGraph.debankAllFF();
-  cout << "Done debank!!!" << endl;
+  // testDTB.builBestCelltype();
+  // Placement testGraph;
+  // testGraph.setDatabase(&testDTB);
+  // testGraph.debankAllFF();
+  // cout << "Done debank!!!" << endl;
 
-  cout << "====Start Lily Graph====" << endl;
-  testGraph.netListGraph();
-  cout << "Done Lily Graph!!!" << endl;
+  // cout << "====Start Lily Graph====" << endl;
+  // testGraph.netListGraph();
+  // cout << "Done Lily Graph!!!" << endl;
 
-  testGraph.windows();
-  cout << "Done Weilun Graph!!!" << endl;
+  // testGraph.windows();
+  // cout << "Done Weilun Graph!!!" << endl;
 
-  testGraph.construct_DAG();
-  cout << "Done DAG Graph!!!" << endl;
+  // testGraph.construct_DAG();
+  // cout << "Done DAG Graph!!!" << endl;
 
   
-  // cout << testGraph.cal_total_cost() << endl;
-  //testDTB.outputTofile(argv[2]);
+  // // cout << testGraph.cal_total_cost() << endl;
+  // //testDTB.outputTofile(argv[2]);
 
-  // layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getbuffer());
+  // // layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getbuffer());
   return 0;
 }

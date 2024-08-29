@@ -483,7 +483,7 @@ void Database::resetBin()
     }
 }
 
-void Database::updateBinUtil()
+int Database::updateBinUtil()
 {
     Module *_tmpModule;
     double _tmpCenterX, _tmpCenterY;
