@@ -1339,9 +1339,5 @@ void Placement::construct_DAG()
             ++i;    //BL後面一定是BR，跳過BR
         }
     }
-    
-
-    cout<<L->getEdge().size()<<endl;
-    cout<<_dataBase->getNumRows()<<endl;
 }
 
