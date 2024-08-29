@@ -487,6 +487,10 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
         return;
     }
     _maxClique.erase(ffs);
+    if (ffs.size() == 1)
+    {
+        return;
+    }
     vector<Module *> ffsV;
     ffsV.assign(ffs.begin(), ffs.end());
     cout << "merging ";
