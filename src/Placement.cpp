@@ -844,17 +844,25 @@ void Placement::constructFeasible(Module *ff)
 
 void Placement::netListGraph()
 {
+    int test = 0;
+    cout <<"LINE: "<< __LINE__ << endl;
     for (int i = 0; i < this->_dataBase->getNumFF(); i++)
     {
+        cout <<"LINE: "<< __LINE__ << endl;
         deque<pair<Pin *, vector<int> > > que;
         for (int j = 0; j < this->_dataBase->ff(i)->numOutPins(); j++)
         {
+            cout <<"test: " <<test <<endl;
+            cout <<"LINE: " << j << " "<< __LINE__ << endl;
             vector<int> a;
             a.push_back(this->_dataBase->ff(i)->No);
             que.push_back({this->_dataBase->ff(i)->OutPin(j), a});
+            cout <<"push back in a/que: " << j << " "<< __LINE__ << endl;
+            test++;
         }
         while (!que.empty())
         {
+            cout << "que not empty que.size=" << que.size() << endl;
             Module *moduleptr = que.front().first->module();
             if (moduleptr->isFF() && moduleptr->name() != this->_dataBase->ff(i)->name())
             {

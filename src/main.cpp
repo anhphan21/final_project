@@ -58,6 +58,7 @@ int main(int argc, char **argv)
   testGraph.debankAllFF();
   cout << "Done debank!!!" << endl;
 
+  cout << "====Start Lily Graph====" << endl;
   testGraph.netListGraph();
   cout << "Done Lily Graph!!!" << endl;
 
