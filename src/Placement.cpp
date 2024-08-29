@@ -123,7 +123,32 @@ void Placement::mainLoop()
     //        }
     //    }
 }
+// clang-format off
+pair<pair<double, double>, pair<double, double> > overlapRegion(const vector<Rectangle *> rectangles)
+{ // clang-format on
+    if (rectangles.empty())
+    {
+        return make_pair(make_pair(-1, -1), make_pair(-1, -1));
+    }
+    double left = rectangles[0]->left();
+    double bottom = rectangles[0]->bottom();
+    double right = rectangles[0]->right();
+    double top = rectangles[0]->top();
 
+    for (size_t i = 1; i < rectangles.size(); ++i)
+    {
+        left = max(left, rectangles[i]->left());
+        bottom = max(bottom, rectangles[i]->bottom());
+        right = min(right, rectangles[i]->right());
+        top = min(top, rectangles[i]->top());
+    }
+
+    if (left >= right || bottom >= top)
+    {
+        return make_pair(make_pair(-1, -1), make_pair(-1, -1));
+    }
+    return make_pair(make_pair(left, bottom), make_pair(right, top));
+}
 void Placement::mergeFFinG()
 {
     while (_nodes.size() > 1)
@@ -452,17 +477,63 @@ void Placement::merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx)
     // }
     // return;
 }
+// This Func can only merge when the set exact number
 void Placement::mergeMulti1bitFF(set<Module *> ffs)
-{
-    // input ffs size must be exactly same as new FF bit size /////////
+{ // input ffs size must be exactly same as new FF bit size /////////
+    // TODO: when merging, need to
+    if (ffs.size() > _dataBase->getmaxLibBit())
+    {
+        cout << "Error: Cannot merge multi-bit FFs. The number of FFs is greater than the maximum library bit size." << endl;
+        return;
+    }
+    _maxClique.erase(ffs);
     vector<Module *> ffsV;
     ffsV.assign(ffs.begin(), ffs.end());
+    cout << "merging ";
+    for (size_t i = 0; i < ffsV.size(); i++)
+    {
+        cout << ffsV[i]->name() << "  ";
+    }
+    cout << endl;
     pair<double, double> ffPos;
+    // remove the freed Module from other Cliques////////////////////////////////////
+    for (size_t i = 0; i < ffsV.size(); i++)
+    {
+        // clang-format off
+        // TODO: during for loop , but insert new element , will be wrong
+        set<set<Module*> > tempClique;
+        tempClique.clear();
+        for (set<set<Module*> >::iterator it = _maxClique.begin(); it != _maxClique.end(); ++it)
+        { // clang-format on
+            const set<Module *> &mySet = *it;
+            set<Module *> innerSet = mySet;
+            if (mySet == ffs)
+            {
+                continue;
+            }
+            innerSet.erase(ffsV[i]);
+            if (innerSet.size() != 0)
+            {
+                tempClique.insert(innerSet);
+            }
+        }
+        _maxClique = tempClique;
+    }
     // temp position/////////////////////////////////////////////////////////////////
     // TODO: new position
-    ffPos.first = ffsV[0]->x();
-    ffPos.second = ffsV[0]->y();
+    vector<Rectangle *> feasibleRegV;
+    feasibleRegV.clear();
+    for (size_t i = 0; i < ffsV.size(); ++i)
+    {
+        feasibleRegV.push_back(ffsV[i]->getFeasibleRegion());
+    }
+    // clang-format off
+    pair<pair<double, double>, pair<double, double> > olArea = overlapRegion(feasibleRegV);
+    // clang-format on
+    ffPos.first = (olArea.first.first + olArea.second.first) / 2;
+    ffPos.second = (olArea.second.second + olArea.first.second) / 2;
     /////////////////////////////////////////////////////////////////////////////////
+    // naming////////////////////////////////////////////////////////////////////////
     string newFFname = _dataBase->module(_dataBase->getNumModules() - 1)->name();
     string letters;
     string numbers;
@@ -518,7 +589,7 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
         }
         else
         {
-            free(targetclk->history());
+            delete targetclk->history();
             for (size_t j = 0; j < _dataBase->getNumPins(); j++)
             {
                 if (_dataBase->pin(j) == targetclk)
@@ -535,10 +606,10 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
                     break;
                 }
             }
-            free(targetclk);
+            delete targetclk;
         }
     }
-    //  clear FFs with no neighbor out of graph(_nodes)/////////////////////////////////
+    // clear FFs with no neighbor out of graph(_nodes)/////////////////////////////////
     // free m1 and m2
     for (size_t i = 0; i < ffsV.size(); i++)
     {
@@ -558,13 +629,13 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
                 break;
             }
         }
-        free(ffsV[i]->getFeasibleRegion());
-        free(ffsV[i]);
+        delete ffsV[i];
     }
     _dataBase->addModule(newMff);
     _dataBase->addFF(newMff);
     newMff->setPosition(ffPos.first, ffPos.second);
-    // check boundary
+    ffsV.clear();
+    // check boundary////////////////////////////////////////////////////
     if (newMff->x() < _dataBase->getBoundaryLeft())
     {
         newMff->setPosition(_dataBase->getBoundaryLeft(), newMff->y());
@@ -597,7 +668,7 @@ void Placement::clearNode()
 {
     for (unsigned i = 0; i < _nodes.size(); i++)
     {
-        free(_nodes[i]);
+        delete _nodes[i];
     }
     _nodes.clear();
     return;
@@ -1115,21 +1186,23 @@ void Placement::debankAllFF()
     unsigned initFFnum = _dataBase->getNumFF();
     // cout << "initFFnum: " << initFFnum << endl;
     // cout << "module num " << _dataBase->getNumModules() << endl;
+    unsigned k = 0;
     for (size_t i = 0; i < initFFnum; i++)
     {
         if (_dataBase->ff(i)->cellType()->numBit() > 1)
         {
+            k += _dataBase->ff(i)->cellType()->numBit();
             string Dname = _dataBase->ff(i)->name();
-            // cout << "ffname: " << Dname << endl;
             debankFFto1bit(Dname);
         }
     }
+    cout << "k: " << k << endl;
     return;
 }
 
 void Placement::debankFFto1bit(string ffname)
 {
-    cout << "debank  " << ffname << endl;
+    // cout << "debank  " << ffname << endl;
     // TODO: Each FF position after debanking
     int celltypeID = 0;
     Module *target = _dataBase->getModuleByName(ffname);
@@ -1163,6 +1236,7 @@ void Placement::debankFFto1bit(string ffname)
         pinName = "Q";
         newfflist[i]->OutPin(0)->setPinName(pinName);
         newfflist[i]->OutPin(0)->setModulePtr(newfflist[i]);
+        // cout << "num out pins " << newfflist[i]->numOutPins() << endl;
     }
     // naming =================================================================
     string nname = _dataBase->module(_dataBase->getNumModules() - 1)->name();
@@ -1229,15 +1303,14 @@ void Placement::debankFFto1bit(string ffname)
         if (_dataBase->ff(i) == target)
         {
             _dataBase->setFF(i, newfflist[ffbit - 1]);
+            cout << "done " << endl;
             break;
         }
     }
-    free(target->getFeasibleRegion());
-    free(target);
+    delete target;
     for (size_t i = 0; i < ffbit - 1; i++)
     {
         _dataBase->addFF(newfflist[i]);
-        cout << "module name : " << newfflist[i]->name() << endl;
         _dataBase->addModule(newfflist[i]);
     }
     return;
@@ -1254,6 +1327,7 @@ bool compareFirst(const Edge &a,
 }
 // clang-format off
 set<set<Module *> > Placement::calMaxClique(Net * targetNet)
+// TODO: maybe can be changed to void func
 { // clang-format on
     // input : clk net id
     // output : maximal clique(without proper subset)
@@ -1281,6 +1355,15 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
         {
             continue;
         }
+        if (targetNet->pin(i)->module()->isFixed() == true)
+        {
+            continue;
+        }
+        if (targetNet->pin(i)->name() != "CLK")
+        {
+            continue;
+        }
+
         if (targetNet->pin(i)->module()->getFeasibleRegion() != NULL)
         {
             targetFFs.push_back(targetNet->pin(i)->module());
@@ -1310,10 +1393,16 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
+    if (strip.size() == 0 || edges.size() == 0)
+    {
+        maxClique.clear();
+        return maxClique;
+    }
     sort(strip.begin(), strip.end());
     strip.erase(unique(strip.begin(), strip.end()), strip.end());
     sort(edges.begin(), edges.end(), compareFirst);
     cout << edges.size() << endl;
+    cout << strip.size() << endl;
     int counter = 0;
     // TODO: currently traverse every edge per strip, maybe a better O() way to implement
     for (size_t i = 0; i < strip.size() - 1; i++)
@@ -1415,6 +1504,211 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
     {
         maxClique.erase(*it);
     }
-    // clang-format on
+    for (set<set<Module*> >::iterator it = maxClique.begin(); it != maxClique.end(); ) {
+        if (it->empty()) 
+        {
+            set<set<Module*> >::iterator temp = it;
+            ++it;
+            maxClique.erase(temp);
+        } 
+        else {
+            ++it;
+        }
+    }
+    toRemove.clear();
+    tempClique.clear();
+    strip.clear();
+    edges.clear();
+    targetFFs.clear();
+    _maxClique = maxClique;
     return maxClique;
+}
+set<Module *> Placement::adjustClique(Net *targetNet, set<Module *> targetClique)
+{
+    set<Module *> perfectClique;
+    perfectClique.clear();
+    unsigned cliqueSize = targetClique.size();
+    unsigned s = 1;
+    unsigned upperS = 0, lowerS = 0;
+    // remove targetClique from _maxClique////////////////////////////////
+    _maxClique.erase(targetClique);
+    while (s <= _dataBase->getmaxLibBit())
+    {
+        if (cliqueSize > _dataBase->getmaxLibBit())
+        {
+            upperS = 0;
+            lowerS = _dataBase->getmaxLibBit();
+        }
+        if (cliqueSize == s)
+        {
+            return targetClique;
+        }
+        if (cliqueSize > s && cliqueSize < (s * 2))
+        {
+            lowerS = s;
+            upperS = s * 2;
+            break;
+        }
+        s = s * 2;
+    }
+    if (lowerS == 0)
+    { // error
+        cout << "error : adjustClique" << endl;
+        return perfectClique;
+    }
+    else if (upperS == 0)
+    { // Clique size is larger than maximum FF lib bit size(need to discard FFs)
+        // calculate overlaparea/feasibleregion
+        vector<Rectangle *> feasibleRegV;
+        feasibleRegV.clear();
+        for (set<Module *>::iterator it = targetClique.begin(); it != targetClique.end(); ++it)
+        {
+            feasibleRegV.push_back((*it)->getFeasibleRegion());
+        }
+        // clang-format off
+        pair<pair<double, double>, pair<double, double> > olArea = overlapRegion(feasibleRegV);
+        // clang-format on
+        cout << "olArea.first.first  " << olArea.first.first << "olArea.first.second " << olArea.first.second << "olArea.second.first " << olArea.second.first << "olArea.second.second " << olArea.second.second << endl;
+        double totoverlapReg = (olArea.second.first - olArea.first.first) *
+                               (olArea.second.second - olArea.first.second);
+        Module *fferased;
+        for (size_t i = 0; i < (cliqueSize - lowerS); i++)
+        {
+            double minOL = DBL_MAX;
+            for (set<Module *>::iterator it = targetClique.begin(); it != targetClique.end(); ++it)
+            {
+                double height = (*it)->getFeasibleRegion()->getHeight();
+                double width = (*it)->getFeasibleRegion()->getWidth();
+                if ((height * width) == 0)
+                {
+                    fferased = (*it);
+                }
+                if ((totoverlapReg / (height * width) < minOL))
+                {
+                    minOL = (totoverlapReg / ((*it)->getFeasibleRegion()->getHeight() * (*it)->getFeasibleRegion()->getWidth()));
+                    fferased = (*it);
+                }
+            }
+            targetClique.erase(fferased);
+        }
+        if (targetClique.size() != lowerS)
+        {
+            cout << "error: Clique isn't correctly sized " << endl;
+        }
+    }
+    else
+    { // Clique isn't perfect sized
+        if ((cliqueSize - lowerS) <= (upperS - cliqueSize))
+        { // in middle or lower , kick out some FF
+            vector<Rectangle *> feasibleRegV;
+            feasibleRegV.clear();
+            for (set<Module *>::iterator it = targetClique.begin(); it != targetClique.end(); ++it)
+            {
+                feasibleRegV.push_back((*it)->getFeasibleRegion());
+            }
+            // clang-format off
+            pair<pair<double, double>, pair<double, double> > olArea = overlapRegion(feasibleRegV);
+            double totoverlapReg = (olArea.second.first - olArea.first.first) *
+                                   (olArea.second.second - olArea.first.second);
+            Module *fferased;
+            double minOL = DBL_MAX;
+            for (size_t i = 0; i < (cliqueSize - lowerS); i++)
+            {
+                for (set<Module *>::iterator it = targetClique.begin(); it != targetClique.end(); ++it)
+                {
+                    double height = (*it)->getFeasibleRegion()->getHeight();
+                    double width = (*it)->getFeasibleRegion()->getWidth();
+                    if ((height * width) == 0)
+                    {
+                    fferased = (*it);
+                    }
+                    if ((totoverlapReg / (height * width)) < minOL)
+                    {
+                        minOL = (totoverlapReg / (height * width));
+                        fferased = (*it);
+                    }
+                }
+                targetClique.erase(fferased);
+            }
+            if (targetClique.size() != lowerS)
+            {
+                cout << "error: Clique isn't correctly sized 1" << endl;
+            }
+            
+        }
+        else
+        { // in upper,
+            // TODO: Implement include some nearby FF, maybe can change into directly merge
+            vector<Rectangle *> feasibleRegV;
+            feasibleRegV.clear();
+            vector<pair<Module *, double> > targetFFcliq;
+            targetFFcliq.clear();
+            // clang-format on
+            for (set<Module *>::iterator it = targetClique.begin(); it != targetClique.end(); ++it)
+            {
+                feasibleRegV.push_back((*it)->getFeasibleRegion());
+            }
+            for (size_t i = 0; i < targetNet->numPins(); i++)
+            {
+                if (targetNet->pin(i)->module() == NULL)
+                {
+                    continue;
+                }
+                if (targetNet->pin(i)->module()->isFixed() == true)
+                {
+                    continue;
+                }
+                if (targetNet->pin(i)->name() != "CLK")
+                {
+                    continue;
+                }
+                if (targetNet->pin(i)->module()->getFeasibleRegion() != NULL)
+                {
+                    if (targetClique.find(targetNet->pin(i)->module()) == targetClique.end())
+                    {
+                        targetFFcliq.push_back(make_pair(targetNet->pin(i)->module(), -1));
+                    }
+                }
+            }
+            // clang-format off
+            pair<pair<double, double>, pair<double, double> > olArea = overlapRegion(feasibleRegV);
+            // clang-format on
+            for (size_t i = 0; i < targetFFcliq.size(); i++)
+            {
+                // clang-format on
+                double FeasOLdisx = min(min(abs(targetFFcliq[i].first->getFeasibleRegion()->getX1() - olArea.first.first),
+                                            abs(targetFFcliq[i].first->getFeasibleRegion()->getX2() - olArea.first.first)),
+                                        min(abs(targetFFcliq[i].first->getFeasibleRegion()->getX1() - olArea.second.first),
+                                            abs(targetFFcliq[i].first->getFeasibleRegion()->getX2() - olArea.second.first)));
+                double FeasOLdisy = min(min(abs(targetFFcliq[i].first->getFeasibleRegion()->getY1() - olArea.first.second),
+                                            abs(targetFFcliq[i].first->getFeasibleRegion()->getY2() - olArea.first.second)),
+                                        min(abs(targetFFcliq[i].first->getFeasibleRegion()->getY1() - olArea.second.second),
+                                            abs(targetFFcliq[i].first->getFeasibleRegion()->getY2() - olArea.second.second)));
+                targetFFcliq[i].second = max(FeasOLdisx, FeasOLdisy);
+            }
+            for (size_t i = 0; i < (upperS - cliqueSize); i++)
+            {
+                pair<Module *, double> target;
+                target = targetFFcliq[0];
+                for (size_t i = 1; i < targetFFcliq.size(); i++)
+                {
+                    if (targetFFcliq[i].second < target.second)
+                    {
+                        target = targetFFcliq[i];
+                    }
+                }
+                // clang-format off
+                targetClique.insert(target.first);
+                vector<pair<Module *, double> >::iterator newEnd = std::remove(targetFFcliq.begin(), targetFFcliq.end(), target);
+                targetFFcliq.erase(newEnd, targetFFcliq.end());
+                // clang-format on
+            }
+            if (targetClique.size() != upperS)
+            {
+                cout << "error: Clique isn't correctly sized 2" << endl;
+            }
+        }
+    }
+    _maxClique.insert(targetClique);
+    return targetClique;
 }

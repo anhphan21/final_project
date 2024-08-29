@@ -5,10 +5,9 @@
 // We declare a Placement every time we are doing merge on a clk net
 class Nodeinf
 {
-   public:
-       Nodeinf() {  };
-       vector<string> record_str;
-
+public:
+   Nodeinf() {};
+   vector<string> record_str;
 };
 
 class Placement
@@ -16,8 +15,8 @@ class Placement
 public:
    Placement()
    {
-       _nodes.resize(1);
-       _nodes[0] = NULL;
+      _nodes.resize(1);
+      _nodes[0] = NULL;
    };
    void mainLoop();
    void constructFeasible(Module *ff);
@@ -26,11 +25,15 @@ public:
 
    void windows();
    void constructGraph();
-   set<set<Module *> > calMaxClique(unsigned clkidx);
+   // clang-format off
+   set<set<Module *> > calMaxClique(Net *targetNet);
+   set<Module*> adjustClique(Net *targetNet , set<Module*> targetClique);
+   // step: decide discard or include 
+   //       desi
+   // clang-format on
    double cal_cost(Module *ff1, Module *ff2);
    double cal_total_cost();
    double getDen();
-
 
    NodeList findMST();
    void netListGraph();
@@ -41,14 +44,17 @@ public:
    void setNodesize(unsigned size);
    void clearNode();
    // func for MST //////////////
+   // clang-format off
    void DecreaseKeyMST(vector<pair<Node *, pair<double, Node *> > > &heap, unsigned idx, double key);
    pair<Node *, pair<double, Node *> > extractMinMST(vector<pair<Node *, pair<double, Node *> > > &heap);
+   
    void swapNodeMST(vector<pair<Node *, pair<double, Node *> > > &heap, unsigned idx1, unsigned idx2);
    // func for MST //////////////
    // func for mergeFF////////////
    void mergeFFinG();
    void eraseEdge(unsigned idx1, unsigned idx2);
    void merge2FF(unsigned idx1, unsigned idx2, unsigned newffidx);
+   void mergeMulti1bitFF(set<Module*> ffs);
    void debankAllFF();
    void debankFFto1bit(string ffname);
    void whichFFtoChose();
@@ -56,8 +62,38 @@ public:
    Node *node(unsigned nodeId) { return _nodes[nodeId]; }
    void setDatabase(Database *dataBase) { _dataBase = dataBase; }
    Database *getDatabase() { return _dataBase; }
-   map<string, vector<Module*> >  CLKNetModule;
+   map<string, vector<Module *> > CLKNetModule;
    vector<pair<vector<string>, string> > latch_record;
+   unsigned getmaxCliqesize(){ return _maxClique.size(); }
+   // clang-format off
+   set<Module*> getLargestCliqSet()
+   {
+      set<Module*> largestSet;
+      size_t maxSize = 0;
+      for (set<set<Module*> >::iterator it = _maxClique.begin(); it != _maxClique.end(); ++it) 
+      {
+        if (it->size() > maxSize) {
+            maxSize = it->size();
+            largestSet = *it;
+        }
+      }
+      return largestSet;
+   }
+   set<Module*> getaCliqSet()
+   {
+      set<set<Module*> >::iterator yo = _maxClique.begin();
+      if (yo != _maxClique.end()) 
+      {
+        return *yo;
+      }
+      else
+      {
+         return set<Module*>();
+      }
+   }
+   set<set<Module*> > getwholeCliq(){ return _maxClique; }
+   void clearmaxCliq() { _maxClique.clear(); }
+
 private:
    Database *_dataBase;
    // construct graph
@@ -65,6 +101,8 @@ private:
    NodeList _nodes;
    map<string, Node *> _name2Node;
    map<string, int> ModuleTraverseN;
+   set<set<Module *> > _maxClique;
+   // clang-format on
 };
 
 #endif // PLACEMENT_H
