@@ -274,7 +274,7 @@ private:
     Module *FindPrePin(Module *currentM);
 
     // void updateInitialSlackInfo();
-    set<Pin *> _initial_negSlack;
+    vector<Pin *> _initial_negSlack;
 
 
 

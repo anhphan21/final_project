@@ -894,11 +894,11 @@ bool feasibleRegion_overlap(const Rectangle *a, const Rectangle *b)
 
 void Placement::windows() // construct weilun graph
 {
-    // double chip_L = _dataBase->getBoundaryLeft();
-    // double chip_R = _dataBase->getBoundaryRight();
-    // double chip_B = _dataBase->getBoundaryBottom();
-    // double chip_T = _dataBase->getBoundaryTop();
-    // double window_size = sqrt((chip_T - chip_B) * (chip_L - chip_R)); // we can adjust window size
+    double chip_L = _dataBase->getBoundaryLeft();
+    double chip_R = _dataBase->getBoundaryRight();
+    double chip_B = _dataBase->getBoundaryBottom();
+    double chip_T = _dataBase->getBoundaryTop();
+    double window_size = sqrt((chip_T - chip_B) * (chip_L - chip_R)); // we can adjust window size
     // double step_size = window_size / 2;
     // clang-format off
     map<pair<double, double>, vector<Module *> > window_idx2FF;
