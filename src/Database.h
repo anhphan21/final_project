@@ -193,22 +193,20 @@ public:
     unsigned getDen(double) const;
     double totalCost(double) const;
 
-    int getbincol() { return _numBinCol; }
-    int getbinrow() { return _numBinRow; }
-
     int getbincol(){return _numBinCol;}
     int getbinrow(){return _numBinRow;}
     double getbinutil() const { return _binMaxUtil; }
     // let all slack be positive
     void setPositive_slack();
-    void adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, double grid_width, double grid_height);
-    vector<Pin *> getNegative_slack() { return _initial_negSlack; };
-    FFCell *getFFlib(int bit) { return _ffLib[bit][0]; }
+    void adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius , double grid_width, double grid_height);
+    set<Pin *> getNegative_slack(){return _initial_negSlack;};
+    FFCell *getFFlib(int bit){return _ffLib[bit][0];}
 
     map<string, Pin *> IODesign;
 
-    map<string, int> OriginModuleN;
-    int record;
+
+    map<string, int > OriginModuleN;
+    int record = 0;
 
 
 
@@ -274,7 +272,7 @@ private:
     Module *FindPrePin(Module *currentM);
 
     // void updateInitialSlackInfo();
-    vector<Pin *> _initial_negSlack;
+    set<Pin *> _initial_negSlack;
 
 
 

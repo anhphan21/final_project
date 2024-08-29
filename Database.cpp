@@ -278,7 +278,7 @@ void Database::parser(const string &filename)
             {
                 Isclk = false; // 定義這個Net是clkNet!!!每一條定義一個
                 getline(file, line);
-                getline(file, line);
+                // getline(file, line);
                 istringstream iss(line);
 
                 iss >> temp >> Netname >> PinNum;
@@ -813,4 +813,230 @@ double Database::totalCost(double _denThrs) const
     }
 
     return _alpha * _tnsCost + _beta * _powerCost + _gamma * _areaCost + _lambda * getDen(_denThrs);
+}
+void Database::setPositive_slack() {
+    std::set<Pin *> processedPins; // 用於存儲已處理過的 Pins
+
+    for (std::set<Pin *>::iterator it = _initial_negSlack.begin(); it != _initial_negSlack.end(); ++it) {
+        Pin* currentPin = *it;
+        
+        if (currentPin->getSlackInfor()->slack() < 0 && currentPin->module() != NULL && currentPin->module()->isFF()
+            && currentPin->net()->OutputPin() != currentPin) {
+            double ff_original_slack = currentPin->getSlackInfor()->slack();
+            double dis_delay = getDisplacementDelay();
+            double initial_dist = std::abs(currentPin->net()->OutputPin()->x() - currentPin->x()) +
+                                  std::abs(currentPin->net()->OutputPin()->y() - currentPin->y());
+            double radius = (ff_original_slack + dis_delay * initial_dist) / dis_delay;
+            adjust_position(currentPin->net()->OutputPin(), currentPin, radius, row(0)->width(), row(0)->height());
+
+            // 更新 slack
+            double new_dist = std::abs(currentPin->net()->OutputPin()->x() - currentPin->x()) +
+                              std::abs(currentPin->net()->OutputPin()->y() - currentPin->y());
+            double new_slack = (initial_dist - new_dist) * dis_delay + ff_original_slack;
+            if (std::abs(new_slack) < std::pow(10, -10)) // 處理浮點誤差
+                new_slack = 0;
+            currentPin->getSlackInfor()->setSlack(new_slack);
+
+            //check overlapping
+            // if(new_dist == 0)
+            // {
+            //     _buffer.push_back(currentPin->module());
+            //     _buffer.push_back(currentPin->net()->OutputPin()->module());
+            //     cout<<"overlapping: "<<currentPin->module()->name()<<"/"<<currentPin->name()<<" ("
+            //     <<currentPin->x()<<","<<currentPin->y()<<") "
+            //     <<currentPin->module()->x()<<","<<currentPin->module()->y()<<" "<<
+            //     currentPin->module()->x()+currentPin->module()->width()<<","<<currentPin->module()->y()+currentPin->module()->height()
+            //     <<" -> "<<currentPin->net()->OutputPin()->module()->name()<<"/"<<currentPin->net()->OutputPin()->name()<<" ("
+            //     <<currentPin->net()->OutputPin()->x()<<","<<currentPin->net()->OutputPin()->y()<<") "
+            //     <<currentPin->net()->OutputPin()->module()->x()<<","<<currentPin->net()->OutputPin()->module()->y()<<" "
+            //     <<currentPin->net()->OutputPin()->module()->x()+currentPin->net()->OutputPin()->module()->width()<<","
+            //     <<currentPin->net()->OutputPin()->module()->y()+currentPin->net()->OutputPin()->module()->height()<<endl;
+            // }
+        
+            // 更新其它 Pins 的 slack
+            for (int j = 0; j < currentPin->net()->numPins(); ++j) {
+                Pin* otherPin = currentPin->net()->pin(j);
+                if (otherPin == currentPin)
+                    continue;
+
+                double newWL = std::abs(otherPin->x() - currentPin->x()) +
+                               std::abs(otherPin->y() - currentPin->y());
+                double buff = otherPin->getSlackInfor()->slack() + dis_delay * (initial_dist - newWL);
+                otherPin->getSlackInfor()->setSlack(buff);
+
+                if (buff < 0 && processedPins.find(otherPin) == processedPins.end()) {
+                    _initial_negSlack.insert(otherPin);
+                    processedPins.insert(otherPin);
+                }
+            }
+        }
+    }
+}
+
+
+
+void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, double grid_width, double grid_height)
+{
+    double deltaX = abs(fix_pin->x() - adjust_pin->x());
+    double deltaY = abs(fix_pin->y() - adjust_pin->y());
+    double initial_dist = deltaX + deltaY;
+    if (initial_dist <= radius)
+        return; // don't have to adjust
+
+    double reduceBy = initial_dist - radius;
+    if (deltaX > deltaY)
+    {
+        if (deltaX - reduceBy < 0)
+        {
+            deltaY = max(deltaY - reduceBy, 0.0);
+        }
+        deltaX = max(deltaX - reduceBy, 0.0);
+    }
+    else
+    {
+        if (deltaY - reduceBy < 0)
+        {
+            deltaX = max(deltaX - reduceBy, 0.0);
+        }
+        deltaY = max(deltaY - reduceBy, 0.0);
+    }
+
+    adjust_pin->setPosition((fix_pin->x() + deltaX * (adjust_pin->x() > fix_pin->x() ? 1 : -1)),
+                            (fix_pin->y() + deltaY * (adjust_pin->y() > fix_pin->y() ? 1 : -1)));
+                        
+    // snap to grid
+    adjust_pin->setPosition((((adjust_pin->x() + grid_width) / grid_width) * grid_width), (((adjust_pin->y() + grid_height) / grid_height) * grid_height));
+    double newx = adjust_pin->x() - adjust_pin->xOffset();
+    double newy = adjust_pin->y() - adjust_pin->yOffset();
+    adjust_pin->module()->setPosition(newx, newy);  
+    double new_dist = abs(fix_pin->x() - adjust_pin->x()) + abs(fix_pin->y() - adjust_pin->y());
+    if (new_dist <= radius)
+        return;
+    else
+    {
+        if (adjust_pin->x() < fix_pin->x())
+            adjust_pin->setPosition(adjust_pin->x() + grid_width, adjust_pin->y());
+        else if (adjust_pin->x() > fix_pin->x())
+            adjust_pin->setPosition(adjust_pin->x() - grid_width, adjust_pin->y());
+        if (adjust_pin->y() < fix_pin->y())
+            adjust_pin->setPosition(adjust_pin->x(), adjust_pin->y() + grid_height);
+        else if (adjust_pin->y() > fix_pin->y())
+            adjust_pin->setPosition(adjust_pin->x(), adjust_pin->y() - grid_height);
+            double newx = adjust_pin->x() - adjust_pin->xOffset();
+        double newy = adjust_pin->y() - adjust_pin->yOffset();
+        adjust_pin->module()->setPosition(newx, newy);  
+    }
+}
+
+void Database::buildBestCelltype()
+{
+    for (size_t i = 0; i < _ffLib.size(); i++)
+    {
+        vector<FFCell *> cellv = _ffLib[pow(2, i)];
+        double maxCost = 0;
+        unsigned bestid;
+        vector<double> disCost;
+        disCost.clear();
+        // find best among cellv(same bit celltype)
+        for (size_t j = 0; j < cellv.size(); j++)
+        { // cal displacement cost
+            unsigned clkidx = cellv[j]->clkPinIdx();
+            double cost = 0;
+            for (size_t k = 0; k < cellv[j]->getInNum(); k++)
+            {
+                if (k != clkidx)
+                {
+                    cost += (cellv[j]->pinOffsetX(k) + cellv[j]->pinOffsetY(k)) * _dDelay;
+                }
+            }
+            disCost.push_back(cost);
+            if (cost > maxCost)
+            {
+                maxCost = cost;
+            }
+        }
+        double mintotCost = DBL_MAX;
+        for (size_t j = 0; j < cellv.size(); j++)
+        {
+            double totcost = 0;
+            totcost += maxCost - disCost[j];
+            totcost += cellv[j]->getArea() + cellv[j]->getPower();
+            if (totcost < mintotCost)
+            {
+                mintotCost = totcost;
+                bestid = j;
+            }
+        }
+        _bestCells[pow(2, i)] = cellv[bestid];
+    }
+    return;
+}
+
+string itos(int num)
+{
+    string ans = "";
+    while (num)
+    {
+        ans = char((num % 10) + '0') + ans;
+        num /= 10;
+    }
+    return ans;
+}
+
+void Database::outputTofile(const string &filename)
+{
+    fstream outFile;
+    outFile.open(filename.c_str(), ios::out);
+    if (!outFile.is_open())
+    {
+        cerr << "Error opening file: " << filename << endl;
+        exit(1);
+    }
+    outFile << fixed;
+    // outFile << "CellInst " << getNumFF() << endl;
+    outFile << "CellInst " << getbuffer().size() << endl;
+    // temp=============================
+    string nname = _modules[_modules.size() - 1]->name();
+    string letters;
+    string numbers;
+    for (int i = 0; i < nname.length(); ++i)
+    {
+        if (isdigit(nname[i]))
+            numbers += nname[i];
+        else
+            letters += nname[i];
+    }
+    int num = atoi(numbers.c_str());
+    for (size_t i = 0; i < _ffModules.size(); ++i)
+    {
+        num++;
+        nname = letters + itos(num);  
+        _ffModules[i]->setName(nname);
+        
+    }
+    // temp=============================
+    for (size_t i = 0; i < getNumFF(); i++)
+    {
+        outFile << "Inst " << _ffModules[i]->name() << " " << _ffModules[i]->cellType()->getName() << " "
+                << setprecision(0) << _ffModules[i]->x() << " " << _ffModules[i]->y() << " " <<endl;
+    }
+    for (size_t i = 0; i < getNumFF(); ++i)
+    {
+        for(size_t j=0;j<_ffModules[i]->totnumPins(); ++j)
+        {
+            outFile << _ffModules[i]->pin(j)->history()->oldModuleName() << "/" << _ffModules[i]->pin(j)->history()->oldPinName()
+                    << " map " << _ffModules[i]->name() << "/" << _ffModules[i]->pin(j)->name() << endl;
+        }   
+    }
+
+
+
+    //check overlapping
+    // for(int i=0; i<_buffer.size(); ++i)
+    // {
+    //      outFile << "Inst " << _buffer[i]->name() << " " << _buffer[i]->cellType()->getName() << " "
+    //             << setprecision(0) << _buffer[i]->x() << " " << _buffer[i]->y() << " "
+    //             << _buffer[i]->width()<< " " <<_buffer[i]->height()<<endl;
+    // }
+    return;
 }
