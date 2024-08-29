@@ -180,7 +180,7 @@ public:
     void updateSlackAll();
     void updateSlack(Pin *);
     void resetVisit();
-    void buildBestCelltype();
+    // void buildBestCelltype();
     void unMarkedDPin(); // unmarked all clk pin of FF
     // void updateRadius(FFCell *);
     void updateRadius();
