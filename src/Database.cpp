@@ -942,7 +942,7 @@ void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, dou
     }
 }
 
-void Database::builBestCelltype()
+void Database::buildBestCelltype()
 {
     for (size_t i = 0; i < _ffLib.size(); i++)
     {

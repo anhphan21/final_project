@@ -24,7 +24,7 @@ public:
    void constructFeasible(Module *ff);
    Rhombus *findInputRegion(Module *ff);
    vector<Rhombus *> findOutputRegion(Module *ff);
-
+   bool overlap_ornot(vector<Rhombus *> &input_rhombus, double &leftBound, double &rightBound, double &botBound, double &topBound);
    void windows();
    void constructGraph();
    // clang-format off

@@ -14,12 +14,12 @@ using namespace std;
 class Module
 {
 public:
-    Module() : _x(-1), _y(-1), _isFixed(false), _type(NULL), _radius(0)
+    Module() : _x(-1), _y(-1), _isFixed(false), _type(NULL), _radius(0),_feasibleRegion(NULL)
     {
     }
 
     Module(string &name, CellType *type, double x, double y)
-        : _name(name), _type(type), _x(x), _y(y), _isFixed(false), _radius(0)
+        : _name(name), _type(type), _x(x), _y(y), _isFixed(false), _radius(0),_feasibleRegion(NULL)
     {
     }
     ~Module()

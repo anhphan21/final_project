@@ -844,23 +844,23 @@ double cal_distance(pair<double, double> A, pair<double, double> B)
     return (abs(A.first - B.first) + abs(A.second - B.second));
 }
 
-bool overlap_ornot(std::vector<Rhombus *> &input_rhombus, double &leftBound, double &rightBound, double &botBound, double &topBound)
+bool Placement::overlap_ornot(vector<Rhombus *> &input_rhombus, double &leftBound, double &rightBound, double &botBound, double &topBound)
 {
     if (input_rhombus.empty())
-        return false;
+        return false;   
 
-    leftBound = -DBL_MAX; // 使用 -DBL_MAX 表示最小可能值
-    rightBound = DBL_MAX; // 使用 DBL_MAX 表示最大可能值
-    botBound = -DBL_MAX;  // 使用 -DBL_MAX 表示最小可能值
-    topBound = DBL_MAX;   // 使用 DBL_MAX 表示最大可能值
+    leftBound = _dataBase->row(0)->x();
+    rightBound = _dataBase->row(0)->x() + _dataBase->row(0)->numSites()*_dataBase->row(0)->width();
+    botBound = _dataBase->row(0)->y();
+    topBound = _dataBase->row(_dataBase->getNumRows()-1)->y();
+   
 
-    // 旋转 45 度
-    for (std::vector<Rhombus *>::iterator it = input_rhombus.begin(); it != input_rhombus.end(); ++it)
+    for (vector<Rhombus *>::iterator it = input_rhombus.begin(); it != input_rhombus.end(); ++it)
     {
-        (*it)->RotatePeak(45); // 解引用指针调用方法
+        (*it)->RotatePeak(45); 
     }
 
-    for (std::vector<Rhombus *>::iterator it = input_rhombus.begin(); it != input_rhombus.end(); ++it)
+    for (vector<Rhombus *>::iterator it = input_rhombus.begin(); it != input_rhombus.end(); ++it)
     {
         leftBound = std::max(leftBound, (*it)->peak(3).x);
         rightBound = std::min(rightBound, (*it)->peak(1).x);
@@ -868,14 +868,21 @@ bool overlap_ornot(std::vector<Rhombus *> &input_rhombus, double &leftBound, dou
         topBound = std::min(topBound, (*it)->peak(1).y);
     }
 
-    // 旋转回 -45 度
-    for (std::vector<Rhombus *>::iterator it = input_rhombus.begin(); it != input_rhombus.end(); ++it)
+    for (vector<Rhombus *>::iterator it = input_rhombus.begin(); it != input_rhombus.end(); ++it)
     {
-        (*it)->RotatePeak(-45); // 解引用指针调用方法
+        (*it)->RotatePeak(-45); 
     }
 
-    // 检查菱形是否重叠
-    if ((leftBound > rightBound) || (botBound > topBound))
+    if(leftBound<_dataBase->row(0)->x())
+        leftBound = _dataBase->row(0)->x();
+    if(rightBound>_dataBase->row(0)->x() + _dataBase->row(0)->numSites()*_dataBase->row(0)->width())
+        rightBound = _dataBase->row(0)->x() + _dataBase->row(0)->numSites()*_dataBase->row(0)->width();
+    if(botBound< _dataBase->row(0)->y())
+        botBound = _dataBase->row(0)->y();
+    if(topBound > _dataBase->row(_dataBase->getNumRows()-1)->y())
+        topBound > _dataBase->row(_dataBase->getNumRows()-1)->y();
+
+    if ((leftBound >= rightBound) || (botBound >= topBound))
     {
         return false;
     }
@@ -893,16 +900,7 @@ bool feasibleRegion_overlap(const Rectangle *a, const Rectangle *b)
 }
 
 void Placement::windows() // construct weilun graph
-{
-    // double chip_L = _dataBase->getBoundaryLeft();
-    // double chip_R = _dataBase->getBoundaryRight();
-    // double chip_B = _dataBase->getBoundaryBottom();
-    // double chip_T = _dataBase->getBoundaryTop();
-    // double window_size = sqrt((chip_T - chip_B) * (chip_L - chip_R)); // we can adjust window size
-    // double step_size = window_size / 2;
-    // clang-format off
-    map<pair<double, double>, vector<Module *> > window_idx2FF;
-    // clang-format on
+{ 
     _nodes.clear();
     int num_FF = _dataBase->getNumFF();
     for (int i = 0; i < num_FF; ++i)
@@ -913,40 +911,35 @@ void Placement::windows() // construct weilun graph
         _name2Node[n->getFFinNode()->name()] = n;
         _nodes.push_back(n);
 
-        // Assign a window index to the current FF.
-        // double idx_x = _dataBase->ff(i)->x() / window_size;
-        // double idx_y = _dataBase->ff(i)->y() / window_size;
-        // window_idx2FF[{idx_x, idx_y}].push_back(_dataBase->ff(i));
-
         // Construct feasible region for current FF
         constructFeasible(_dataBase->ff(i));
     }
-    // double y_min = chip_B / window_size;
-    // double y_max = chip_T / window_size;
-    // double x_min = chip_L / window_size;
-    // double x_max = chip_R / window_size;
-    // for (int y = y_min; y <= y_max; ++y)
-    // {
-    //     for (int x = x_min; x <= x_max; ++x)
-    //     {
-            // double length = window_idx2FF[{x, y}].size();
-            for (int i = 0; i < num_FF; ++i)
+    for (int i = 0; i < num_FF; ++i)
+    {
+        for (int j = i + 1; j < num_FF; ++j)
+        {
+            if(_dataBase->ff(i)->getFeasibleRegion()==NULL)
+                continue;
+            if(_dataBase->ff(j)->getFeasibleRegion()==NULL)
+                continue;
+            if (feasibleRegion_overlap(_dataBase->ff(i)->getFeasibleRegion(), _dataBase->ff(j)->getFeasibleRegion()))
             {
-                for (int j = i + 1; j < num_FF; ++j)
-                {
-                    if(_dataBase->ff(i)->getFeasibleRegion()==NULL)
-                        continue;
-                    if(_dataBase->ff(j)->getFeasibleRegion()==NULL)
-                        continue;
-                    if (feasibleRegion_overlap(_dataBase->ff(i)->getFeasibleRegion(), _dataBase->ff(j)->getFeasibleRegion()))
-                    {
-                        _name2Node[_dataBase->ff(i)->name()]->addNeighborPair({_name2Node[_dataBase->ff(j)->name()], 0}); // without cost
-                        _name2Node[_dataBase->ff(j)->name()]->addNeighborPair({_name2Node[_dataBase->ff(i)->name()], 0}); // two directions
-                    }
-                }
+                _name2Node[_dataBase->ff(i)->name()]->addNeighborPair({_name2Node[_dataBase->ff(j)->name()], 0}); // without cost
+                _name2Node[_dataBase->ff(j)->name()]->addNeighborPair({_name2Node[_dataBase->ff(i)->name()], 0}); // two directions
             }
-    //     }
-    // }
+        }
+    }
+    for (int i = 0; i < num_FF; ++i)
+    {
+        if(_dataBase->ff(i)->getFeasibleRegion()==NULL)
+            continue;
+        if(_dataBase->ff(i)->getFeasibleRegion()->left()!=0)
+        {
+            cout<<_dataBase->ff(i)->getFeasibleRegion()->left()<<","<<_dataBase->ff(i)->getFeasibleRegion()->bottom()<<"    ";
+            cout<<_dataBase->ff(i)->getFeasibleRegion()->right()<<","<<_dataBase->ff(i)->getFeasibleRegion()->top();
+            cout<<endl;
+        }
+    }
 }
 
 double Placement::cal_total_cost()
@@ -1050,20 +1043,24 @@ void Placement::constructFeasible(Module *ff)
     vector<Rhombus *> out = findOutputRegion(ff);
     if (out.empty())
     {
-
         return;
     }
     out.push_back(in); // in_and_out
+
     double Feas_x1 = 0, Feas_y1 = 0, Feas_x2 = 0, Feas_y2 = 0;
     if (overlap_ornot(out, Feas_x1, Feas_x2, Feas_y1, Feas_y2) == 1)
     { // if return is true then Feas_x1, Feas_x2, Feas_y1, Feas_y2 have correct value
         Rectangle *buff = new Rectangle(Feas_x1, Feas_y1, Feas_x2, Feas_y2);
+        if (abs(Feas_x1) < pow(10, -10)) Feas_x1=0;
+        if (abs(Feas_y1) < pow(10, -10)) Feas_y1=0;
+        if (abs(Feas_x2) < pow(10, -10)) Feas_x2=0;
+        if (abs(Feas_y2) < pow(10, -10)) Feas_y2=0;
+
         ff->setFeasibleRegion(buff); // feasibleRegion still be retangleable
     }
     else
     {
-        // cout << ff->name() << " feasibleRegion not found\n"
-        //      << endl;
+        ff->setFeasibleRegion(NULL);
     }
 }
 
