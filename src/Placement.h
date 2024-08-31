@@ -102,7 +102,14 @@ public:
    void add_DAG_nodes(DAG_Node *node) { _DAG_nodes.push_back(node); }
    unsigned getNum_DAG_Node() { return _DAG_nodes.size(); }
    void construct_DAG();
-   
+   //Cell Shifting Heuristic
+   void cell_shifting();
+   map<Node*, vector<int>> table;
+   double cal_rho(DAG_Node *_DagNode) {return rho_i;}
+   double cal_theta(DAG_Node *_DagNode) {return theta_i;}
+   double cal_l(DAG_Node *_DagNode) {return l_i;}
+   double cal_r(DAG_Node *_DagNode) {return r_i;}
+
 private:
    Database *_dataBase;
    // construct graph
@@ -111,6 +118,12 @@ private:
    map<string, Node *> _name2Node;
    map<string, int> ModuleTraverseN;
    set<set<Module *> > _maxClique;
+   
+   double rho_i;
+   double theta_i;
+   double l_i;
+   double r_i;
+
    // clang-format on
 
    map<double, map<double, double> > _binMap;

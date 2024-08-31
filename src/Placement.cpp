@@ -1992,3 +1992,9 @@ void Placement::construct_DAG()
     cout<<L->getEdge().size()<<endl;
     cout<<_dataBase->getNumRows()<<endl;
 }
+
+void cell_shifting()
+{
+    DAG_Node _DagNode;
+    
+}
