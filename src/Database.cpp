@@ -983,6 +983,7 @@ void Database::buildBestCelltype()
         }
         _bestCells[pow(2, i)] = cellv[bestid];
     }
+    _ffLibMaxBit = pow(2, _ffLib.size() - 1);
     return;
 }
 

@@ -34,9 +34,9 @@ void layout(const string &filename, const int x, const int y, vector<Module *> m
     }
     else
     {
-      fout << "rect " << module[i]->x() << " " << module[i]->y() << " " 
-        << module[i]->x() + module[i]->width() << " " << module[i]->y() + module[i]->height() << " " 
-        << "red"<< " name " <<module[i]->name() << endl;
+      fout << "rect " << module[i]->x() << " " << module[i]->y() << " "
+           << module[i]->x() + module[i]->width() << " " << module[i]->y() + module[i]->height() << " "
+           << "red" << " name " << module[i]->name() << endl;
     }
   }
 
@@ -51,37 +51,61 @@ int main(int argc, char **argv)
   cout << "Done parser!!!" << endl;
   testDTB.setPositive_slack();
   cout << "Done positive slack!!!" << endl;
-
   testDTB.buildBestCelltype();
   Placement testGraph;
   testGraph.setDatabase(&testDTB);
-  unsigned count = 0;
-  for (size_t i = 0; i < testDTB.getNumFF(); i++)
-  {
-    if (testDTB.ff(i)->cellType()->numBit() > 1)
-    {
-      count += testDTB.ff(i)->cellType()->numBit();
-    }
-  }
-  cout << "count: " << count << endl;
   testGraph.debankAllFF();
-  // cout << "Done debank!!!" << endl;
-  // cout << "count: " << count << endl;
-  // cout << "ff num " << testDTB.getNumFF() << endl;
-  // cout << testDTB.getmaxLibBit() << endl;
-  // cout << "power of 4 1bit FF " << testDTB.getBestCelltype(1)->getPower() * 3 << endl;
-  // cout << "power of 1 4bit FF " << testDTB.getBestCelltype(4)->getPower() << endl;
-  // cout << "power + area of 4 1bit FF "
-  //      << testDTB.getBestCelltype(1)->getPower() * 2 + testDTB.getBestCelltype(1)->getArea() * 2 << endl;
-  // cout << "power + area of 1 4bit FF "
-  //      << testDTB.getBestCelltype(4)->getPower() + testDTB.getBestCelltype(4)->getArea() << endl;
-  // cout << "power + area of 1 2 bit FF "
-  //      << testDTB.getBestCelltype(2)->getPower() + testDTB.getBestCelltype(2)->getArea() << endl;
+  cout << "Done debank!!!" << endl;
   testGraph.netListGraph();
   cout << "Done Lily Graph!!!" << endl;
-
   testGraph.windows();
   cout << "Done Weilun Graph!!!" << endl;
+  // get clk net list
+  NetList Cnets = testDTB.getClkNets();
+  for (size_t j = 0; j < Cnets.size(); j++)
+  {
+    // clang-format off
+    set<set<Module *> > cliques = testGraph.calMaxClique(Cnets[j]);
+    while (testGraph.getmaxCliqesize() != 0)
+    {
+      set<Module *> a = testGraph.getLargestCliqSet();
+      set<Module *> b = testGraph.adjustClique(Cnets[j], a);
+      testGraph.mergeMulti1bitFF(b);
+      set<set<Module*> >c = testGraph.getwholeCliq();
+      for (set<set<Module*> >::iterator it = c.begin(); it != c.end(); ++it)
+      { // clang-format on
+        const set<Module *> &mySet = *it;
+        set<Module *> innerSet = mySet;
+        // cout << "-------------------------------" << endl;
+        // for (set<Module *>::iterator it2 = innerSet.begin(); it2 != innerSet.end(); ++it2)
+        // {
+        //   cout << (*it2)->name() << "  ";
+        // }
+        // cout << endl;
+        innerSet.clear();
+      }
+      a.clear();
+      b.clear();
+      c.clear();
+    }
+
+    cliques.clear();
+    testGraph.clearmaxCliq();
+  }
+  for (size_t i = 0; i < testDTB.getNumModules(); i++)
+  {
+    cout << i << endl;
+    cout << testDTB.module(i)->cellType() << endl;
+    // cout << "name : " << testDTB.module(i)->name() << endl;
+  }
+  for (size_t i = testDTB.getNumModules() - 1; i >= 108000; i--)
+  {
+    // cout << "name : " << testDTB.module(i)->name() << endl;
+  }
+
+  testDTB.printResult();
+  // for (int i = 0; i < testGraph.getNumNode(); ++i)
+  //   cout << testGraph.node(i)->getNeighborsize() << endl;
   // for (unsigned i = 0; i < testDTB.getNumClkNets(); i++)
   // {
   //   NetList Cnets = testDTB.getClkNets();
