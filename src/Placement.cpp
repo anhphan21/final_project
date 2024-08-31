@@ -187,6 +187,7 @@ void Placement::eraseEdge(unsigned idx1, unsigned idx2)
         if ((*it)->getNeighborsize() == 0)
         {
             delete *it;
+            (*it) = NULL;
             it = _nodes.erase(it);
         }
         else
@@ -484,6 +485,7 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
     if (ffs.size() > _dataBase->getmaxLibBit())
     {
         cout << "Error: Cannot merge multi-bit FFs. The number of FFs is greater than the maximum library bit size." << endl;
+        cout << ffs.size() << endl;
         return;
     }
     _maxClique.erase(ffs);
@@ -493,12 +495,11 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
     }
     vector<Module *> ffsV;
     ffsV.assign(ffs.begin(), ffs.end());
-    cout << "merging ";
-    for (size_t i = 0; i < ffsV.size(); i++)
-    {
-        cout << ffsV[i]->name() << "  ";
-    }
-    cout << endl;
+    // cout << "merging ";
+    // for (size_t i = 0; i < ffsV.size(); i++)
+    // {
+    //     cout << ffsV[i]->name() << "  ";
+    // }
     pair<double, double> ffPos;
     // remove the freed Module from other Cliques////////////////////////////////////
     for (size_t i = 0; i < ffsV.size(); i++)
@@ -575,7 +576,11 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
         newMff->OutPin(i)->setModulePtr(newMff);
     }
     // only first FF CLK pin will remain //////////////////////////////////////////////////////////////
-    newMff->setInPin(newMff->cellType()->clkPinIdx(), ffsV[0]->InPin(1));
+    newMff->setInPin(newMff->cellType()->clkPinIdx(), ffsV[0]->InPin(ffsV[0]->cellType()->clkPinIdx()));
+    if (ffsV[0]->InPin(1)->name() != "CLK")
+    {
+        cout << "error: target pin isn't CLK" << endl;
+    }
     newMff->InPin(newMff->cellType()->clkPinIdx())->setModulePtr(newMff);
     // update Module in Pin
     // update pin position and x,y offset
@@ -594,6 +599,7 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
         else
         {
             delete targetclk->history();
+            targetclk->setHistory(NULL);
             for (size_t j = 0; j < _dataBase->getNumPins(); j++)
             {
                 if (_dataBase->pin(j) == targetclk)
@@ -611,10 +617,12 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
                 }
             }
             delete targetclk;
+            targetclk = NULL;
         }
     }
     // clear FFs with no neighbor out of graph(_nodes)/////////////////////////////////
     // free m1 and m2
+    // cout << "new FF name " << newMff->name() << " " << newMff->cellType()->getName() << endl;
     for (size_t i = 0; i < ffsV.size(); i++)
     {
         for (size_t j = 0; j < _dataBase->getNumModules(); j++)
@@ -634,11 +642,12 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
             }
         }
         delete ffsV[i];
+        ffsV[i] = NULL;
     }
     _dataBase->addModule(newMff);
     _dataBase->addFF(newMff);
+    cout << "new FF name " << _dataBase->module(_dataBase->getNumModules() - 1)->name() << endl;
     newMff->setPosition(ffPos.first, ffPos.second);
-    ffsV.clear();
     // check boundary////////////////////////////////////////////////////
     if (newMff->x() < _dataBase->getBoundaryLeft())
     {
@@ -656,6 +665,13 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
     {
         newMff->setPosition(newMff->x(), _dataBase->getBoundaryTop() - newMff->height());
     }
+    feasibleRegV.clear();
+    ffsV.clear();
+    ffs.clear();
+    // for (size_t i = 0; i < _dataBase->getNumFF(); i++)
+    // {
+    //     cout << "name : " << _dataBase->ff(i)->name() << endl;
+    // }
     return;
 }
 void Placement::setNodesize(unsigned size)
@@ -673,6 +689,7 @@ void Placement::clearNode()
     for (unsigned i = 0; i < _nodes.size(); i++)
     {
         delete _nodes[i];
+        _nodes[i] = NULL;
     }
     _nodes.clear();
     return;
@@ -680,93 +697,94 @@ void Placement::clearNode()
 
 NodeList Placement::findMST()
 {
-    // graph should be in _nodes////////////////////////////////
-    // clang-format off
-    vector<pair<Node *, pair<double, Node *> > > qheap; // <Node,key,predecessor>
-    qheap.resize(_nodes.size());
-    for (size_t i = 0; i < _nodes.size(); i++)
-    {
-        _nodes[i]->setNodeidxheap(i);
-        qheap[i].first = _nodes[i];
-        qheap[i].second.first = __DBL_MAX__;
-        qheap[i].second.second = NULL;
-    }
-    qheap[0].second.first = 0;
-    vector<pair<Node *, pair<double, Node *> > > mstHeap;
+    // // graph should be in _nodes////////////////////////////////
+    // // clang-format off
+    // vector<pair<Node *, pair<double, Node *> > > qheap; // <Node,key,predecessor>
+    // qheap.resize(_nodes.size());
+    // for (size_t i = 0; i < _nodes.size(); i++)
+    // {
+    //     _nodes[i]->setNodeidxheap(i);
+    //     qheap[i].first = _nodes[i];
+    //     qheap[i].second.first = __DBL_MAX__;
+    //     qheap[i].second.second = NULL;
+    // }
+    // qheap[0].second.first = 0;
+    // vector<pair<Node *, pair<double, Node *> > > mstHeap;
     NodeList mst;
-    while (qheap.size() > 0)
-    {
-        // pair<Node *, pair<double, Node *> > min = extractMinMST(qheap);
-        // min.first->setNodeidxheap(-1);
-        // map<string, pair<Node *, double> > neighbor = min.first->getneighbormap(); // previous node's neighbor
-        // for (map<string, pair<Node*, double> >::iterator it = neighbor.begin(); it != neighbor.end(); ++it)
-        //{
-        //     if (pair.second.first->getNodeidxheap() != -1)
-        //     {
-        //         if (pair.second.second < qheap[pair.second.first->getNodeidxheap()].second.first)
-        //         {
-        //             qheap[pair.second.first->getNodeidxheap()].second.second = min.first; // set predecessor
-        //             DecreaseKeyMST(qheap, pair.second.first->getNodeidxheap(), pair.second.second);
-        //         }
-        //     }
-        pair<Node *, pair<double, Node *> > min = extractMinMST(qheap);
-        min.first->setNodeidxheap(-1);
-        map<string, pair<Node *, double> > neighbor = min.first->getneighbormap(); // previous node's neighbor
-        for (map<string, pair<Node *, double> >::iterator it = neighbor.begin(); it != neighbor.end(); ++it)
-        {
-            if (it->second.first->getNodeidxheap() != -1)
-            {
-                if (it->second.second < qheap[it->second.first->getNodeidxheap()].second.first)
-                {
-                    qheap[it->second.first->getNodeidxheap()].second.second = min.first; // set predecessor
-                    DecreaseKeyMST(qheap, it->second.first->getNodeidxheap(), it->second.second);
-                }
-            }
-        }
-        mstHeap.push_back(min);
-    } // clang-format on
-    for (size_t i = 0; i < mstHeap.size(); ++i)
-    {
-        mst.push_back(new Node(mstHeap[i].first->getFFinNode()));
-        mst[i]->setNodeidxheap(i);
-        mstHeap[i].first->setNodeidxheap(i);
-        mst[i]->setisleaf(false);
-    }
-    for (size_t i = mstHeap.size() - 1; i >= 1; --i)
-    {
-        mst[i]->addNeighborPair(make_pair(mst[mstHeap[i].second.second->getNodeidxheap()], mstHeap[i].second.first));
-        unsigned id = mstHeap[i].second.second->getNodeidxheap();
-        mst[id]->addNeighborPair(make_pair(mst[i], mstHeap[i].second.first));
-    }
-    // print MST ///////////////////////////////////////////////
-    // for (size_t i = 0; i < mst.size(); i++)
+    // while (qheap.size() > 0)
     // {
-    //     cout << "Node " << mst[i]->getFFinNode()->name() << " has neighbor: ";
-    //     map<string, pair<Node *, double> > neighbor = mst[i]->getneighbormap();
-    //     for (const auto &pair : neighbor)
+    //     // pair<Node *, pair<double, Node *> > min = extractMinMST(qheap);
+    //     // min.first->setNodeidxheap(-1);
+    //     // map<string, pair<Node *, double> > neighbor = min.first->getneighbormap(); // previous node's neighbor
+    //     // for (map<string, pair<Node*, double> >::iterator it = neighbor.begin(); it != neighbor.end(); ++it)
+    //     //{
+    //     //     if (pair.second.first->getNodeidxheap() != -1)
+    //     //     {
+    //     //         if (pair.second.second < qheap[pair.second.first->getNodeidxheap()].second.first)
+    //     //         {
+    //     //             qheap[pair.second.first->getNodeidxheap()].second.second = min.first; // set predecessor
+    //     //             DecreaseKeyMST(qheap, pair.second.first->getNodeidxheap(), pair.second.second);
+    //     //         }
+    //     //     }
+    //     pair<Node *, pair<double, Node *> > min = extractMinMST(qheap);
+    //     min.first->setNodeidxheap(-1);
+    //     map<string, pair<Node *, double> > neighbor = min.first->getneighbormap(); // previous node's neighbor
+    //     for (map<string, pair<Node *, double> >::iterator it = neighbor.begin(); it != neighbor.end(); ++it)
     //     {
-    //         cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
+    //         if (it->second.first->getNodeidxheap() != -1)
+    //         {
+    //             if (it->second.second < qheap[it->second.first->getNodeidxheap()].second.first)
+    //             {
+    //                 qheap[it->second.first->getNodeidxheap()].second.second = min.first; // set predecessor
+    //                 DecreaseKeyMST(qheap, it->second.first->getNodeidxheap(), it->second.second);
+    //             }
+    //         }
     //     }
-    //     cout << endl;
+    //     mstHeap.push_back(min);
+    // } // clang-format on
+    // for (size_t i = 0; i < mstHeap.size(); ++i)
+    // {
+    //     mst.push_back(new Node(mstHeap[i].first->getFFinNode()));
+    //     mst[i]->setNodeidxheap(i);
+    //     mstHeap[i].first->setNodeidxheap(i);
+    //     mst[i]->setisleaf(false);
     // }
-    // print MST ///////////////////////////////////////////////
-    mstHeap.clear();
-    qheap.clear();
+    // for (size_t i = mstHeap.size() - 1; i >= 1; --i)
+    // {
+    //     mst[i]->addNeighborPair(make_pair(mst[mstHeap[i].second.second->getNodeidxheap()], mstHeap[i].second.first));
+    //     unsigned id = mstHeap[i].second.second->getNodeidxheap();
+    //     mst[id]->addNeighborPair(make_pair(mst[i], mstHeap[i].second.first));
+    // }
+    // // print MST ///////////////////////////////////////////////
+    // // for (size_t i = 0; i < mst.size(); i++)
+    // // {
+    // //     cout << "Node " << mst[i]->getFFinNode()->name() << " has neighbor: ";
+    // //     map<string, pair<Node *, double> > neighbor = mst[i]->getneighbormap();
+    // //     for (const auto &pair : neighbor)
+    // //     {
+    // //         cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
+    // //     }
+    // //     cout << endl;
+    // // }
+    // // print MST ///////////////////////////////////////////////
+    // mstHeap.clear();
+    // qheap.clear();
+    // return mst;
+    // //  print the heap//////////////////////////////////////////
+    // // for (size_t i = 0; i < qheap.size(); i++)
+    // // {
+    // //     cout << "Node " << qheap[i].first->getFFinNode()->name() << " has neighbor: ";
+    // //     cout << " " << qheap[i].first->getNodeidxheap() << " " << endl;
+    // //     cout << "key : " << qheap[i].second.first << endl;
+    // //     map<string, pair<Node *, double> > neighbor = qheap[i].first->getneighbormap();
+    // //     for (const auto &pair : neighbor)
+    // //     {
+    // //         cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
+    // //     }
+    // //     cout << endl;
+    // // }
+    // // print the heap//////////////////////////////////////////
     return mst;
-    //  print the heap//////////////////////////////////////////
-    // for (size_t i = 0; i < qheap.size(); i++)
-    // {
-    //     cout << "Node " << qheap[i].first->getFFinNode()->name() << " has neighbor: ";
-    //     cout << " " << qheap[i].first->getNodeidxheap() << " " << endl;
-    //     cout << "key : " << qheap[i].second.first << endl;
-    //     map<string, pair<Node *, double> > neighbor = qheap[i].first->getneighbormap();
-    //     for (const auto &pair : neighbor)
-    //     {
-    //         cout << pair.second.first->getFFinNode()->name() << " " << pair.second.second << " ";
-    //     }
-    //     cout << endl;
-    // }
-    // print the heap//////////////////////////////////////////
 }
 // clang-format off
 void Placement::DecreaseKeyMST(vector<pair<Node *, pair<double, Node *> > > &heap, unsigned idx, double key)
@@ -1190,17 +1208,15 @@ void Placement::debankAllFF()
     unsigned initFFnum = _dataBase->getNumFF();
     // cout << "initFFnum: " << initFFnum << endl;
     // cout << "module num " << _dataBase->getNumModules() << endl;
-    unsigned k = 0;
     for (size_t i = 0; i < initFFnum; i++)
     {
         if (_dataBase->ff(i)->cellType()->numBit() > 1)
         {
-            k += _dataBase->ff(i)->cellType()->numBit();
             string Dname = _dataBase->ff(i)->name();
+            cout << "debank" << endl;
             debankFFto1bit(Dname);
         }
     }
-    cout << "k: " << k << endl;
     return;
 }
 
@@ -1213,7 +1229,7 @@ void Placement::debankFFto1bit(string ffname)
     int ffbit = target->cellType()->getnumBit();
     vector<Module *> newfflist;
     newfflist.clear();
-    string pinName;
+    string pinName = "";
     // TODO:radius
     // clang-format off
     vector<pair<double, double> > newPos;
@@ -1222,7 +1238,8 @@ void Placement::debankFFto1bit(string ffname)
     for (size_t i = 0; i < ffbit; i++)
     {
         newPos.push_back(make_pair(target->x(), target->y()));
-        newfflist.push_back(new Module());
+        Module *nff = new Module();
+        newfflist.push_back(nff);
         newfflist[i]->setCellType(_dataBase->getBestCelltype(1));
         newfflist[i]->setPinsize(3);
         newfflist[i]->setInPin(0, target->InPin(i));
@@ -1244,8 +1261,8 @@ void Placement::debankFFto1bit(string ffname)
     }
     // naming =================================================================
     string nname = _dataBase->module(_dataBase->getNumModules() - 1)->name();
-    string letters;
-    string numbers;
+    string letters = "";
+    string numbers = "";
     for (string::size_type i = 0; i < nname.size(); ++i)
     {
         char c = nname[i];
@@ -1259,7 +1276,7 @@ void Placement::debankFFto1bit(string ffname)
         }
     }
     int num = my_stoi(numbers);
-    for (size_t i = 0; i < ffbit - 1; i++)
+    for (size_t i = 0; i < ffbit; i++)
     {
         num++;
         nname = letters + my_itos(num);
@@ -1268,7 +1285,6 @@ void Placement::debankFFto1bit(string ffname)
     // naming =================================================================
     newfflist[ffbit - 1]->setInPin(newfflist[ffbit - 1]->cellType()->clkPinIdx(), target->InPin(target->cellType()->clkPinIdx()));
     newfflist[ffbit - 1]->InPin(newfflist[ffbit - 1]->cellType()->clkPinIdx())->setModulePtr(newfflist[ffbit - 1]);
-    newfflist[ffbit - 1]->setName(target->name());
     for (size_t i = 0; i < ffbit - 1; i++)
     {
         Pin *newCLK = new Pin();
@@ -1298,7 +1314,7 @@ void Placement::debankFFto1bit(string ffname)
     {
         if (_dataBase->module(i) == target)
         {
-            _dataBase->setModule(i, newfflist[ffbit - 1]);
+            _dataBase->eraseModule(i);
             break;
         }
     }
@@ -1306,17 +1322,19 @@ void Placement::debankFFto1bit(string ffname)
     {
         if (_dataBase->ff(i) == target)
         {
-            _dataBase->setFF(i, newfflist[ffbit - 1]);
-            cout << "done " << endl;
+            _dataBase->eraseFF(i);
             break;
         }
     }
     delete target;
-    for (size_t i = 0; i < ffbit - 1; i++)
+    target = NULL;
+    for (size_t i = 0; i < ffbit; i++)
     {
         _dataBase->addFF(newfflist[i]);
         _dataBase->addModule(newfflist[i]);
     }
+    newfflist.clear();
+    newPos.clear();
     return;
 }
 bool isStrictSubset(const set<Module *> &a, const set<Module *> &b)
@@ -1359,38 +1377,48 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
         {
             continue;
         }
-        if (targetNet->pin(i)->module()->isFixed() == true)
+        if (targetNet->pin(i)->module()->cellType()->isFF() == false)
         {
             continue;
         }
         if (targetNet->pin(i)->name() != "CLK")
         {
+            cout << "error: pin isn't CLK" << endl;
             continue;
         }
-
+        if (targetNet->pin(i)->module()->cellType()->numBit() != 1)
+        {
+            // cout << "history : " << targetNet->pin(i)->history()->oldModuleName() << " " << targetNet->pin(i)->history()->oldPinName() << endl;
+            // cout << targetNet->pin(i)->name() << endl;
+            // cout << targetNet->pin(i)->module()->name() << endl;
+            // cout << targetNet->pin(i)->module()->cellType()->getName() << endl;
+            // cout << "bit num error" << endl;
+            continue;
+        }
         if (targetNet->pin(i)->module()->getFeasibleRegion() != NULL)
         {
             targetFFs.push_back(targetNet->pin(i)->module());
-            strip.push_back(targetFFs[targetFFs.size() - 1]->getFeasibleRegion()->left());
+            unsigned targetSizeID = targetFFs.size() - 1;
+            strip.push_back(targetFFs[targetSizeID]->getFeasibleRegion()->left());
             // cout << "left : " << targetFFs[targetFFs.size() - 1]->getFeasibleRegion()->left() << endl;
-            strip.push_back(targetFFs[targetFFs.size() - 1]->getFeasibleRegion()->right());
+            strip.push_back(targetFFs[targetSizeID]->getFeasibleRegion()->right());
             // cout << "right : " << targetFFs[targetFFs.size() - 1]->getFeasibleRegion()->right() << endl;
             Edge ee;
-            ee.ff = targetFFs[targetFFs.size() - 1];
-            ee.y = targetFFs[targetFFs.size() - 1]->getFeasibleRegion()->top();
+            ee.ff = targetFFs[targetSizeID];
+            ee.y = targetFFs[targetSizeID]->getFeasibleRegion()->top();
             ee.isIN = true;
-            ee.startx = targetFFs[targetFFs.size() - 1]->getFeasibleRegion()->left();
-            ee.endx = targetFFs[targetFFs.size() - 1]->getFeasibleRegion()->right();
+            ee.startx = targetFFs[targetSizeID]->getFeasibleRegion()->left();
+            ee.endx = targetFFs[targetSizeID]->getFeasibleRegion()->right();
             if (ee.endx - ee.startx != 0)
             {
                 edges.push_back(ee);
             }
             Edge ee1;
-            ee1.ff = targetFFs[targetFFs.size() - 1];
-            ee1.y = targetFFs[targetFFs.size() - 1]->getFeasibleRegion()->bottom();
+            ee1.ff = targetFFs[targetSizeID];
+            ee1.y = targetFFs[targetSizeID]->getFeasibleRegion()->bottom();
             ee1.isIN = false;
-            ee1.startx = targetFFs[targetFFs.size() - 1]->getFeasibleRegion()->left();
-            ee1.endx = targetFFs[targetFFs.size() - 1]->getFeasibleRegion()->right();
+            ee1.startx = targetFFs[targetSizeID]->getFeasibleRegion()->left();
+            ee1.endx = targetFFs[targetSizeID]->getFeasibleRegion()->right();
             if (ee1.endx - ee1.startx != 0)
             {
                 edges.push_back(ee1);
@@ -1399,14 +1427,24 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
     }
     if (strip.size() == 0 || edges.size() == 0)
     {
+        edges.clear();
+        strip.clear();
         maxClique.clear();
         return maxClique;
     }
     sort(strip.begin(), strip.end());
     strip.erase(unique(strip.begin(), strip.end()), strip.end());
     sort(edges.begin(), edges.end(), compareFirst);
-    cout << edges.size() << endl;
-    cout << strip.size() << endl;
+    for (size_t i = 0; i < edges.size() - 1; i++)
+    {
+        if (edges[i].y == edges[i + 1].y)
+        {
+            // cout << "asfdasdfadfas" << endl;
+            // cout << edges[i].ff->name() << " " << edges[i].isIN << endl;
+            // cout << edges[i + 1].ff->name() << " " << edges[i + 1].isIN << endl;
+        }
+    }
+
     int counter = 0;
     // TODO: currently traverse every edge per strip, maybe a better O() way to implement
     for (size_t i = 0; i < strip.size() - 1; i++)
@@ -1427,8 +1465,35 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
                     counter++;
                     if (edges[j].isIN == false)
                     {
-                        cout << "error1" << endl;
                         cout << edges[j].startx << "  " << edges[j].endx << endl;
+                        for (size_t k = j; k < edges.size(); k++)
+                        {
+                            if (edges[j].y < edges[k].y)
+                            {
+                                break;
+                            }
+                            if (edges[j].y == edges[k].y && edges[k].isIN == true)
+                            {
+                                Edge temp;
+                                temp = edges[j];
+                                edges[j] = edges[k];
+                                edges[k] = temp;
+                                tempClique[0].insert(edges[j].ff);
+                                break;
+                            }
+                        }
+                        if (edges[j].isIN == false)
+                        {
+                            cout << "error1" << endl;
+                        }
+                        // for (size_t k = 0; k < edges.size(); k++)
+                        // {
+                        //     if (edges[j].ff == edges[k].ff && edges[j])
+                        //     {
+                        //         /* code */
+                        //     }
+
+                        // }
                     }
                     else
                     {
@@ -1489,6 +1554,12 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
+    if (maxClique.size() == 0)
+    {
+        edges.clear();
+        strip.clear();
+        return maxClique;
+    }
     // TODO: remove proper subset
     // clang-format off
     vector<set<Module *> > toRemove;
@@ -1542,6 +1613,7 @@ set<Module *> Placement::adjustClique(Net *targetNet, set<Module *> targetClique
         {
             upperS = 0;
             lowerS = _dataBase->getmaxLibBit();
+            break;
         }
         if (cliqueSize == s)
         {
@@ -1572,7 +1644,6 @@ set<Module *> Placement::adjustClique(Net *targetNet, set<Module *> targetClique
         // clang-format off
         pair<pair<double, double>, pair<double, double> > olArea = overlapRegion(feasibleRegV);
         // clang-format on
-        cout << "olArea.first.first  " << olArea.first.first << "olArea.first.second " << olArea.first.second << "olArea.second.first " << olArea.second.first << "olArea.second.second " << olArea.second.second << endl;
         double totoverlapReg = (olArea.second.first - olArea.first.first) *
                                (olArea.second.second - olArea.first.second);
         Module *fferased;
@@ -1666,6 +1737,10 @@ set<Module *> Placement::adjustClique(Net *targetNet, set<Module *> targetClique
                 {
                     continue;
                 }
+                if (targetNet->pin(i)->module()->cellType()->numBit() != 1)
+                {
+                    continue;
+                }
                 if (targetNet->pin(i)->module()->getFeasibleRegion() != NULL)
                 {
                     if (targetClique.find(targetNet->pin(i)->module()) == targetClique.end())
@@ -1707,6 +1782,7 @@ set<Module *> Placement::adjustClique(Net *targetNet, set<Module *> targetClique
                 targetFFcliq.erase(newEnd, targetFFcliq.end());
                 // clang-format on
             }
+
             if (targetClique.size() != upperS)
             {
                 cout << "error: Clique isn't correctly sized 2" << endl;

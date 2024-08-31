@@ -18,7 +18,7 @@ public:
     {
     }
 
-    Module(string &name, CellType *type, double x, double y)
+    Module(string name, CellType *type, double x, double y)
         : _name(name), _type(type), _x(x), _y(y), _isFixed(false), _radius(0)
     {
     }

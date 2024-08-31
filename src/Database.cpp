@@ -878,7 +878,7 @@ void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, dou
     }
 }
 
-void Database::builBestCelltype()
+void Database::buildBestCelltype()
 {
     for (size_t i = 0; i < _ffLib.size(); i++)
     {
@@ -919,6 +919,7 @@ void Database::builBestCelltype()
         }
         _bestCells[pow(2, i)] = cellv[bestid];
     }
+    _ffLibMaxBit = pow(2, _ffLib.size() - 1);
     return;
 }
 
