@@ -14,6 +14,8 @@
 #include <cfloat>
 #include <queue>
 #include <utility>
+
+#include <stack>
 using namespace std;
 
 #define leafthresold 0.75 // TODO: can be changed
@@ -1946,26 +1948,161 @@ void Placement::construct_DAG()
     }
 
     //test
-    for(int i=0;i<_DAG_nodes.size();++i)
-    {
-        // cout<<_DAG_nodes[i]->getModule()->name()<<": ";
-        for(int j=0;j<_DAG_nodes[i]->getEdge().size();++j)
-        {
-            vector<pair<DAG_Node *,double > > buff = _DAG_nodes[i]->getEdge();
-            // if(buff[j].first->getModule()==NULL)
-            //     cout<<buff[j].first->getName()<<" ";
-            // else
-            //     cout<<buff[j].first->getModule()->name()<<" ";
-            // if(buff[j].first==NULL)
-            // {
-            //     cout<<"fuck~~"<<endl;
-            //     return;
-            // }
-                
+    // for(int i=0;i<_DAG_nodes.size();++i)
+    // {
+    //     cout<<_DAG_nodes[i]->getModule()->name()<<": ";
+    //     for(int j=0;j<_DAG_nodes[i]->getEdge().size();++j)
+    //     {
+    //         vector<pair<DAG_Node *,double > > buff = _DAG_nodes[i]->getEdge();
+    //         if(buff[j].first==NULL)
+    //         {
+    //          cout<<"fuck U~~"<<endl;
+    //         //     return;
+    //          }
+    //     }
+    //     // cout<<endl;
+    // }
+}
 
-            if(buff[j].first == NULL)
-                cout<<"hello"<<endl;
+
+
+void Placement::topologicalSortUtil(DAG_Node *node, stack<DAG_Node *> &Stack, vector<DAG_Node *> &visited) {
+    visited.push_back(node);
+    
+    vector<pair<DAG_Node *, double> > edges = node->getEdge();
+    for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) {
+        DAG_Node *adjNode = it->first;
+        if (find(visited.begin(), visited.end(), adjNode) == visited.end()) {
+            topologicalSortUtil(adjNode, Stack, visited);
         }
-        // cout<<endl;
+    }
+
+    
+    Stack.push(node);
+}
+
+// 計算 DAG 中每個節點的最長路徑
+void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes) {
+    stack<DAG_Node *> Stack;
+    vector<DAG_Node *> visited;
+
+     for (int i=0;i<nodes.size();i++) 
+     {
+        nodes[i]->setPreviousNode(NULL);
+        nodes[i]->setwidth(nodes[i]->getModule()->width());
+        nodes[i]->setwstar(0);
+        nodes[i]->setorder(i);
+    }
+    // 進行拓撲排序
+    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it) {
+    DAG_Node *node = *it;
+    if (find(visited.begin(), visited.end(), node) == visited.end()) {
+        topologicalSortUtil(node, Stack, visited);
+    }
+    }
+
+    // 動態規劃計算最長路徑
+    while (!Stack.empty()) {
+        DAG_Node *node = Stack.top();
+        Stack.pop();
+
+        if (node->getLongestPath() == -DBL_MAX) {
+            node->setLongestPath(0);  
+        }
+
+       vector<pair<DAG_Node *, double> > edges = node->getEdge();
+        for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) {
+        DAG_Node *adjNode = it->first;
+        double weight = it->second;
+        if (node->getLongestPath() + weight > adjNode->getLongestPath()) {
+            adjNode->setwstar(node->getwidth()+node->getwstar());
+            adjNode->setLongestPath(node->getLongestPath() + weight);
+            adjNode->setPreviousNode(node);  
+            adjNode->record = node->record;
+            adjNode->record.insert(node->getorder());
+        }
+    }
+
+    }
+}
+
+// 打印從起點到某個節點的最長路徑
+void Placement::printLongestPath(DAG_Node *node) {
+    if (node == NULL) return;
+    printLongestPath(node->getPreviousNode());
+    cout << node->getName() <<" -> " ;
+}
+
+void Placement::cal_rhoi()
+{
+    for(int i=0;i<this->_DAG_nodes.size();i++)
+    {
+        double rhoi = -DBL_MAX;
+        if(_DAG_nodes[i]->isFF()==0)
+        {
+            cout<<"NONONO"<<endl;
+            rhoi = -DBL_MAX;
+            continue;
+        }
+        for(int j=0;j<=i;j++)
+        {
+            if(i==j)
+            {
+                cout<<"CASE1"<<endl;
+                rhoi = max(rhoi,double(0));
+            }
+            else if(_DAG_nodes[i]->record.find(j) == _DAG_nodes[i]->record.end() || _DAG_nodes[j]->isFF()==0)
+            {
+                for (std::set<int>::iterator it = _DAG_nodes[i]->record.begin(); it != _DAG_nodes[i]->record.end(); ++it) {
+                     cout<<"i= "<<i <<" j= "<<j<<endl;
+                     std::cout << *it << " ";
+                    }
+
+                if(_DAG_nodes[i]->record.find(j) == _DAG_nodes[i]->record.end())
+                {
+                    cout<<"O"<<endl;
+                }
+                cout<<"CASE2"<<endl;
+                rhoi = max(rhoi, -DBL_MAX);    
+            }
+            else
+            {
+                cout<<"CASE3"<<endl;
+                rhoi = max(rhoi,( _DAG_nodes[i]->getwstar()-_DAG_nodes[j]->getwstar() - (_DAG_nodes[i]->getX() - _DAG_nodes[j]->getX()) ));
+            }
+        }
+        _DAG_nodes[i]->setrhoi(rhoi);
+
+
+    }
+}
+
+void Placement::cal_thetai()
+{
+    for(int i=0;i<this->_DAG_nodes.size();i++)
+    {
+        double thetai = -DBL_MAX;
+        if(_DAG_nodes[i]->isFF()==0)
+        {
+            continue;
+        }
+        for(int j=i;j<_DAG_nodes.size();j++)
+        {
+            if(i==j)
+            {
+                thetai = max(thetai,double(0));
+            }
+            else if(_DAG_nodes[j]->record.find(i) == _DAG_nodes[j]->record.end())
+            {
+                thetai = max(thetai, -DBL_MAX);    
+            }
+            else
+            {
+                thetai = max(thetai,( _DAG_nodes[j]->getwstar()-_DAG_nodes[i]->getwstar() - (_DAG_nodes[j]->getX() - _DAG_nodes[i]->getX()) ));
+            }
+        }
+        _DAG_nodes[i]->setthetai(thetai);
+
+
     }
 }

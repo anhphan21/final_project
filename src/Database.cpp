@@ -1,284 +1,1056 @@
-#ifndef DATABASE_H
-#define DATABASE_H
-
-#include <cassert>
-#include <map>
-#include <string>
-#include <vector>
+#include "Database.h"
+#include <float.h>
+#include <stdlib.h>
+#include <fstream>
 #include <queue>
-#include <set>
-#include "Bin.h"
-#include "DatabaseDef.h"
-#include "History.h"
-#include "Module.h"
-#include "Net.h"
-#include "Node.h"
+#include <sstream>
+#include <cmath>
+#include <math.h>
 #include "Pin.h"
-#include "Placement.h"
-#include "rhombus.h"
 #include "Row.h"
+#include <iomanip>
+#include <set>
 using namespace std;
 
-class Database
+Database::Database()
+    : _name(),
+      _boundaryTop(-1),
+      _boundaryBottom(-1),
+      _boundaryLeft(-1),
+      _boundaryRight(-1),
+      _numModules(0),
+      _numNet(0),
+      _numInput(-1),
+      _numOutput(-1),
+      _numBinCol(0),
+      _numBinRow(0),
+      _binWidth(-1),
+      _binHeight(-1),
+      _binMaxUtil(-1),
+      _alpha(-1),
+      _beta(-1),
+      _gamma(-1),
+      _lambda(-1),
+      record(0) {}
+
+Database::~Database() {}
+
+void Database::parser(const string &filename)
 {
-public:
-    Database();
-    ~Database();
-
-    void parser(const string &filename);
-    void outputTofile(const string &filename);
-    // Design parameters
-    void setName(string &name) { _name = name; }
-
-    void setAlpha(double alpha) { _alpha = alpha; }
-    void setBeta(double beta) { _beta = beta; }
-    void setGamma(double gamma) { _gamma = gamma; }
-    void setLambda(double lambda) { _lambda = lambda; }
-
-    // Boundaries and Rectangle
-    void setBoundaryTop(double boundaryTop) { _boundaryTop = boundaryTop; }
-    void setBoundaryLeft(double boundaryLeft) { _boundaryLeft = boundaryLeft; }
-    void setBoundaryBottom(double boundaryBottom) { _boundaryBottom = boundaryBottom; }
-    void setBoundaryRight(double boundaryRight) { _boundaryRight = boundaryRight; }
-    void updateRectangle()
+    ifstream file(filename.c_str());
+    string line;
+    while (getline(file, line))
     {
-        _dieRectangle.setBounds(_boundaryLeft, _boundaryBottom, _boundaryRight, _boundaryTop);
-    }
-
-    void setNumInput(unsigned numIn) { _numInput = numIn; }
-    void setNumOutput(unsigned numOut) { _numOutput = numOut; }
-
-    void setBinWidth(double w) { _binWidth = w; }
-    void setBinHeight(double h) { _binHeight = h; }
-    void setBinUtil(double u) { _binMaxUtil = u; }
-    void setModule(unsigned idx, Module *mod)
-    {
-        _modules[idx] = mod;
-        ModuleName2Ptr[mod->name()] = mod;
-    }
-    void setFF(unsigned idx, Module *mod) { _ffModules[idx] = mod; }
-    void setDisplacementDelay(double delay) { _dDelay = delay; }
-
-    // methods for design (hyper-graph) construction
-    void addModule(Module *module)
-    {
-        _modules.push_back(module);
-        // auto iter = ModuleName2Ptr.find(module->name());
-        std::map<std::string, Module *>::iterator iter = ModuleName2Ptr.find(module->name());
-        assert(iter == ModuleName2Ptr.end());
-        ModuleName2Ptr[module->name()] = module;
-    }
-    void addFF(Module *ff) { _ffModules.push_back(ff); }
-    void addNet(Net *net) { _nets.push_back(net); }
-    void addClkNet(Net *clk) { _clkNets.push_back(clk); }
-    void addPin(Pin *pin) { _pins.push_back(pin); }
-    void addRow(Row *row) { _rows.push_back(row); }
-    void addCellLib(CellType *cellLib) { _cellLib.push_back(cellLib); }
-    void addFFLib(FFCell *ffLib, unsigned bitNum) { _ffLib[bitNum].push_back(ffLib); }
-    void erasePin(unsigned pinId) { _pins.erase(_pins.begin() + pinId); }
-    void eraseModule(unsigned moduleId)
-    {
-        ModuleName2Ptr.erase(_modules[moduleId]->name());
-        _modules.erase(_modules.begin() + moduleId);
-    }
-    void eraseFF(unsigned ffId)
-    {
-        ModuleName2Ptr.erase(_ffModules[ffId]->name());
-        _ffModules.erase(_ffModules.begin() + ffId);
-    }
-
-    // Bin operation
-    void initialBinArray();
-    void resetBin();
-    int updateBinUtil();
-
-    // get design property
-    ModuleList getmodule(){return _modules;}
-    Module *module(unsigned moduleId) { return _modules[moduleId]; }
-    Module *ff(unsigned ffId) { return _ffModules[ffId]; }
-    Net *net(unsigned netId) { return _nets[netId]; }
-    Pin *pin(unsigned pinId) { return _pins[pinId]; }
-    Row *row(unsigned rowId) { return _rows[rowId]; }
-    Bin *bin(unsigned colIdx, unsigned rowIdx) { return _bins[colIdx][rowIdx]; }
-
-    Pin *input(unsigned inId)
-    {
-        assert(inId < _numInput);
-        return _pins[inId];
-    }
-
-    Pin *output(unsigned outId)
-    {
-        assert(outId < _numOutput);
-        return _pins[_numInput + outId];
-    }
-    // get design property through name
-    Module *getModuleByName(string &name)
-    {
-        map<string, Module *>::iterator it = ModuleName2Ptr.find(name);
-        assert(it != ModuleName2Ptr.end());
-        return ModuleName2Ptr[name];
-    }
-    unsigned getNumModules() const { return _modules.size(); }
-    unsigned getNumFF() const { return _ffModules.size(); }
-    unsigned getNumNets() const { return _nets.size(); }
-    unsigned getNumClkNets() const { return _clkNets.size(); }
-    unsigned getNumDataNets() const { return getNumNets() - getNumClkNets(); }
-    unsigned getNumPins() const { return _pins.size(); }
-    unsigned getNumInputs() const { return _numInput; }
-    unsigned getNumOutputs() const { return _numOutput; }
-    unsigned getNumRows() const { return _rows.size(); }
-    double getAlpha() const { return _alpha; }
-    double getBeta() const { return _beta; }
-    double getGamma() const { return _gamma; }
-    double getLambda() const { return _lambda; }
-    double getDisplacementDelay() const { return _dDelay; }
-    // unsigned getMaxBitFFLib() const { return _ffLib.end()->first; }
-    NetList getClkNets() const { return _clkNets; }
-
-    double getBoundaryTop() const { return _boundaryTop; }
-    Module *getStringModule(string moduleName) { return ModuleName2Ptr[moduleName]; }
-    Module *getIntModule(int No) { return ModuleNo2Ptr[No]; }
-    double getBoundaryLeft() const { return _boundaryLeft; }
-    double getBoundaryBottom() const { return _boundaryBottom; }
-    double getBoundaryRight() const { return _boundaryRight; }
-    FFCell *ffLib(unsigned bitNum, unsigned idx)
-    {
-        // clang-format off
-        std::map<unsigned, std::vector<FFCell *> >::iterator it = _ffLib.find(bitNum);
-        // clang-format on
-        if (it != _ffLib.end())
-        {
-            return _ffLib[bitNum][idx];
-        }
+        size_t _pos = filename.find_last_of("/");
+        if (_pos != string::npos)
+            _name = filename.substr(_pos + 1);
         else
+            _name = filename;
+
+        istringstream iss(line);
+        string keyword;
+        iss >> keyword;
+        if (keyword == "Alpha" || keyword == "Beta" || keyword == "Gamma" ||
+            keyword == "Lambda")
         {
-            cout << "Error: FF library not found!" << endl;
-            exit(1);
+            double data;
+            iss >> data;
+            if (keyword == "Alpha")
+            {
+                setAlpha(data);
+            }
+            else if (keyword == "Beta")
+            {
+                setBeta(data);
+            }
+            else if (keyword == "Gamma")
+            {
+                setGamma(data);
+            }
+            else if (keyword == "Lambda")
+            {
+                setLambda(data);
+            }
+        }
+        else if (keyword == "DieSize")
+        {
+            int left, bottom, right, top;
+            iss >> left >> bottom >> right >> top;
+            setBoundaryLeft(left);
+            setBoundaryBottom(bottom);
+            setBoundaryRight(right);
+            setBoundaryTop(top);
+            updateRectangle();
+        }
+        else if (keyword == "NumInput")
+        {
+            iss >> _numInput;
+            // map<string, Pin*> IODesignPin;
+            for (int i = 0; i < _numInput; ++i)
+            {
+                getline(file, line);
+                istringstream iss(line);
+                string temp, type;
+                double x, y;
+                iss >> temp >> type >> x >> y;
+                Pin *pinptr = new Pin();
+                // input(num)->name(type);
+                // input(num)->setPosition(x, y);
+
+                pinptr->setPinName(type);
+                pinptr->setPosition(x, y);
+                pinptr->setModulePtr(NULL);
+                _pins.push_back(pinptr);
+                if (type == "clk" || type.find("C") != string::npos)
+                {
+                    type = "CLK";
+                }
+                IODesign.insert(make_pair(type, pinptr));
+                // IODesignPin.insert({type, pinptr});
+            }
+            // PinName2Ptr.insert({"IODesignIn", IODesignPin});
+        }
+        else if (keyword == "NumOutput")
+        {
+            iss >> _numOutput;
+            // map<string, Pin*> IODesignPin;
+            for (int i = 0; i < _numOutput; i++)
+            {
+                getline(file, line);
+                istringstream iss(line);
+                string temp, type;
+                double x, y;
+                iss >> temp >> type >> x >> y;
+                Pin *pinptr = new Pin();
+                // output(num)->name(type);
+                // output(num)->setPosition(x, y);
+                IODesign.insert(make_pair(type, pinptr));
+                pinptr->setPinName(type);
+                pinptr->setPosition(x, y);
+                pinptr->setModulePtr(NULL);
+                _pins.push_back(pinptr);
+                // IODesignPin.insert({type, pinptr});
+                IODesign.insert(make_pair(type, pinptr));
+            }
+            // PinName2Ptr.insert({"IODesignOut", IODesignPin});
+        }
+        else if (keyword == "FlipFlop")
+        {
+            double bitCount, width, height, pinCount;
+            string id;
+
+            iss >> bitCount >> id >> width >> height >> pinCount;
+            FFCell *FFcellptr =
+                new FFCell(id, width, height, pinCount, bitCount);
+
+            string _clkPin;
+            double _clkX, _clkY;
+
+            // ensure the size of _ffLib
+            addFFLib(FFcellptr, bitCount);
+            string temp, name;
+            double x, y;
+            bool _check;
+            for (int i = 0; i < pinCount; ++i)
+            {
+                getline(file, line);
+                istringstream iss(line);
+                iss >> temp >> name >> x >> y;
+
+                _check = (name[0] == 'Q') ? true : false;
+
+                if (name.substr(0, 3) == "CLK")
+                {
+                    _clkPin = name;
+                    _clkX = x;
+                    _clkY = y;
+                    continue;
+                }
+                FFcellptr->setPin(name, make_pair(x, y), _check);
+            }
+            FFcellptr->setPin(_clkPin, make_pair(_clkX, _clkY), false);
+            FFcellptr->setClkPin(FFcellptr->getInNum() - 1);
+            CellType2Ptr[id] = FFcellptr;
+        }
+        else if (keyword == "Gate")
+        {
+            double width, height;
+            int pinCount = 0;
+            string id;
+
+            iss >> id >> width >> height >> pinCount;
+            BaseCell *bptr = new BaseCell(id, width, height, pinCount);
+            addCellLib(bptr);
+            CellType2Ptr.insert(make_pair(id, bptr));
+            string temp, name;
+            double x, y;
+            bool _check;
+            for (int i = 0; i < pinCount; i++)
+            {
+                getline(file, line);
+                istringstream iss(line);
+
+                iss >> temp >> name >> x >> y;
+                // bptr->AllPinName.push_back(name);
+                // if (name.find("O") != string::npos) {
+                //     bptr->setOutput(name, 1);
+                //     bptr->setPinOffset(name, pair<double, double>(x, y));
+
+                // } else {
+                //     bptr->setPinOffset(name, pair<double, double>(x, y));
+                // }
+                if (name.size() >= 3)
+                    _check = (name.substr(0, 3) == "Out") ? true : false;
+                bptr->setPin(name, make_pair(width, height), _check);
+            }
+            // cout << "Gate" << " " << id << " " << width << " " << height <<
+            // endl;
+        }
+        else if (keyword == "NumInstances")
+        {
+            // Handle Instances
+            iss >> _numModules;
+            string temp, name, type;
+            double x, y;
+            CellType *_type;
+            int PinOfMnum;
+            Module *currentM;
+            for (int i = 0; i < _numModules; ++i)
+            {
+                getline(file, line);
+                istringstream instIss(line);
+                // Comment: You can put the variables temp, name, type to
+                // outside of the while that you can reuse them without
+                // re-declarate them -> save some runtime
+                instIss >> temp >> name >> type >> x >> y;
+                // cout << "testhere" << name << endl;
+                // auto it = CellType2Ptr.find(type);
+                // if (type.find("G") != string::npos) {
+                // cout << "this is Gate type" << endl;
+                std::map<std::string, BaseCell *>::iterator it = CellType2Ptr.find(type);
+                map<string, Pin *> PinOfM;
+                if (it == CellType2Ptr.end())
+                {
+                    // can't find Standard Cell
+                    // Comment: Nice idea for checking error of input file
+                    // cout << "Test error" << type << endl;
+                }
+                else
+                {
+                    _type = CellType2Ptr[type];
+                    PinOfMnum = _type->pinNum();
+                    currentM = new Module(name, _type, x, y);
+                    // ModuleName2Ptr[name] = currentM;
+                    currentM->No = i;
+                    ModuleNo2Ptr[i] = currentM;
+                    addModule(currentM);
+                    if (_type->isFF())
+                        addFF(currentM);
+                    for (int i = 0; i < PinOfMnum; ++i)
+                    {
+                        string PinName = _type->pinName(i);
+                        Pin *pinptr = new Pin();
+                        pinptr->setPosition(x, y);
+                        pinptr->setPinName(PinName);
+                        pinptr->setOffset(_type->pinOffsetX(i),
+                                          _type->pinOffsetY(i));
+                        pinptr->setModulePtr(currentM);
+
+                        addPin(pinptr);
+                        currentM->addPin(pinptr);
+                    }
+                }
+            }
+        }
+        else if (keyword == "NumNets")
+        {
+            int PinNum;
+            string temp, Netname;
+            iss >> _numNet;
+
+            string type, FFname, TargetPin;
+            Module *_tModule;
+            CellType *_type;
+            Pin *_tPin;
+            Net *netptr;
+            bool Isclk;
+            for (int i = 0; i < _numNet; i++)
+            {
+                Isclk = false; // 定義這個Net是clkNet!!!每一條定義一個
+                getline(file, line);
+                // getline(file, line);
+                istringstream iss(line);
+
+                iss >> temp >> Netname >> PinNum;
+                netptr = new Net();
+                netptr->setName(Netname);
+
+                for (int j = 0; j < PinNum; j++)
+                {
+                    getline(file, line);
+                    istringstream piniss(line);
+                    piniss >> temp >> type;
+                    size_t pos = type.find("/");
+                    if (pos == type.npos)
+                    {
+                        // 如果沒有'/'的Net pin角 代表會再IODesign  this is
+                        // design pin
+                        std::map<std::string, Pin *>::iterator it = IODesign.find(type);
+
+                        if (it == IODesign.end())
+                        {
+                            // IODesignPin腳 處理跟FF不一樣
+                            cout << "No match pin!!" << endl;
+                        }
+                        else
+                        {
+                            if (type.find("CLK") != string::npos)
+                            {
+                                // 找到clk
+                                Isclk = true;
+                                netptr->setclkFlag(true);
+                            }
+                            it->second->setNetPtr(netptr);
+                            netptr->addPin(it->second);
+                            if (type.substr(0, 5) == "INPUT" || type.substr(0, 2) == "in" || type.substr(0, 3) == "CLK")
+                            {
+                                netptr->setOutputPins(j);
+                            }
+                        }
+                    }
+                    else // 有'/'切割的Net Pin
+                    {
+                        // cout << "有'/'切割的Net Pin" << endl;
+                        FFname = type.substr(0, pos);
+                        TargetPin = type.substr(pos + 1);
+                        std::map<std::string, Module *>::iterator it = ModuleName2Ptr.find(FFname);
+                        std::map<std::string, int>::iterator it2 = OriginModuleN.find(FFname);
+                        if (it2 == OriginModuleN.end())
+                        {
+                            OriginModuleN.insert(make_pair(FFname, 1));
+                        }
+                        else
+                        {
+                            it2->second++;
+                        }
+                        if (it == ModuleName2Ptr.end())
+                        {
+                            cout << "can't find correspoding module" << endl;
+                        }
+                        else
+                        {
+                            // Found Pin
+                            _type = it->second->cellType();
+                            if ((TargetPin.substr(0, 3) == "OUT") ||
+                                (TargetPin[0] == 'Q'))
+                            {
+                                netptr->setOutputPins(j);
+                            }
+                            _tModule = it->second;
+                            _tPin = _tModule->pin(_type->getPinIdxFromName(TargetPin));
+                            _tPin->setNetPtr(netptr);
+                            netptr->addPin(_tPin);
+                        }
+                        if (type.find("CLK") != string::npos)
+                        {
+                            // 找到clk
+                            Isclk = true;
+                            netptr->setclkFlag(true);
+                        }
+                    }
+                }
+                addNet(netptr);
+                if (Isclk)
+                    addClkNet(netptr);
+            }
+        }
+        else if (keyword == "BinWidth" || keyword == "BinHeight" ||
+                 keyword == "BinMaxUtil")
+        {
+            int data;
+            iss >> data;
+            if (keyword == "BinWidth")
+            {
+                setBinWidth(data);
+            }
+            else if (keyword == "BinHeight")
+            {
+                setBinHeight(data);
+            }
+            else if (keyword == "BinMaxUtil")
+            {
+                setBinUtil(data);
+            }
+        }
+        else if (keyword == "PlacementRows")
+        {
+            double startX, startY, siteWidth, siteHeight, totalNumOfSites;
+            iss >> startX >> startY >> siteWidth >> siteHeight >>
+                totalNumOfSites;
+            Row *_tRow = new Row(startX, startY, siteWidth, siteHeight, totalNumOfSites);
+            addRow(_tRow);
+        }
+        else if (keyword == "DisplacementDelay")
+        {
+            double delay;
+            iss >> delay;
+            setDisplacementDelay(delay);
+        }
+        else if (keyword == "QpinDelay")
+        {
+            string type;
+            double delay;
+            iss >> type >> delay;
+            CellType *_type = CellType2Ptr[type];
+            _type->setQdelay(delay);
+        }
+        else if (keyword == "TimingSlack")
+        {
+            string name, Dpin;
+            double slack;
+            iss >> name >> Dpin >> slack;
+            Module *_tModule = ModuleName2Ptr[name];
+            CellType *_type = _tModule->cellType();
+            Pin *_tDPin = _tModule->pin(_type->getPinIdxFromName(Dpin));
+            _tDPin->setSlack(slack);
+            if (slack < 0)
+                _initial_negSlack.insert(_tDPin);
+        }
+        else if (keyword == "GatePower")
+        {
+            string type;
+            double power;
+            iss >> type >> power;
+            BaseCell *_type = CellType2Ptr[type];
+            _type->setPower(power);
         }
     }
-    FFCell *getBestCelltype(unsigned bitnum) { return _bestCells[bitnum]; }
-    // unsigned getFFlibBitsize() { return _bestCells.size(); }
-    unsigned getmaxLibBit() { return _ffLibMaxBit; }
-    unsigned getNumfflibBit(unsigned bit)
+    initialBinArray();
+    file.close();
+    vector<History *> _his;
+    _his.resize(_pins.size());
+    for (size_t i = 0; i < _pins.size(); i++)
     {
-        // clang-format off
-        std::map<unsigned, std::vector<FFCell *> >::iterator it = _ffLib.find(bit);
-        // clang-format on
-        if (it != _ffLib.end())
+        if (_pins[i]->module() != NULL)
         {
-            return _ffLib[bit].size();
-        }
-        else
-        {
-            cout << "Error: FF library not found!" << endl;
-            exit(1);
+            _his[i] = new History();
+            _pins[i]->setHistory(_his[i]);
+            string name = _pins[i]->module()->name();
+            _pins[i]->history()->setOldModuleName(name);
+            name = _pins[i]->name();
+            _pins[i]->history()->setOldPinName(name);
         }
     }
-    // For slack update
-    void sortClkNet();
-    void updateSlackAll();
-    void updateSlack(Pin *);
-    void resetVisit();
-    void buildBestCelltype();
-    void unMarkedDPin(); // unmarked all clk pin of FF
-    // void updateRadius(FFCell *);
-    void updateRadius();
-    void debankFF();
-    Pin *FindPrePin(Pin *inputPin);
-    void updateInitialSlackInfo();
-    void printResult();
+}
+void Database::initialBinArray()
+{
+    // Initial Die Boundary
+    assert((_boundaryRight != -1) || (_boundaryLeft != -1) ||
+           (_boundaryTop != -1) || (_boundaryBottom != -1));
+    // Initial Bin information
+    assert((_binWidth != -1) || (_binHeight != -1) || (_binMaxUtil != -1));
 
-    double getTNS() const;
-    unsigned getDen(double) const;
-    double totalCost(double) const;
+    _numBinRow = _dieRectangle.height() / _binHeight;
+    _numBinCol = _dieRectangle.width() / _binWidth;
 
-    int getbincol(){return _numBinCol;}
-    int getbinrow(){return _numBinRow;}
-    double getbinutil() const { return _binMaxUtil; }
-    // let all slack be positive
-    void setPositive_slack();
-    void adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius , double grid_width, double grid_height);
-    set<Pin *> getNegative_slack(){return _initial_negSlack;};
-    FFCell *getFFlib(int bit){return _ffLib[bit][0];}
+    double _binArea = _binHeight * _binWidth;
 
-    map<string, Pin *> IODesign;
+    double _xPos = _dieRectangle.left();
+    double _yPos = _dieRectangle.bottom();
+
+    // Create bin array
+    double _tempLeft, _tempBottom;
+    _bins.resize(_numBinCol);
+    for (int i = 0; i < _numBinCol; ++i)
+    {
+        _bins[i].resize(_numBinRow);
+        _tempLeft = _xPos + _binWidth * i;
+        for (int j = 0; j < _numBinRow; ++j)
+        {
+            _tempBottom = _yPos + _binHeight * j;
+            _bins[i][j] = new Bin(_tempLeft, _tempBottom, _tempLeft + _binWidth,
+                                  _tempBottom + _binHeight, _binArea);
+        }
+    }
+}
+
+void Database::resetBin()
+{
+    for (size_t i = 0; i < _numBinCol; ++i)
+    {
+        for (size_t j = 0; j < _numBinRow; ++j)
+        {
+            _bins[i][j]->resetBin();
+        }
+    }
+}
+
+int Database::updateBinUtil()
+{
+    Module *_tmpModule;
+    double _tmpCenterX, _tmpCenterY;
+    int _lbinIdx, _bbinIdx, _rbinIdx, _tbinIdx;
+    // Reset bin util to 0
+    resetBin();
+    // Update bin util
+    for (size_t i = 0; i < _numModules; ++i)
+    {
+        _tmpModule = module(i);
+
+        _lbinIdx = _tmpModule->x() / _binWidth;
+        _bbinIdx = _tmpModule->y() / _binHeight;
+        _rbinIdx = (_tmpModule->x() + _tmpModule->width()) / _binWidth;
+        _tbinIdx = (_tmpModule->y() + _tmpModule->height()) / _binHeight;
+
+        _rbinIdx = ((_rbinIdx + 1) >= _numBinCol) ? _numBinCol : (_rbinIdx + 1);
+        _tbinIdx = ((_tbinIdx + 1) >= _numBinRow) ? _numBinRow : (_tbinIdx + 1);
+        _lbinIdx = (_lbinIdx < 0) ? 0 : _lbinIdx;
+        _bbinIdx = (_bbinIdx < 0) ? 0 : _bbinIdx;
+
+        for (int j = _lbinIdx; j < _rbinIdx; ++j)
+        {
+            for (int k = _bbinIdx; k < _tbinIdx; ++k)
+            {
+                _bins[j][k]->updateOverlapArea(Rectangle::overlapArea(
+                    _tmpModule->rectangle(), *_bins[j][k]));
+            }
+        }
+    }
+
+    //calculate bin density
+    int num_violated_bin = 0;
+    for (size_t i = 0; i < _numBinCol; ++i)
+    {
+        for (size_t j = 0; j < _numBinRow; ++j)
+        {
+            if(_bins[i][j]->getDensity()>getbinutil()*0.01)
+            {
+                num_violated_bin++;
+            }            
+        }
+    }
+    return num_violated_bin;
+}
+
+// For timing slack
+
+/**
+ * Unmark the D pin of FF to update the slack
+ */
+void Database::unMarkedDPin()
+{
+    Module *_tModule;
+
+    for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i)
+    {
+        _tModule = _ffModules[i];
+        for (size_t j = 0, endj = _tModule->numInPins(); j < endj; ++j)
+        {
+            _tModule->InPin(j)->setVisited(false);
+        }
+    }
+}
+
+/**
+ * Update slack value of single D pins
+ */
+void Database::updateInitialSlackInfo()
+{
+    Module *_tModule;
+    Pin *_tPin;
+
+    for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i)
+    {
+        _tModule = _ffModules[i];
+        for (size_t j = 0, endj = _tModule->numInPins(); j < endj; j++)
+        {
+            _tPin = _tModule->InPin(j);
+            if (_tPin->name().substr(0, 3) != "CLK")
+            {
+                _tPin->setOldPos(_tPin->x(), _tPin->y());
+                _tPin->setOldQ(_tModule->cellType()->getQdelay());
+                // TODO: set pre Pin FF
+                _tPin->setPreFFPin(FindPrePin(_tPin));
+            }
+        }
+    }
+}
+
+void Database::updateSlack(Pin *ffpin)
+{
+    Pin *_preFFPin;
+
+    if (!ffpin->isVisited())
+    { // Check if we need to update or not ?
+        double _displacement = 0;
+        Pin *_tPin = NULL;
+        Net *_preNet;
+
+        _preFFPin = FindPrePin(ffpin);
+        ffpin->setPreFFPin(_preFFPin);
+        if (_preFFPin != NULL)
+        { // If the previous pin != null -> there is a FF before the current FF
+            if (!_preFFPin->isVisited())
+            { // If the pre ff pin didn't update slack, then update it before update this FF
+                string _prePinName = _preFFPin->name();
+                _prePinName[0] = 'D';
+                unsigned idx = _preFFPin->module()->cellType()->getPinIdxFromName(_prePinName);
+                updateSlack(_preFFPin->module()->InPin(idx)); // Input idx 0 is D pin
+            }
+            // Update slack of this D pin
+            // Calculate the preFF->comb displacement
+            if (ffpin->net()->OutputPin() != _preFFPin)
+            {
+                _preNet = _preFFPin->net();
+                double _max = 0;
+                // Find the farest pin to cal the displacement
+                for (size_t i = 0, endi = _preNet->numPins(); i < endi; i++)
+                {
+                    if (Pin::calHPWL(*_preFFPin, *_preNet->pin(i)) > _max)
+                    {
+                        _tPin = _preNet->pin(i);
+                    }
+                }
+                _displacement += (abs(_preFFPin->oldX() - _tPin->x()) + abs(_preFFPin->oldY()) - (_tPin->y()) - abs(_preFFPin->x() - _tPin->x()) + abs(_preFFPin->y() - _tPin->y()));
+            }
+        }
+
+        if (ffpin->isMoved())
+        { // If the FF is moved then update the new slack
+            _tPin = ffpin->net()->OutputPin();
+            _displacement += (abs(ffpin->oldX() - _tPin->x()) + abs(ffpin->oldY() - _tPin->y())) - (abs(ffpin->x() - _tPin->x()) + abs(ffpin->y() - _tPin->y()));
+        }
+        // cout << "before: " << ffpin->slack() << endl;
+
+        ffpin->setSlack(ffpin->slack() + _displacement * _dDelay + (ffpin->oldQ() - ffpin->module()->cellType()->getQdelay()));
+        // cout << ffpin->module()->name() << "/" << ffpin->name() << endl;
+        // cout << "after: " << ffpin->slack() << endl;
+    }
+    ffpin->setVisited(true);
+}
+
+void Database::updateSlackAll()
+{
+    // Update slack first
+    for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i)
+    {
+        for (size_t j = 0, endj = _ffModules[i]->numInPins() - 1; j < endj; ++j)
+        {
+            updateSlack(_ffModules[i]->InPin(j));
+        }
+    }
+    // Update timing slack old
+    for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i)
+    {
+        for (size_t j = 0, endj = _ffModules[i]->numInPins() - 1; j < endj; ++j)
+        {
+            _ffModules[i]->InPin(j)->updateSlackInfo(_ffModules[i]->getQdelay());
+        }
+    }
+    // Unmarked all the FF
+    unMarkedDPin();
+}
+/**
+ * Update radius value of Module
+ */
+// void Database::updateRadius(FFCell *_newType) {
+void Database::updateRadius()
+{
+    // Note: Only merge with the single 2bit FF
+    // Assume the previous FF's D pin is fixed
+    // For multibit FF, the smallest radius will be consider
+    // double _newQDelay = _newType->getQdelay();
+    // Reset the Slack first
+    // unMarkedDPin();
+    // Require to update the slack first
+    Module *_tModule;
+    Pin *_tPin;
+    Timing *_tSlack;
+    double _dist2PreGate;
+    double _nRadius;
+    double _tRadius;
+    for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i)
+    {
+        // _radius.clear();
+        _tRadius = DBL_MAX;
+        _tModule = _ffModules[i];
+        for (size_t j = 0, endj = _tModule->numInPins(); j < endj; ++j)
+        {
+            cout << "here " << endl;
+            _tPin = _tModule->InPin(j);
+            _tSlack = _tPin->getSlackInfor();
+            _dist2PreGate = Pin::calHPWL(*_tPin, *_tPin->net()->getOutputPin());
+            _nRadius = (_tSlack->slack() + _dDelay * _dist2PreGate) / _dDelay;
+            if (_nRadius < _tRadius)
+                _tRadius = _nRadius;
+            cout << "here 2" << endl;
+        }
+        _tModule->setRadius(_tRadius);
+    }
+}
+
+void Database::printResult()
+{
+    string _tmp = _name + ".out";
+    fstream _outFile;
+    _outFile.open(_tmp.c_str(), ios::out);
+
+    // if (!_outFile.is_open())
+    //     cout << "Cannot open output file !!!" << endl;
+
+    _outFile << "CellInst " << _ffModules.size() << endl;
+    Module *_tModule;
+    for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i)
+    {
+        _tModule = _ffModules[i];
+        _outFile << "Inst " << _tModule->name() << " " << _tModule->cellType()->getName() << " " << _tModule->x() << " " << _tModule->y() << endl;
+    }
+
+    History *_tHistory;
+
+    for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i)
+    {
+        for (size_t j = 0, endj = _ffModules[i]->totnumPins(); j < endj; j++)
+        {
+            _tHistory = _ffModules[i]->pin(j)->history();
+            _outFile << _tHistory->oldModuleName() << "/" << _tHistory->oldPinName() << " map " << _ffModules[i]->name() << "/" << _ffModules[i]->pin(j)->name() << endl;
+        }
+    }
+}
+
+Pin *Database::FindPrePin(Pin *inputPin)
+{
+    Module *currentM = inputPin->module();
+    string originFF = currentM->name();
+    queue<Pin *> que;
+    Net *OriginalCLKNet = NULL;
+    Net *CurrentCLKNet = NULL;
+    Net *currentnet = NULL;
+    Pin *currentPin = NULL;
+    if (currentM->isFF() == 0)
+    {
+        cout << "please put FF in the argumemt!!! bad guy" << endl;
+        return 0;
+    }
+    for (int i = 0; i < currentM->totnumPins(); i++)
+    {
+        if (currentM->pin(i)->name() == "CLK")
+        {
+            OriginalCLKNet = currentM->pin(i)->net();
+        }
+    }
+    while (1)
+    {
+        for (int i = 0; i < currentM->numInPins(); i++)
+        {
+            que.push(currentM->InPin(i));
+        }
+
+        currentPin = que.front();
+        que.pop();
+        if (que.empty())
+        {
+            // If it cannot be found, it may be received by IOdesign and will return Nullptr
+            return NULL;
+        }
+        while (currentPin->name() == "CLK" || currentPin->net()->getOutputPin()->module() == NULL)
+        {
+            // Exclude finding IOdesign Module will be NULL
+            currentPin = que.front();
+            que.pop();
+            if (que.empty())
+            {
+                // If it cannot be found, it may be received by IOdesign and will return Nullptr
+                return NULL;
+            }
+        }
+        currentM = currentPin->net()->getOutputPin()->module();
+        for (int i = 0; i < currentM->totnumPins(); i++)
+        {
+            if (currentM->pin(i)->name() == "CLK")
+            {
+                CurrentCLKNet = currentM->pin(i)->net();
+            }
+        }
+        if (currentM->isFF() == 1 && CurrentCLKNet == OriginalCLKNet && originFF != currentM->name())
+        {
+            // cout << endl << endl;
+            currentPin = currentPin->net()->getOutputPin();
+            // cout << "PrePin: " << currentPin->module()->name()<<"/"<< currentPin->name() << endl;
+            // cout << "PreModule " << currentM->name() << endl;
+            return currentPin;
+        }
+    }
+}
+
+double Database::getTNS() const
+{
+    double _tns = 0;
+    Pin *_tPin;
+    for (size_t i = 0, endi = _ffModules.size(); i < endi; i++)
+    {
+        for (size_t j = 0, endj = _ffModules[i]->numInPins(); j < endj; j++)
+        {
+            _tPin = _ffModules[i]->InPin(j);
+            cout << "slack: " << _tPin->slack() << endl;
+            if (_tPin->slack() < 0)
+                _tns += _tPin->slack();
+        }
+    }
+    return _tns;
+}
+
+unsigned Database::getDen(double threshold) const
+{
+    unsigned _value = 0;
+    // Traverse the bin array, get the density for each bin -> calc the cost
+    for (size_t i = 0; i < _numBinCol; ++i)
+    {
+        for (size_t j = 0; j < _numBinRow; ++j)
+        {
+            if (_bins[i][j]->getDensity() > threshold)
+                _value++;
+        }
+    }
+    return _value;
+}
+
+double Database::totalCost(double _denThrs) const
+{
+    double _areaCost = 0;
+    double _powerCost = 0;
+    double _tnsCost = getTNS();
+    for (size_t i = 0, endi = _ffModules.size(); i < endi; i++)
+    {
+        _powerCost += _ffModules[i]->getPower();
+        _areaCost += _ffModules[i]->area();
+    }
+
+    return _alpha * _tnsCost + _beta * _powerCost + _gamma * _areaCost + _lambda * getDen(_denThrs);
+}
+void Database::setPositive_slack() {
+    std::set<Pin *> processedPins; // 用於存儲已處理過的 Pins
+
+    for (std::set<Pin *>::iterator it = _initial_negSlack.begin(); it != _initial_negSlack.end(); ++it) {
+        Pin* currentPin = *it;
+        
+        if (currentPin->getSlackInfor()->slack() < 0 && currentPin->module() != NULL && currentPin->module()->isFF()
+            && currentPin->net()->OutputPin() != currentPin) {
+            double ff_original_slack = currentPin->getSlackInfor()->slack();
+            double dis_delay = getDisplacementDelay();
+            double initial_dist = std::abs(currentPin->net()->OutputPin()->x() - currentPin->x()) +
+                                  std::abs(currentPin->net()->OutputPin()->y() - currentPin->y());
+            double radius = (ff_original_slack + dis_delay * initial_dist) / dis_delay;
+            adjust_position(currentPin->net()->OutputPin(), currentPin, radius, row(0)->width(), row(0)->height());
+
+            // 更新 slack
+            double new_dist = std::abs(currentPin->net()->OutputPin()->x() - currentPin->x()) +
+                              std::abs(currentPin->net()->OutputPin()->y() - currentPin->y());
+            double new_slack = (initial_dist - new_dist) * dis_delay + ff_original_slack;
+            if (std::abs(new_slack) < std::pow(10, -10)) // 處理浮點誤差
+                new_slack = 0;
+            currentPin->getSlackInfor()->setSlack(new_slack);
+
+            //check overlapping
+            // if(new_dist == 0)
+            // {
+            //     _buffer.push_back(currentPin->module());
+            //     _buffer.push_back(currentPin->net()->OutputPin()->module());
+            //     cout<<"overlapping: "<<currentPin->module()->name()<<"/"<<currentPin->name()<<" ("
+            //     <<currentPin->x()<<","<<currentPin->y()<<") "
+            //     <<currentPin->module()->x()<<","<<currentPin->module()->y()<<" "<<
+            //     currentPin->module()->x()+currentPin->module()->width()<<","<<currentPin->module()->y()+currentPin->module()->height()
+            //     <<" -> "<<currentPin->net()->OutputPin()->module()->name()<<"/"<<currentPin->net()->OutputPin()->name()<<" ("
+            //     <<currentPin->net()->OutputPin()->x()<<","<<currentPin->net()->OutputPin()->y()<<") "
+            //     <<currentPin->net()->OutputPin()->module()->x()<<","<<currentPin->net()->OutputPin()->module()->y()<<" "
+            //     <<currentPin->net()->OutputPin()->module()->x()+currentPin->net()->OutputPin()->module()->width()<<","
+            //     <<currentPin->net()->OutputPin()->module()->y()+currentPin->net()->OutputPin()->module()->height()<<endl;
+            // }
+        
+            // 更新其它 Pins 的 slack
+            for (int j = 0; j < currentPin->net()->numPins(); ++j) {
+                Pin* otherPin = currentPin->net()->pin(j);
+                if (otherPin == currentPin)
+                    continue;
+
+                double newWL = std::abs(otherPin->x() - currentPin->x()) +
+                               std::abs(otherPin->y() - currentPin->y());
+                double buff = otherPin->getSlackInfor()->slack() + dis_delay * (initial_dist - newWL);
+                otherPin->getSlackInfor()->setSlack(buff);
+
+                if (buff < 0 && processedPins.find(otherPin) == processedPins.end()) {
+                    _initial_negSlack.insert(otherPin);
+                    processedPins.insert(otherPin);
+                }
+            }
+        }
+    }
+}
 
 
-    map<string, int > OriginModuleN;
-    int record = 0;
+
+void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, double grid_width, double grid_height)
+{
+    double deltaX = abs(fix_pin->x() - adjust_pin->x());
+    double deltaY = abs(fix_pin->y() - adjust_pin->y());
+    double initial_dist = deltaX + deltaY;
+    if (initial_dist <= radius)
+        return; // don't have to adjust
+
+    double reduceBy = initial_dist - radius;
+    if (deltaX > deltaY)
+    {
+        if (deltaX - reduceBy < 0)
+        {
+            deltaY = max(deltaY - reduceBy, 0.0);
+        }
+        deltaX = max(deltaX - reduceBy, 0.0);
+    }
+    else
+    {
+        if (deltaY - reduceBy < 0)
+        {
+            deltaX = max(deltaX - reduceBy, 0.0);
+        }
+        deltaY = max(deltaY - reduceBy, 0.0);
+    }
+
+    adjust_pin->setPosition((fix_pin->x() + deltaX * (adjust_pin->x() > fix_pin->x() ? 1 : -1)),
+                            (fix_pin->y() + deltaY * (adjust_pin->y() > fix_pin->y() ? 1 : -1)));
+                        
+    // snap to grid
+    adjust_pin->setPosition((((adjust_pin->x() + grid_width) / grid_width) * grid_width), (((adjust_pin->y() + grid_height) / grid_height) * grid_height));
+    double newx = adjust_pin->x() - adjust_pin->xOffset();
+    double newy = adjust_pin->y() - adjust_pin->yOffset();
+    adjust_pin->module()->setPosition(newx, newy);  
+    double new_dist = abs(fix_pin->x() - adjust_pin->x()) + abs(fix_pin->y() - adjust_pin->y());
+    if (new_dist <= radius)
+        return;
+    else
+    {
+        if (adjust_pin->x() < fix_pin->x())
+            adjust_pin->setPosition(adjust_pin->x() + grid_width, adjust_pin->y());
+        else if (adjust_pin->x() > fix_pin->x())
+            adjust_pin->setPosition(adjust_pin->x() - grid_width, adjust_pin->y());
+        if (adjust_pin->y() < fix_pin->y())
+            adjust_pin->setPosition(adjust_pin->x(), adjust_pin->y() + grid_height);
+        else if (adjust_pin->y() > fix_pin->y())
+            adjust_pin->setPosition(adjust_pin->x(), adjust_pin->y() - grid_height);
+            double newx = adjust_pin->x() - adjust_pin->xOffset();
+        double newy = adjust_pin->y() - adjust_pin->yOffset();
+        adjust_pin->module()->setPosition(newx, newy);  
+    }
+}
+
+void Database::buildBestCelltype()
+{
+    for (size_t i = 0; i < _ffLib.size(); i++)
+    {
+        vector<FFCell *> cellv = _ffLib[pow(2, i)];
+        double maxCost = 0;
+        unsigned bestid;
+        vector<double> disCost;
+        disCost.clear();
+        // find best among cellv(same bit celltype)
+        for (size_t j = 0; j < cellv.size(); j++)
+        { // cal displacement cost
+            unsigned clkidx = cellv[j]->clkPinIdx();
+            double cost = 0;
+            for (size_t k = 0; k < cellv[j]->getInNum(); k++)
+            {
+                if (k != clkidx)
+                {
+                    cost += (cellv[j]->pinOffsetX(k) + cellv[j]->pinOffsetY(k)) * _dDelay;
+                }
+            }
+            disCost.push_back(cost);
+            if (cost > maxCost)
+            {
+                maxCost = cost;
+            }
+        }
+        double mintotCost = DBL_MAX;
+        for (size_t j = 0; j < cellv.size(); j++)
+        {
+            double totcost = 0;
+            totcost += maxCost - disCost[j];
+            totcost += cellv[j]->getArea() + cellv[j]->getPower();
+            if (totcost < mintotCost)
+            {
+                mintotCost = totcost;
+                bestid = j;
+            }
+        }
+        _bestCells[pow(2, i)] = cellv[bestid];
+    }
+    return;
+}
+
+string itos(int num)
+{
+    string ans = "";
+    while (num)
+    {
+        ans = char((num % 10) + '0') + ans;
+        num /= 10;
+    }
+    return ans;
+}
+
+void Database::outputTofile(const string &filename)
+{
+    fstream outFile;
+    outFile.open(filename.c_str(), ios::out);
+    if (!outFile.is_open())
+    {
+        cerr << "Error opening file: " << filename << endl;
+        exit(1);
+    }
+    outFile << fixed;
+    // outFile << "CellInst " << getNumFF() << endl;
+    outFile << "CellInst " << getbuffer().size() << endl;
+    // temp=============================
+    string nname = _modules[_modules.size() - 1]->name();
+    string letters;
+    string numbers;
+    for (int i = 0; i < nname.length(); ++i)
+    {
+        if (isdigit(nname[i]))
+            numbers += nname[i];
+        else
+            letters += nname[i];
+    }
+    int num = atoi(numbers.c_str());
+    for (size_t i = 0; i < _ffModules.size(); ++i)
+    {
+        num++;
+        nname = letters + itos(num);  
+        _ffModules[i]->setName(nname);
+        
+    }
+    // temp=============================
+    for (size_t i = 0; i < getNumFF(); i++)
+    {
+        outFile << "Inst " << _ffModules[i]->name() << " " << _ffModules[i]->cellType()->getName() << " "
+                << setprecision(0) << _ffModules[i]->x() << " " << _ffModules[i]->y() << " " <<endl;
+    }
+    for (size_t i = 0; i < getNumFF(); ++i)
+    {
+        for(size_t j=0;j<_ffModules[i]->totnumPins(); ++j)
+        {
+            outFile << _ffModules[i]->pin(j)->history()->oldModuleName() << "/" << _ffModules[i]->pin(j)->history()->oldPinName()
+                    << " map " << _ffModules[i]->name() << "/" << _ffModules[i]->pin(j)->name() << endl;
+        }   
+    }
 
 
 
-    vector<Module *> getbuffer(){return _buffer;}
-    double getBinHeight(){return _binHeight;}
-    double getBinWidth(){return _binWidth;}
-private:
-    string _name; // Design Name
-
-    // Design Data
-    unsigned _numModules;
-    unsigned _numNet;
-    unsigned _numInput;
-    unsigned _numOutput;
-
-    ModuleList _modules;
-    NetList _nets;
-    PinList _pins;
-    RowList _rows;
-    BinList _bins;
-
-    // Library
-    FFLLibrary _ffLib;
-    CellLibrary _cellLib;
-    map<unsigned, FFCell *> _bestCells;
-    unsigned _ffLibMaxBit;
-
-    // Design statics
-    Rectangle _dieRectangle;
-    double _boundaryTop;
-    double _boundaryLeft;
-    double _boundaryBottom;
-    double _boundaryRight;
-
-    // Bin statics
-    double _binWidth;
-    double _binHeight;
-    double _binMaxUtil;
-    int _numBinCol; // Like x index
-    int _numBinRow; // Like y index
-
-    // For FF merging
-    double _dDelay;
-    double _alpha;
-    double _beta;
-    double _gamma;
-    double _lambda;
-
-    // Caching
-    map<string, BaseCell *> CellType2Ptr;
-    map<string, Module *> ModuleName2Ptr;
-    map<int, Module *> ModuleNo2Ptr;
-
-    // Caching the list for processing
-    ModuleList _ffModules;
-    NetList _clkNets;
-
-    // History for output
-    // vector<History> _pinHistory;
-
-    // void createPinforModule(Module *);
-    // void updateRadiusRecur(FFCell*, Module*);
-    Module *FindPrePin(Module *currentM);
-
-    // void updateInitialSlackInfo();
-    set<Pin *> _initial_negSlack;
-
-
-
-
-
-    vector<Module *> _buffer;
-};
-
-#endif // DATABASE_H
+    //check overlapping
+    // for(int i=0; i<_buffer.size(); ++i)
+    // {
+    //      outFile << "Inst " << _buffer[i]->name() << " " << _buffer[i]->cellType()->getName() << " "
+    //             << setprecision(0) << _buffer[i]->x() << " " << _buffer[i]->y() << " "
+    //             << _buffer[i]->width()<< " " <<_buffer[i]->height()<<endl;
+    // }
+    return;
+}

@@ -26,17 +26,39 @@ public:
     double     getX(){return _x;}
     double     getY(){return _y;}
     double     get_deltaY(){return _deltaY;}
-    bool       isFF(){return _isFF;}
+    void     setwstar (double a) {wstar= a;}
+    double   getwstar ()         {return wstar;}
+    void     setwidth (double a) {width= a;}
+    double   getwidth ()         {return width;}
+    double   getrhoi() {return rhoi;}
+    double   setrhoi(double a) {rhoi = a;}
+    double   getthetai(){return thetai;}
+    double   setthetai(double a) {thetai = a;}
+    int getorder() {return order;}
+    void setorder(int a){ order = a;}
+    bool       isFF(){return _m->isFF();}
     double getLongestPath() const {return _longestPath;}
     void setLongestPath(double path) {_longestPath = path;}
+    DAG_Node* getPreviousNode() const { return _previousNode; }
+    void setPreviousNode(DAG_Node* prevNode) { _previousNode = prevNode; }
+    
+    set<int> record;
+
 private:
     Module      *_m;
     string      _name;
+    int order;
+    double      width;
+    double      wstar;
     double      _weight;
+    double      rhoi;
+    double      thetai;
     double      _x;
     double      _y;
-    double      _deltaY;
+    double      _deltaY=0;
     bool        _isFF;
     vector<pair<DAG_Node *,double > > _edge;
+
     double _longestPath;
+    DAG_Node* _previousNode;
 };

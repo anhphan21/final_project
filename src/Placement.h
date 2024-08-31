@@ -3,6 +3,7 @@
 #include <set>
 #include "Database.h"
 #include "DAG.h"
+#include <stack>
 // We declare a Placement every time we are doing merge on a clk net
 class Nodeinf
 {
@@ -22,11 +23,17 @@ public:
    };
    void mainLoop();
    void constructFeasible(Module *ff);
+   
+   void cal_rhoi();
+   void cal_thetai();
    Rhombus *findInputRegion(Module *ff);
    vector<Rhombus *> findOutputRegion(Module *ff);
    bool overlap_ornot(vector<Rhombus *> &input_rhombus, double &leftBound, double &rightBound, double &botBound, double &topBound);
    void windows();
    void constructGraph();
+   void printLongestPath(DAG_Node *node);
+   void calculateLongestPaths(std::vector<DAG_Node*>& nodes);
+   void topologicalSortUtil(DAG_Node* node, std::stack<DAG_Node*>& Stack, std::vector<DAG_Node*>& visited);
    // clang-format off
    set<set<Module *> > calMaxClique(Net *targetNet);
    set<Module*> adjustClique(Net *targetNet , set<Module*> targetClique);
@@ -102,7 +109,8 @@ public:
    }
    set<set<Module*> > getwholeCliq(){ return _maxClique; }
    void clearmaxCliq() { _maxClique.clear(); }
-
+   
+   DAG_NodeList _DAG_nodes;
 private:
    Database *_dataBase;
    // construct graph
@@ -112,7 +120,6 @@ private:
    map<string, int> ModuleTraverseN;
 
    map<double, map<double, double> > _binMap;
-   DAG_NodeList _DAG_nodes;
    
    map<pair<int ,int >,vector<DAG_Node *> > _Position2_DAG_Node;
    map<int , vector<DAG_Node *> > _x2_DAG_Node;
