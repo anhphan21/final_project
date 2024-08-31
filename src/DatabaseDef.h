@@ -22,6 +22,7 @@ class Placement;
 class Rhombus;
 
 class Database;
+class DAG_Node;
 
 typedef BaseCell CellType;
 typedef vector<CellType *> CellLibrary;
@@ -33,5 +34,5 @@ typedef vector<Net *> NetList;
 typedef vector<Row *> RowList;
 typedef vector<vector<Bin *> > BinList;
 typedef vector<Node *> NodeList;
-
+typedef vector<DAG_Node *> DAG_NodeList;
 #endif  // DATABASEDEF_H

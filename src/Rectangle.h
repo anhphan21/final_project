@@ -11,7 +11,7 @@ class Rectangle {
     Rectangle() : _left(0), _bottom(0), _right(0), _top(0) {
     }
 
-    Rectangle(double left, double bottom, double right, double top)
+    Rectangle(double left, double bottom, double right, double top) //x1 y1 x2 y2
         : _left(left), _bottom(bottom), _right(right), _top(top) {
     }
 

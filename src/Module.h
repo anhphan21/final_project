@@ -14,14 +14,21 @@ using namespace std;
 class Module
 {
 public:
-    Module() : _x(-1), _y(-1), _isFixed(false), _type(NULL), _radius(0)
+    Module() : _x(-1), _y(-1), _isFixed(false), _type(NULL), _radius(0),_feasibleRegion(NULL)
     {
     }
 
     Module(string &name, CellType *type, double x, double y)
-        : _name(name), _type(type), _x(x), _y(y), _isFixed(false), _radius(0){
+        : _name(name), _type(type), _x(x), _y(y), _isFixed(false), _radius(0),_feasibleRegion(NULL)
+    {
     }
-
+    ~Module()
+    {
+        if (_feasibleRegion != NULL)
+        {
+            delete _feasibleRegion;
+        }
+    }
     /////////////////////////////////////////////
     // get
     /////////////////////////////////////////////
@@ -39,7 +46,6 @@ public:
     double area() const { return _type->getArea(); }
 
     Rectangle rectangle() const { return Rectangle(_x, _y, _x + width(), _y + height()); }
-
 
     double getPower() const { return _type->getPower(); }
     double getQdelay() const { return _type->getQdelay(); }
@@ -98,16 +104,17 @@ public:
     void setInPin(unsigned idx, Pin *pPin) { _pins[_type->inIdx(idx)] = pPin; }
     void setOutPin(unsigned idx, Pin *pPin) { _pins[_type->outIdx(idx)] = pPin; }
     void setCellType(CellType *type) { _type = type; }
-    set<pair<Module*,Module*> > _outputFF;  //first: Gate; second: ouput FF
+    // clang-format off
+    set<pair<Module *, Module *> > _outputFF; // first: Gate; second: ouput FF
     int No;
-    
+    // clang-format on
     double getTNS()
     {
-        double tns=0;
-        for(int i=0;i<numInPins();++i)          //input pin
+        double tns = 0;
+        for (int i = 0; i < numInPins(); ++i) // input pin
         {
-            if(InPin(i)->getSlackInfor()->slack()<0)
-                tns+=InPin(i)->getSlackInfor()->slack();
+            if (InPin(i)->getSlackInfor()->slack() < 0)
+                tns += InPin(i)->getSlackInfor()->slack();
         }
         return tns;
     }
