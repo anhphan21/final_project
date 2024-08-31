@@ -5,7 +5,12 @@ using namespace std;
 class DAG_Node
 {
 public:
-    DAG_Node():_m(NULL),_deltaY(0){_edge.clear();}
+    DAG_Node():_m(NULL),_deltaY(0)
+    {
+        _edge.clear();
+        for(int i=0;i<_edge.size();++i)
+            _edge[i].first=NULL;
+    }
     ~DAG_Node();
     void    setModule(Module *m){_m = m;}
     void    setName(string n){_name = n;}
@@ -14,7 +19,7 @@ public:
     void    setY(double y){_y = y;}
     void    set_deltaY(double y){_deltaY = y;}
     bool    set_isFF(bool isFF){_isFF = isFF;}
-    
+
     vector<pair<DAG_Node *,double > > getEdge(){return _edge;}
     Module *getModule(){return _m;}
     string  getName(){return _name;}

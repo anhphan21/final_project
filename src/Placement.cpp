@@ -929,17 +929,6 @@ void Placement::windows() // construct weilun graph
             }
         }
     }
-    for (int i = 0; i < num_FF; ++i)
-    {
-        if(_dataBase->ff(i)->getFeasibleRegion()==NULL)
-            continue;
-        if(_dataBase->ff(i)->getFeasibleRegion()->left()!=0)
-        {
-            cout<<_dataBase->ff(i)->getFeasibleRegion()->left()<<","<<_dataBase->ff(i)->getFeasibleRegion()->bottom()<<"    ";
-            cout<<_dataBase->ff(i)->getFeasibleRegion()->right()<<","<<_dataBase->ff(i)->getFeasibleRegion()->top();
-            cout<<endl;
-        }
-    }
 }
 
 double Placement::cal_total_cost()
@@ -1954,5 +1943,29 @@ void Placement::construct_DAG()
             }
             ++i;    //BL後面一定是BR，跳過BR
         }
+    }
+
+    //test
+    for(int i=0;i<_DAG_nodes.size();++i)
+    {
+        // cout<<_DAG_nodes[i]->getModule()->name()<<": ";
+        for(int j=0;j<_DAG_nodes[i]->getEdge().size();++j)
+        {
+            vector<pair<DAG_Node *,double > > buff = _DAG_nodes[i]->getEdge();
+            // if(buff[j].first->getModule()==NULL)
+            //     cout<<buff[j].first->getName()<<" ";
+            // else
+            //     cout<<buff[j].first->getModule()->name()<<" ";
+            // if(buff[j].first==NULL)
+            // {
+            //     cout<<"fuck~~"<<endl;
+            //     return;
+            // }
+                
+
+            if(buff[j].first == NULL)
+                cout<<"hello"<<endl;
+        }
+        // cout<<endl;
     }
 }
