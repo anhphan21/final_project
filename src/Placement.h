@@ -2,6 +2,7 @@
 #define PLACEMENT_H
 #include <set>
 #include "Database.h"
+#include "DAG.h"
 // We declare a Placement every time we are doing merge on a clk net
 class Nodeinf
 {
@@ -15,14 +16,15 @@ class Placement
 public:
    Placement()
    {
-      _nodes.resize(1);
-      _nodes[0] = NULL;
+       _nodes.resize(1);
+       _nodes[0] = NULL;
+
    };
    void mainLoop();
    void constructFeasible(Module *ff);
    Rhombus *findInputRegion(Module *ff);
    vector<Rhombus *> findOutputRegion(Module *ff);
-
+   bool overlap_ornot(vector<Rhombus *> &input_rhombus, double &leftBound, double &rightBound, double &botBound, double &topBound);
    void windows();
    void constructGraph();
    // clang-format off
@@ -33,7 +35,7 @@ public:
    // clang-format on
    double cal_cost(Module *ff1, Module *ff2);
    double cal_total_cost();
-   double getDen();
+   
 
    NodeList findMST();
    void netListGraph();
@@ -64,6 +66,13 @@ public:
    Database *getDatabase() { return _dataBase; }
    map<string, vector<Module *> > CLKNetModule;
    vector<pair<vector<string>, string> > latch_record;
+
+   //DAG
+   DAG_Node *DAGnode(unsigned nodeId){ return _DAG_nodes[nodeId];}
+   void add_DAG_nodes(DAG_Node *node) { _DAG_nodes.push_back(node); }
+   unsigned getNum_DAG_Node() { return _DAG_nodes.size(); }
+   void construct_DAG();
+   
    unsigned getmaxCliqesize(){ return _maxClique.size(); }
    // clang-format off
    set<Module*> getLargestCliqSet()
@@ -101,6 +110,12 @@ private:
    NodeList _nodes;
    map<string, Node *> _name2Node;
    map<string, int> ModuleTraverseN;
+
+   map<double, map<double, double> > _binMap;
+   DAG_NodeList _DAG_nodes;
+   
+   map<pair<int ,int >,vector<DAG_Node *> > _Position2_DAG_Node;
+   map<int , vector<DAG_Node *> > _x2_DAG_Node;
    set<set<Module *> > _maxClique;
    // clang-format on
 };
