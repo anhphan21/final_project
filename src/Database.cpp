@@ -957,49 +957,49 @@ void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, dou
     }
 }
 
-// void Database::buildBestCelltype()
-// {
-//     for (size_t i = 0; i < _ffLib.size(); i++)
-//     {
-//         vector<FFCell *> cellv = _ffLib[pow(2, i)];
-//         double maxCost = 0;
-//         unsigned bestid;
-//         vector<double> disCost;
-//         disCost.clear();
-//         // find best among cellv(same bit celltype)
-//         for (size_t j = 0; j < cellv.size(); j++)
-//         { // cal displacement cost
-//             unsigned clkidx = cellv[j]->clkPinIdx();
-//             double cost = 0;
-//             for (size_t k = 0; k < cellv[j]->getInNum(); k++)
-//             {
-//                 if (k != clkidx)
-//                 {
-//                     cost += (cellv[j]->pinOffsetX(k) + cellv[j]->pinOffsetY(k)) * _dDelay;
-//                 }
-//             }
-//             disCost.push_back(cost);
-//             if (cost > maxCost)
-//             {
-//                 maxCost = cost;
-//             }
-//         }
-//         double mintotCost = DBL_MAX;
-//         for (size_t j = 0; j < cellv.size(); j++)
-//         {
-//             double totcost = 0;
-//             totcost += maxCost - disCost[j];
-//             totcost += cellv[j]->getArea() + cellv[j]->getPower();
-//             if (totcost < mintotCost)
-//             {
-//                 mintotCost = totcost;
-//                 bestid = j;
-//             }
-//         }
-//         _bestCells[pow(2, i)] = cellv[bestid];
-//     }
-//     return;
-// }
+void Database::buildBestCelltype()
+{
+    for (size_t i = 0; i < _ffLib.size(); i++)
+    {
+        vector<FFCell *> cellv = _ffLib[pow(2, i)];
+        double maxCost = 0;
+        unsigned bestid;
+        vector<double> disCost;
+        disCost.clear();
+        // find best among cellv(same bit celltype)
+        for (size_t j = 0; j < cellv.size(); j++)
+        { // cal displacement cost
+            unsigned clkidx = cellv[j]->clkPinIdx();
+            double cost = 0;
+            for (size_t k = 0; k < cellv[j]->getInNum(); k++)
+            {
+                if (k != clkidx)
+                {
+                    cost += (cellv[j]->pinOffsetX(k) + cellv[j]->pinOffsetY(k)) * _dDelay;
+                }
+            }
+            disCost.push_back(cost);
+            if (cost > maxCost)
+            {
+                maxCost = cost;
+            }
+        }
+        double mintotCost = DBL_MAX;
+        for (size_t j = 0; j < cellv.size(); j++)
+        {
+            double totcost = 0;
+            totcost += maxCost - disCost[j];
+            totcost += cellv[j]->getArea() + cellv[j]->getPower();
+            if (totcost < mintotCost)
+            {
+                mintotCost = totcost;
+                bestid = j;
+            }
+        }
+        _bestCells[pow(2, i)] = cellv[bestid];
+    }
+    return;
+}
 
 string itos(int num)
 {

@@ -27,7 +27,7 @@ public:
    void calculateLongestPaths(std::vector<DAG_Node*>& nodes);
    void topologicalSortUtil(DAG_Node* node, std::stack<DAG_Node*>& Stack, std::vector<DAG_Node*>& visited);
    vector<Rhombus *> findOutputRegion(Module *ff);
-
+   bool overlap_ornot(vector<Rhombus *> &input_rhombus, double &leftBound, double &rightBound, double &botBound, double &topBound);
    void windows();
    void constructGraph();
    // clang-format off
@@ -38,7 +38,7 @@ public:
    // clang-format on
    double cal_cost(Module *ff1, Module *ff2);
    double cal_total_cost();
-   double getDen();
+   
 
    NodeList findMST();
    void netListGraph();
@@ -69,6 +69,13 @@ public:
    Database *getDatabase() { return _dataBase; }
    map<string, vector<Module *> > CLKNetModule;
    vector<pair<vector<string>, string> > latch_record;
+
+   //DAG
+   DAG_Node *DAGnode(unsigned nodeId){ return _DAG_nodes[nodeId];}
+   void add_DAG_nodes(DAG_Node *node) { _DAG_nodes.push_back(node); }
+   unsigned getNum_DAG_Node() { return _DAG_nodes.size(); }
+   void construct_DAG();
+   
    unsigned getmaxCliqesize(){ return _maxClique.size(); }
    // clang-format off
    set<Module*> getLargestCliqSet()
@@ -99,23 +106,6 @@ public:
    set<set<Module*> > getwholeCliq(){ return _maxClique; }
    void clearmaxCliq() { _maxClique.clear(); }
 
-
-   //DAG
-   DAG_Node *DAGnode(unsigned nodeId){ return _DAG_nodes[nodeId];}
-   void add_DAG_nodes(DAG_Node *node) { _DAG_nodes.push_back(node); }
-   unsigned getNum_DAG_Node() { return _DAG_nodes.size(); }
-   void construct_DAG();
-   //Cell Shifting Heuristic
-   void cell_shifting();
-   map<Node*, vector<int> > table;
-   void longest_path();
-   double cal_rho(DAG_Node *_DagNode) {return rho_i;}
-   double cal_theta(DAG_Node *_DagNode) {return theta_i;}
-   double cal_l(DAG_Node *_DagNode) {return l_i;}
-   double cal_r(DAG_Node *_DagNode) {return r_i;}
-   DAG_NodeList _DAG_nodes;
-
-   
 private:
    Database *_dataBase;
    // construct graph
@@ -123,20 +113,14 @@ private:
    NodeList _nodes;
    map<string, Node *> _name2Node;
    map<string, int> ModuleTraverseN;
-   set<set<Module *> > _maxClique;
-   
-   double rho_i;
-   double theta_i;
-   double l_i;
-   double r_i;
-
-   // clang-format on
 
    map<double, map<double, double> > _binMap;
    
    
    map<pair<int ,int >,vector<DAG_Node *> > _Position2_DAG_Node;
    map<int , vector<DAG_Node *> > _x2_DAG_Node;
+   set<set<Module *> > _maxClique;
+   // clang-format on
 };
 
 #endif // PLACEMENT_H

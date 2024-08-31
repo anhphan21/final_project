@@ -55,16 +55,16 @@ int main(int argc, char **argv)
   //testDTB.buildBestCelltype();
   Placement testGraph;
   testGraph.setDatabase(&testDTB);
-  // unsigned count = 0;
-  // for (size_t i = 0; i < testDTB.getNumFF(); i++)
-  // {
-  //   if (testDTB.ff(i)->cellType()->numBit() > 1)
-  //   {
-  //     count += testDTB.ff(i)->cellType()->numBit();
-  //   }
-  // }
-  // cout << "count: " << count << endl;
-  // testGraph.debankAllFF();
+  unsigned count = 0;
+  for (size_t i = 0; i < testDTB.getNumFF(); i++)
+  {
+    if (testDTB.ff(i)->cellType()->numBit() > 1)
+    {
+      count += testDTB.ff(i)->cellType()->numBit();
+    }
+  }
+  cout << "count: " << count << endl;
+  testGraph.debankAllFF();
   // cout << "Done debank!!!" << endl;
   // cout << "count: " << count << endl;
   // cout << "ff num " << testDTB.getNumFF() << endl;
@@ -112,7 +112,6 @@ int main(int argc, char **argv)
   //   }
   // }
   testGraph.construct_DAG();
-  testGraph.calculateLongestPaths(testGraph._DAG_nodes);
   cout << "Done DAG Graph!!!" << endl;
   // testDTB.outputTofile(argv[2]);
 
