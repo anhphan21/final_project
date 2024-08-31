@@ -3,6 +3,7 @@
 #include <set>
 #include "Database.h"
 #include "DAG.h"
+#include <stack>
 // We declare a Placement every time we are doing merge on a clk net
 class Nodeinf
 {
@@ -23,6 +24,8 @@ public:
    void mainLoop();
    void constructFeasible(Module *ff);
    Rhombus *findInputRegion(Module *ff);
+   void calculateLongestPaths(std::vector<DAG_Node*>& nodes);
+   void topologicalSortUtil(DAG_Node* node, std::stack<DAG_Node*>& Stack, std::vector<DAG_Node*>& visited);
    vector<Rhombus *> findOutputRegion(Module *ff);
 
    void windows();
@@ -104,12 +107,15 @@ public:
    void construct_DAG();
    //Cell Shifting Heuristic
    void cell_shifting();
-   map<Node*, vector<int>> table;
+   map<Node*, vector<int> > table;
+   void longest_path();
    double cal_rho(DAG_Node *_DagNode) {return rho_i;}
    double cal_theta(DAG_Node *_DagNode) {return theta_i;}
    double cal_l(DAG_Node *_DagNode) {return l_i;}
    double cal_r(DAG_Node *_DagNode) {return r_i;}
+   DAG_NodeList _DAG_nodes;
 
+   
 private:
    Database *_dataBase;
    // construct graph
@@ -127,7 +133,7 @@ private:
    // clang-format on
 
    map<double, map<double, double> > _binMap;
-   DAG_NodeList _DAG_nodes;
+   
    
    map<pair<int ,int >,vector<DAG_Node *> > _Position2_DAG_Node;
    map<int , vector<DAG_Node *> > _x2_DAG_Node;

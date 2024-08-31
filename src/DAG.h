@@ -5,7 +5,8 @@ using namespace std;
 class DAG_Node
 {
 public:
-    DAG_Node():_m(NULL),_deltaY(0){_edge.clear();}
+   DAG_Node() : _m(NULL), _deltaY(0), _longestPath(2.22507e-308) {_edge.clear();}
+
     ~DAG_Node();
     void    setModule(Module *m){_m = m;}
     void    setName(string n){_name = n;}
@@ -22,6 +23,8 @@ public:
     double     getY(){return _y;}
     double     get_deltaY(){return _deltaY;}
     bool       isFF(){return _isFF;}
+    double getLongestPath() const {return _longestPath;}
+    void setLongestPath(double path) {_longestPath = path;}
 private:
     Module      *_m;
     string      _name;
@@ -31,4 +34,5 @@ private:
     double      _deltaY;
     bool        _isFF;
     vector<pair<DAG_Node *,double > > _edge;
+    double _longestPath;
 };

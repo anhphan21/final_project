@@ -48,14 +48,13 @@ int main(int argc, char **argv)
 {
   Database testDTB;
   testDTB.parser(argv[1]);
-  cout<<testDTB.getNumClkNets()<<endl;
   cout << "Done parser!!!" << endl;
-  // testDTB.setPositive_slack();
-  // cout << "Done positive slack!!!" << endl;
+  testDTB.setPositive_slack();
+  cout << "Done positive slack!!!" << endl;
 
-  // testDTB.buildBestCelltype();
-  // Placement testGraph;
-  // testGraph.setDatabase(&testDTB);
+  //testDTB.buildBestCelltype();
+  Placement testGraph;
+  testGraph.setDatabase(&testDTB);
   // unsigned count = 0;
   // for (size_t i = 0; i < testDTB.getNumFF(); i++)
   // {
@@ -78,11 +77,11 @@ int main(int argc, char **argv)
   //      << testDTB.getBestCelltype(4)->getPower() + testDTB.getBestCelltype(4)->getArea() << endl;
   // cout << "power + area of 1 2 bit FF "
   //      << testDTB.getBestCelltype(2)->getPower() + testDTB.getBestCelltype(2)->getArea() << endl;
-  // testGraph.netListGraph();
-  // cout << "Done Lily Graph!!!" << endl;
+  testGraph.netListGraph();
+  cout << "Done Lily Graph!!!" << endl;
 
-  // testGraph.windows();
-  // cout << "Done Weilun Graph!!!" << endl;
+  testGraph.windows();
+  cout << "Done Weilun Graph!!!" << endl;
   // for (unsigned i = 0; i < testDTB.getNumClkNets(); i++)
   // {
   //   NetList Cnets = testDTB.getClkNets();
@@ -112,37 +111,11 @@ int main(int argc, char **argv)
   //     testGraph.clearmaxCliq();
   //   }
   // }
-  // for (int i = 0; i < testGraph.getNumNode(); ++i)
-  //   cout << testGraph.node(i)->getNeighborsize() << endl;
-  // for (unsigned i = 0; i < testDTB.getNumClkNets(); i++)
-  // {
-  //   NetList Cnets = testDTB.getClkNets();
-  //   for (size_t j = 0; j < Cnets.size(); j++)
-  //   {
-  //     cout << "net num " << j + 1 << endl;
-  //     // clang-format off
-  //     set<set<Module *> > cliques = testGraph.calMaxClique(Cnets[j]);
-  //     int counter = 0;
-  //     if (cliques.size() == 0)
-  //     {
-  //       continue;
-  //     }
-  //     for (set<set<Module*> >::iterator it =cliques.begin(); it != cliques.end(); ++it)
-  //     {
-  //       counter++;
-  //       const set<Module *> &mySet = *it;
-  //       set<Module *> innerSet = mySet;
-  //       innerSet =  testGraph.adjustClique(Cnets[j],innerSet);
-  //       cout << "set " << counter << " : " << endl;
-  //       for (set<Module*>::iterator it2 = innerSet.begin(); it2 != innerSet.end(); it2++)
-  //       {
-  //         cout << (*it2)->name() << "  " ;
-  //       }
-  //       cout << endl;
-  //     }
-  //     // clang-format on
-  //   }
-  // }
+  testGraph.construct_DAG();
+  testGraph.calculateLongestPaths(testGraph._DAG_nodes);
+  cout << "Done DAG Graph!!!" << endl;
   // testDTB.outputTofile(argv[2]);
+
+  // layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getbuffer());
   return 0;
 }

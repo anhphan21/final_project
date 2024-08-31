@@ -14,6 +14,7 @@
 #include <cfloat>
 #include <queue>
 #include <utility>
+#include <stack>
 using namespace std;
 
 #define leafthresold 0.75 // TODO: can be changed
@@ -1075,7 +1076,7 @@ void Placement::netListGraph()
 
 
     int test = 0;
-    cout <<"LINE: "<< __LINE__ << endl;
+    //cout <<"LINE: "<< __LINE__ << endl;
     for (int i = 0; i < this->_dataBase->getNumFF(); i++)
     {
         // clang-format off
@@ -1086,20 +1087,20 @@ void Placement::netListGraph()
            
             vector<int> a;
             a.push_back(this->_dataBase->ff(i)->No);
-            cout<<i<<endl;
-            cout <<"LINE: "<< __LINE__ << endl;
-            cout<<this->_dataBase->ff(i)->name()<<endl;
-            cout <<"LINE: "<< __LINE__ << endl;
-            cout<<this->_dataBase->ff(i)->name()<<endl;
-            cout <<"LINE: "<< __LINE__ << endl;
-            cout<<this->_dataBase->ff(i)->numOutPins()<<endl;
+            //cout<<i<<endl;
+            //cout <<"LINE: "<< __LINE__ << endl;
+            // cout<<this->_dataBase->ff(i)->name()<<endl;
+            // cout <<"LINE: "<< __LINE__ << endl;
+            // cout<<this->_dataBase->ff(i)->name()<<endl;
+            // cout <<"LINE: "<< __LINE__ << endl;
+            // cout<<this->_dataBase->ff(i)->numOutPins()<<endl;
             que.push_back({this->_dataBase->ff(i)->OutPin(j), a});
-            cout <<"push back in a/que: " << j << " "<< __LINE__ << endl;
+            //cout <<"push back in a/que: " << j << " "<< __LINE__ << endl;
             test++;
         }
         while (!que.empty())
         {
-            cout << "que not empty que.size=" << que.size() << endl;
+            //cout << "que not empty que.size=" << que.size() << endl;
             Module *moduleptr = que.front().first->module();
             if (moduleptr->isFF() && moduleptr->name() != this->_dataBase->ff(i)->name())
             {
@@ -1991,10 +1992,73 @@ void Placement::construct_DAG()
 
     cout<<L->getEdge().size()<<endl;
     cout<<_dataBase->getNumRows()<<endl;
+    for(int i=0; i< _DAG_nodes.size();i++)
+    {
+        for(int j=0 ; _DAG_nodes[i]->getEdge().size();j++)
+        {
+            vector<pair<DAG_Node *,double > > temp = _DAG_nodes[i]->getEdge();
+            if(temp[j].first == NULL)
+            {
+                cout<<"HELLO"<<endl;
+            }
+
+        }
+
+
+    }
+}
+void Placement::topologicalSortUtil(DAG_Node *node, stack<DAG_Node *> &Stack, vector<DAG_Node *> &visited) 
+{
+    visited.push_back(node);
+    
+    vector<std::pair<DAG_Node *, double> >::iterator it;
+    for (it = node->getEdge().begin(); it != node->getEdge().end(); ++it) {
+    DAG_Node *adjNode = it->first;
+    if (adjNode == NULL) {
+        // 处理空指针的情况
+        cout<<"G"<<endl;
+        continue;
+    }
+    if (std::find(visited.begin(), visited.end(), adjNode) == visited.end()) {
+        topologicalSortUtil(adjNode, Stack, visited);
+    }
 }
 
-void cell_shifting()
-{
-    DAG_Node _DagNode;
     
+    Stack.push(node);
+}
+
+// 計算 DAG 中每個節點的最長路徑
+void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes) {
+    stack<DAG_Node *> Stack;
+    vector<DAG_Node *> visited;
+
+    // 進行拓撲排序
+    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it) {
+    DAG_Node *node = *it;
+    if (std::find(visited.begin(), visited.end(), node) == visited.end()) {
+        topologicalSortUtil(node, Stack, visited);
+    }
+}
+
+
+    // 動態規劃計算最長路徑
+    while (!Stack.empty()) {
+        DAG_Node *node = Stack.top();
+        Stack.pop();
+
+        if (node->getLongestPath() == 2.22507e-308) {
+            node->setLongestPath(0);  // 對於起點來說，最長路徑為0
+        }
+
+        vector<std::pair<DAG_Node *, double> >::iterator it;
+        for (it = node->getEdge().begin(); it != node->getEdge().end(); ++it) {
+            DAG_Node *adjNode = it->first;
+            double weight = it->second;
+            if (node->getLongestPath() + weight > adjNode->getLongestPath()) {
+                adjNode->setLongestPath(node->getLongestPath() + weight);
+            }
+        }
+
+    }
 }
