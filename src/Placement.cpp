@@ -557,6 +557,7 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
     int num = my_stoi(numbers);
     newFFname = letters + my_itos(num + 1);
     Module *newMff = new Module(newFFname, _dataBase->getBestCelltype(ffsV.size()), ffPos.first, ffPos.second);
+    newMff->setCenterPosition(ffPos.first, ffPos.second);
     newMff->setIsFixed(false);
     newMff->clearPins();
     newMff->setPinsize(newMff->cellType()->getnumBit() * 2 + 1);
@@ -1859,7 +1860,6 @@ void Placement::construct_DAG()
     int row_right_boundary = _dataBase->row(0)->x() + _dataBase->row(0)->numSites() * _dataBase->row(0)->width();
     int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y();
     int row_bottom_boundary = _dataBase->row(0)->y();
-
     DAG_Node *L = new DAG_Node();
     L->setName("Left_boundary");
     L->setX(row_left_boundary);
