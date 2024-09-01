@@ -72,6 +72,7 @@ public:
    void add_DAG_nodes(DAG_Node *node) { _DAG_nodes.push_back(node); }
    unsigned getNum_DAG_Node() { return _DAG_nodes.size(); }
    void construct_DAG();
+   int contour_L();
    
    unsigned getmaxCliqesize(){ return _maxClique.size(); }
    // clang-format off

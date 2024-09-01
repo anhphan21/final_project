@@ -949,17 +949,6 @@ void Placement::windows() // construct weilun graph
             }
         }
     }
-    for (int i = 0; i < num_FF; ++i)
-    {
-        if (_dataBase->ff(i)->getFeasibleRegion() == NULL)
-            continue;
-        if (_dataBase->ff(i)->getFeasibleRegion()->left() != 0)
-        {
-            cout << _dataBase->ff(i)->getFeasibleRegion()->left() << "," << _dataBase->ff(i)->getFeasibleRegion()->bottom() << "    ";
-            cout << _dataBase->ff(i)->getFeasibleRegion()->right() << "," << _dataBase->ff(i)->getFeasibleRegion()->top();
-            cout << endl;
-        }
-    }
 }
 
 double Placement::cal_total_cost()
@@ -1857,8 +1846,8 @@ bool isDuplicate(vector<pair<DAG_Node *, double> > edges, const pair<DAG_Node *,
 void Placement::construct_DAG()
 {
     int row_left_boundary = _dataBase->row(0)->x();
-    int row_right_boundary = _dataBase->row(0)->x() + _dataBase->row(0)->numSites() * _dataBase->row(0)->width();
-    int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y();
+    int row_right_boundary = _dataBase->row(0)->x() + (_dataBase->row(0)->numSites()) * _dataBase->row(0)->width();
+    int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y()+_dataBase->row(_dataBase->getNumRows() - 1)->height();
     int row_bottom_boundary = _dataBase->row(0)->y();
     DAG_Node *L = new DAG_Node();
     L->setName("Left_boundary");
@@ -1871,7 +1860,10 @@ void Placement::construct_DAG()
 
     vector<Module *> modules = _dataBase->getmodule();
     quickSort(modules, 0, modules.size() - 1);
-
+    //test
+    for(int i=0;i<modules.size();++i)
+        if(modules[i]->y()+modules[i]->height()>row_top_boundary)
+        cout<<modules[i]->name()<<" "<<modules[i]->y()+modules[i]->height()<<endl;
     for (size_t i = 0; i < modules.size(); ++i)
     {
         if (modules[i]->isFF())
@@ -2050,4 +2042,112 @@ void Placement::construct_DAG()
             ++i; // BL後面一定是BR，跳過BR
         }
     }
+
+    //test
+    for(int i=0;i<_DAG_nodes.size();++i)
+    {
+        // cout<<_DAG_nodes[i]->getModule()->name()<<": ";
+        for(int j=0;j<_DAG_nodes[i]->getEdge().size();++j)
+        {
+            vector<pair<DAG_Node *,double > > buff = _DAG_nodes[i]->getEdge();
+            // if(buff[j].first->getModule()==NULL)
+            //     cout<<buff[j].first->getName()<<" ";
+            // else
+            //     cout<<buff[j].first->getModule()->name()<<" ";
+            // if(buff[j].first==NULL)
+            // {
+            //     cout<<"fuck~~"<<endl;
+            //     return;
+            // }
+                
+
+            if(buff[j].first == NULL)
+                cout<<"hello"<<endl;
+        }
+        // cout<<endl;
+    }
+
+    //test
+    for(int i=0;i<_DAG_nodes.size();++i)
+    {
+        // cout<<_DAG_nodes[i]->getModule()->name()<<": ";
+        for(int j=0;j<_DAG_nodes[i]->getEdge().size();++j)
+        {
+            vector<pair<DAG_Node *,double > > buff = _DAG_nodes[i]->getEdge();
+            // if(buff[j].first->getModule()==NULL)
+            //     cout<<buff[j].first->getName()<<" ";
+            // else
+            //     cout<<buff[j].first->getModule()->name()<<" ";
+            // if(buff[j].first==NULL)
+            // {
+            //     cout<<"fuck~~"<<endl;
+            //     return;
+            // }
+                
+
+            if(buff[j].first == NULL)
+                cout<<"hello"<<endl;
+        }
+        // cout<<endl;
+    }
+}
+
+int Placement::contour_L()
+{
+    int row_left_boundary = _dataBase->row(0)->x();
+    int row_right_boundary = _dataBase->row(0)->x() + _dataBase->row(0)->numSites() * _dataBase->row(0)->width();
+    int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y()+_dataBase->row(_dataBase->getNumRows() - 1)->height();
+    int row_bottom_boundary = _dataBase->row(0)->y();
+
+    // //test
+    // for(int i=0;i<_DAG_nodes.size();++i)
+    //     if(_DAG_nodes[i]->getModule()!=NULL && _DAG_nodes[i]->getY()+_DAG_nodes[i]->getModule()->height()>row_top_boundary)
+    //     cout<<_DAG_nodes[i]->getModule()->name()<<" "<<_DAG_nodes[i]->getY()+_DAG_nodes[i]->getModule()->height()<<endl;
+
+
+    contour_Node *start = new contour_Node("outline_L");
+    start->setMax_X(0);
+    start->setMax_height(row_top_boundary);
+    start->insertNode_small(start, NULL);
+
+    int RowHeight =  _dataBase->row(0)->height();
+    int RowWidth =  _dataBase->row(0)->width();
+    for(int i=0,sizetmp=_DAG_nodes.size(); i<sizetmp; ++i)
+    {
+        if(_DAG_nodes[i]->getModule()!=NULL)
+        {
+            contour_Node *buff_con = new contour_Node(_DAG_nodes[i]->getModule()->name());
+            contour_Node *target = start->search_big(_DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height());
+            contour_Node *target_min = start->search_small(_DAG_nodes[i]->getY());//cout<<__LINE__<<endl;
+            int max_X = start->findmax_X(target_min, target);//cout<<__LINE__<<endl;
+            int li = max_X - _DAG_nodes[i]->getX() + _DAG_nodes[i]->get_deltaY();//deltaY should be 0
+            _DAG_nodes[i]->set_li(li);
+
+            if (target->getMax_height() == _DAG_nodes[i]->getY() +_DAG_nodes[i]->getModule()->height())
+                start->insertNode_big(buff_con, target);
+            else
+                start->insertNode_small(buff_con, target);
+            buff_con->setMax_X(max_X + _DAG_nodes[i]->getModule()->width());
+            buff_con->setMax_height(_DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height());
+            contour_Node *target_equal = start->search_small(_DAG_nodes[i]->getY()); // 確認x1對應的node是不是x本身
+            if (buff_con->getName() != target_equal->getName())
+            { // contour有節點需要被刪掉或改xmax
+            // 刪掉中間的
+                target_equal->setnext(buff_con);
+                buff_con->setprev(target_equal);
+
+            // 改target_main xmax或刪掉
+                target_equal->setMax_height(_DAG_nodes[i]->getY());
+                if (target_equal->getprev() != NULL)
+                {
+                    if (target_equal->getprev()->getMax_height() == target_equal->getMax_height())
+                    start->deleteNode(target_equal);
+                }
+                else if (target_equal->getMax_height() == 0)
+                    start->deleteNode(target_equal);
+            }
+        }
+    }
+
+
 }
