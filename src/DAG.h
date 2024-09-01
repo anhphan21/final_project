@@ -175,7 +175,8 @@ public:
         newNode->setnext(curr->getnext());
         newNode->setprev(curr);
         curr->setnext(newNode);
-        newNode->getnext()->setprev(newNode);
+        if(newNode->getnext()!=NULL)
+            newNode->getnext()->setprev(newNode);
     }
 
     void insertNode_small(contour_Node *newNode, contour_Node *target)
@@ -209,7 +210,8 @@ public:
         newNode->setnext(curr->getnext());
         newNode->setprev(curr);
         curr->setnext(newNode);
-        newNode->getnext()->setprev(newNode);
+        if(newNode->getnext()!=NULL)
+            newNode->getnext()->setprev(newNode);
     }
 
     void deleteNode(contour_Node *target)
