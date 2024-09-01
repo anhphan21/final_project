@@ -2122,7 +2122,6 @@ int Placement::contour_L()
             int max_X = start->findmax_X(target_min, target);//cout<<__LINE__<<endl;
             int li = max_X - _DAG_nodes[i]->getX() + _DAG_nodes[i]->get_deltaY();//deltaY should be 0
             _DAG_nodes[i]->set_li(li);
-
             if (target->getMax_height() == _DAG_nodes[i]->getY() +_DAG_nodes[i]->getModule()->height())
                 start->insertNode_big(buff_con, target);
             else
@@ -2148,6 +2147,10 @@ int Placement::contour_L()
             }
         }
     }
-
-
+    //test
+    // for(int i=0;i<_DAG_nodes.size();++i)
+    // {
+    //     if(_DAG_nodes[i]->getModule()!=NULL)
+    //         cout<<_DAG_nodes[i]->get_li()<<endl;
+    // }
 }

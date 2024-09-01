@@ -96,8 +96,8 @@ int main(int argc, char **argv)
   testGraph.construct_DAG();
   cout << "Done DAG Graph!!!" << endl;
 
-  // testGraph.contour_L();
-  // cout << "Done Contour Graph!!!" << endl;
+  testGraph.contour_L();
+  cout << "Done Contour Graph!!!" << endl;
 
   // testDTB.outputTofile(argv[2]);
 
