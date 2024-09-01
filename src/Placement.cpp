@@ -557,7 +557,6 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
     int num = my_stoi(numbers);
     newFFname = letters + my_itos(num + 1);
     Module *newMff = new Module(newFFname, _dataBase->getBestCelltype(ffsV.size()), ffPos.first, ffPos.second);
-    newMff->setCenterPosition(ffPos.first, ffPos.second);
     newMff->setIsFixed(false);
     newMff->clearPins();
     newMff->setPinsize(newMff->cellType()->getnumBit() * 2 + 1);
@@ -650,31 +649,59 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
     }
     _dataBase->addModule(newMff);
     _dataBase->addFF(newMff);
-    newMff->setPosition(ffPos.first, ffPos.second);
-    // check boundary////////////////////////////////////////////////////
-    if (newMff->x() < _dataBase->getBoundaryLeft())
-    {
-        newMff->setPosition(_dataBase->getBoundaryLeft(), newMff->y());
-    }
-    if (newMff->y() < _dataBase->getBoundaryBottom())
-    {
-        newMff->setPosition(newMff->x(), _dataBase->getBoundaryBottom());
-    }
-    if (newMff->x() + newMff->width() > _dataBase->getBoundaryRight())
-    {
-        newMff->setPosition(_dataBase->getBoundaryRight() - newMff->width(), newMff->y());
-    }
-    if (newMff->y() + newMff->height() > _dataBase->getBoundaryTop())
-    {
-        newMff->setPosition(newMff->x(), _dataBase->getBoundaryTop() - newMff->height());
-    }
+    newMff->setCenterPosition(ffPos.first, ffPos.second);
     feasibleRegV.clear();
     ffsV.clear();
     ffs.clear();
-    // for (size_t i = 0; i < _dataBase->getNumFF(); i++)
-    // {
-    //     cout << "name : " << _dataBase->ff(i)->name() << endl;
-    // }
+    // row assignment//////////////////////////////////////////////
+    double upperY, lowerY;
+    double targetPosY = 0;
+    unsigned rowID = 0;
+    for (size_t i = 0; i < _dataBase->getNumRows() - 1; i++)
+    {
+        lowerY = _dataBase->row(i)->y();
+        upperY = _dataBase->row(i + 1)->y();
+        if (newMff->y() >= lowerY && newMff->y() < upperY)
+        {
+            rowID = i;
+            break;
+        }
+    }
+    if ((newMff->y() - lowerY) > (upperY - newMff->y()))
+    {
+        targetPosY = upperY;
+        rowID++;
+    }
+    else
+    {
+        targetPosY = lowerY;
+    }
+    while (_dataBase->row(rowID)->y() + newMff->height() > _dataBase->getBoundaryTop())
+    {
+        rowID--;
+    }
+
+    // row assignment//////////////////////////////////////////////
+    upperY = 0;
+    lowerY = 0;
+    double targetDobX = 0;
+    unsigned targetPosX = 0;
+    if (newMff->x() < _dataBase->row(rowID)->x())
+    {
+        newMff->setPosition(_dataBase->row(rowID)->x(), targetPosY);
+    }
+    else
+    {
+        targetDobX = (newMff->x() - _dataBase->row(rowID)->x()) / _dataBase->row(rowID)->width();
+        targetPosX = static_cast<unsigned>(round(targetDobX));
+        newMff->setPosition(_dataBase->row(rowID)->x() + targetPosX * _dataBase->row(rowID)->width(), targetPosY);
+    }
+    // check boundary
+    while (newMff->x() + newMff->width() > _dataBase->getBoundaryRight())
+    {
+        targetPosX--;
+        newMff->setPosition(_dataBase->row(rowID)->x() + targetPosX * _dataBase->row(rowID)->width(), targetPosY);
+    }
     return;
 }
 void Placement::setNodesize(unsigned size)
@@ -1216,7 +1243,7 @@ void Placement::debankFFto1bit(string ffname)
     newPos.clear();
     for (size_t i = 0; i < ffbit; i++)
     {
-        newPos.push_back(make_pair(target->x(), target->y()));
+        newPos.push_back(make_pair(target->centerX(), target->centerY()));
         Module *nff = new Module();
         newfflist.push_back(nff);
         newfflist[i]->setCellType(_dataBase->getBestCelltype(1));
@@ -1287,8 +1314,60 @@ void Placement::debankFFto1bit(string ffname)
     }
     for (size_t i = 0; i < ffbit; i++)
     {
-        newfflist[i]->setPosition(newPos[i].first, newPos[i].second);
+        newfflist[i]->setCenterPosition(newPos[i].first, newPos[i].second);
     }
+    double upperY, lowerY;
+    double targetPosY = 0;
+    unsigned rowID = 0;
+    for (size_t i = 0; i < _dataBase->getNumRows() - 1; i++)
+    {
+        lowerY = _dataBase->row(i)->y();
+        upperY = _dataBase->row(i + 1)->y();
+        if (newfflist[0]->y() >= lowerY && newfflist[0]->y() < upperY)
+        {
+            rowID = i;
+            break;
+        }
+    }
+    if ((newfflist[0]->y() - lowerY) > (upperY - newfflist[0]->y()))
+    {
+        targetPosY = upperY;
+        rowID++;
+    }
+    else
+    {
+        targetPosY = lowerY;
+    }
+    while (_dataBase->row(rowID)->y() + newfflist[0]->height() > _dataBase->getBoundaryTop())
+    {
+        rowID--;
+    }
+    upperY = 0;
+    lowerY = 0;
+    double targetDobX = 0;
+    unsigned targetPosX = 0;
+    if (newfflist[0]->x() < _dataBase->row(rowID)->x())
+    {
+        for (size_t i = 0; i < newfflist.size(); i++)
+        {
+            newfflist[i]->setPosition(_dataBase->row(rowID)->x(), targetPosY);
+        }
+    }
+    else
+    {
+        targetDobX = (newfflist[0]->x() - _dataBase->row(rowID)->x()) / _dataBase->row(rowID)->width();
+        targetPosX = static_cast<unsigned>(round(targetDobX));
+        for (size_t i = 0; i < newfflist.size(); i++)
+        {
+            newfflist[0]->setPosition(_dataBase->row(rowID)->x() + targetPosX * _dataBase->row(rowID)->width(), targetPosY);
+        }
+    }
+    while (newfflist[0]->x() + newfflist[0]->width() > _dataBase->getBoundaryRight())
+    {
+        targetPosX--;
+        newfflist[0]->setPosition(_dataBase->row(rowID)->x() + targetPosX * _dataBase->row(rowID)->width(), targetPosY);
+    }
+    ////////////////////////////////////////////////
     for (size_t i = 0; i < _dataBase->getNumModules(); i++)
     {
         if (_dataBase->module(i) == target)
@@ -2043,13 +2122,13 @@ void Placement::construct_DAG()
         }
     }
 
-    //test
-    for(int i=0;i<_DAG_nodes.size();++i)
+    // test
+    for (int i = 0; i < _DAG_nodes.size(); ++i)
     {
         // cout<<_DAG_nodes[i]->getModule()->name()<<": ";
-        for(int j=0;j<_DAG_nodes[i]->getEdge().size();++j)
+        for (int j = 0; j < _DAG_nodes[i]->getEdge().size(); ++j)
         {
-            vector<pair<DAG_Node *,double > > buff = _DAG_nodes[i]->getEdge();
+            vector<pair<DAG_Node *, double>> buff = _DAG_nodes[i]->getEdge();
             // if(buff[j].first->getModule()==NULL)
             //     cout<<buff[j].first->getName()<<" ";
             // else
@@ -2059,21 +2138,20 @@ void Placement::construct_DAG()
             //     cout<<"fuck~~"<<endl;
             //     return;
             // }
-                
 
-            if(buff[j].first == NULL)
-                cout<<"hello"<<endl;
+            if (buff[j].first == NULL)
+                cout << "hello" << endl;
         }
         // cout<<endl;
     }
 
-    //test
-    for(int i=0;i<_DAG_nodes.size();++i)
+    // test
+    for (int i = 0; i < _DAG_nodes.size(); ++i)
     {
         // cout<<_DAG_nodes[i]->getModule()->name()<<": ";
-        for(int j=0;j<_DAG_nodes[i]->getEdge().size();++j)
+        for (int j = 0; j < _DAG_nodes[i]->getEdge().size(); ++j)
         {
-            vector<pair<DAG_Node *,double > > buff = _DAG_nodes[i]->getEdge();
+            vector<pair<DAG_Node *, double>> buff = _DAG_nodes[i]->getEdge();
             // if(buff[j].first->getModule()==NULL)
             //     cout<<buff[j].first->getName()<<" ";
             // else
@@ -2083,10 +2161,9 @@ void Placement::construct_DAG()
             //     cout<<"fuck~~"<<endl;
             //     return;
             // }
-                
 
-            if(buff[j].first == NULL)
-                cout<<"hello"<<endl;
+            if (buff[j].first == NULL)
+                cout << "hello" << endl;
         }
         // cout<<endl;
     }
@@ -2096,7 +2173,7 @@ int Placement::contour_L()
 {
     int row_left_boundary = _dataBase->row(0)->x();
     int row_right_boundary = _dataBase->row(0)->x() + _dataBase->row(0)->numSites() * _dataBase->row(0)->width();
-    int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y()+_dataBase->row(_dataBase->getNumRows() - 1)->height();
+    int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y() + _dataBase->row(_dataBase->getNumRows() - 1)->height();
     int row_bottom_boundary = _dataBase->row(0)->y();
 
     // //test
@@ -2104,26 +2181,25 @@ int Placement::contour_L()
     //     if(_DAG_nodes[i]->getModule()!=NULL && _DAG_nodes[i]->getY()+_DAG_nodes[i]->getModule()->height()>row_top_boundary)
     //     cout<<_DAG_nodes[i]->getModule()->name()<<" "<<_DAG_nodes[i]->getY()+_DAG_nodes[i]->getModule()->height()<<endl;
 
-
     contour_Node *start = new contour_Node("outline_L");
     start->setMax_X(0);
     start->setMax_height(row_top_boundary);
     start->insertNode_small(start, NULL);
 
-    int RowHeight =  _dataBase->row(0)->height();
-    int RowWidth =  _dataBase->row(0)->width();
-    for(int i=0,sizetmp=_DAG_nodes.size(); i<sizetmp; ++i)
+    int RowHeight = _dataBase->row(0)->height();
+    int RowWidth = _dataBase->row(0)->width();
+    for (int i = 0, sizetmp = _DAG_nodes.size(); i < sizetmp; ++i)
     {
-        if(_DAG_nodes[i]->getModule()!=NULL)
+        if (_DAG_nodes[i]->getModule() != NULL)
         {
             contour_Node *buff_con = new contour_Node(_DAG_nodes[i]->getModule()->name());
             contour_Node *target = start->search_big(_DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height());
-            contour_Node *target_min = start->search_small(_DAG_nodes[i]->getY());//cout<<__LINE__<<endl;
-            int max_X = start->findmax_X(target_min, target);//cout<<__LINE__<<endl;
-            int li = max_X - _DAG_nodes[i]->getX() + _DAG_nodes[i]->get_deltaY();//deltaY should be 0
+            contour_Node *target_min = start->search_small(_DAG_nodes[i]->getY()); // cout<<__LINE__<<endl;
+            int max_X = start->findmax_X(target_min, target);                      // cout<<__LINE__<<endl;
+            int li = max_X - _DAG_nodes[i]->getX() + _DAG_nodes[i]->get_deltaY();  // deltaY should be 0
             _DAG_nodes[i]->set_li(li);
 
-            if (target->getMax_height() == _DAG_nodes[i]->getY() +_DAG_nodes[i]->getModule()->height())
+            if (target->getMax_height() == _DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height())
                 start->insertNode_big(buff_con, target);
             else
                 start->insertNode_small(buff_con, target);
@@ -2132,22 +2208,20 @@ int Placement::contour_L()
             contour_Node *target_equal = start->search_small(_DAG_nodes[i]->getY()); // 確認x1對應的node是不是x本身
             if (buff_con->getName() != target_equal->getName())
             { // contour有節點需要被刪掉或改xmax
-            // 刪掉中間的
+                // 刪掉中間的
                 target_equal->setnext(buff_con);
                 buff_con->setprev(target_equal);
 
-            // 改target_main xmax或刪掉
+                // 改target_main xmax或刪掉
                 target_equal->setMax_height(_DAG_nodes[i]->getY());
                 if (target_equal->getprev() != NULL)
                 {
                     if (target_equal->getprev()->getMax_height() == target_equal->getMax_height())
-                    start->deleteNode(target_equal);
+                        start->deleteNode(target_equal);
                 }
                 else if (target_equal->getMax_height() == 0)
                     start->deleteNode(target_equal);
             }
         }
     }
-
-
 }
