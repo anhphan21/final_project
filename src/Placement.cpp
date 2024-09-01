@@ -2301,4 +2301,10 @@ int Placement::contour_R()
             }
         }
     }
+
+    for(int i=0;i<_DAG_nodes.size();++i)
+    {
+        buff = (-1)*_DAG_nodes[i]->getX();
+        _DAG_nodes[i]->setX(buff);
+    }
 }

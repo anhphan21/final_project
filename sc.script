@@ -3,5 +3,5 @@ make clean
 make
 clear
 cd bin
-./fp ../benchmark/testcase1_0812 output.txt
+./fp ../benchmark/testcase2_0812 output.txt
 cd ..
