@@ -2046,6 +2046,7 @@ void Placement::cal_rhoi()
         }
         for(int j=0;j<=i;j++)
         {
+        
             if(i==j)
             {
                 cout<<"CASE1"<<endl;
@@ -2084,20 +2085,28 @@ void Placement::cal_thetai()
         double thetai = -DBL_MAX;
         if(_DAG_nodes[i]->isFF()==0)
         {
+            thetai = -DBL_MAX;
             continue;
         }
         for(int j=i;j<_DAG_nodes.size();j++)
         {
+            cout<<"i: "<<i<<" j: "<<j<<endl;
             if(i==j)
             {
+                cout<<"CASE1"<<endl;
                 thetai = max(thetai,double(0));
             }
-            else if(_DAG_nodes[j]->record.find(i) == _DAG_nodes[j]->record.end())
+            else if(_DAG_nodes[j]->record.find(i) == _DAG_nodes[j]->record.end() || _DAG_nodes[j]->isFF()==0)
             {
+                 for (std::set<int>::iterator it = _DAG_nodes[j]->record.begin(); it != _DAG_nodes[j]->record.end(); ++it) {
+                     std::cout << *it << " ";
+                    }
+                cout<<"CASE2"<<endl;
                 thetai = max(thetai, -DBL_MAX);    
             }
             else
             {
+                cout<<"CASE3"<<endl;
                 thetai = max(thetai,( _DAG_nodes[j]->getwstar()-_DAG_nodes[i]->getwstar() - (_DAG_nodes[j]->getX() - _DAG_nodes[i]->getX()) ));
             }
         }

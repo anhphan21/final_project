@@ -180,12 +180,13 @@ int main(int argc, char **argv)
   //       std::cout << *it << " ";
   //   }
 
-  testGraph.cal_rhoi();
-  cout<<"-----------Rhoi---------------"<<endl;
-  for(int i=0; i < testGraph._DAG_nodes.size();i++)
-  {
-    cout<<"node"<<i+1<<" :  "<<testGraph._DAG_nodes[i]->getrhoi()<<endl;
-  }
+  // testGraph.cal_rhoi();
+  testGraph.cal_thetai();
+  // cout<<"-----------Rhoi---------------"<<endl;
+  // for(int i=0; i < testGraph._DAG_nodes.size();i++)
+  // {
+  //   cout<<"node"<<i+1<<" :  "<<testGraph._DAG_nodes[i]->getrhoi()<<endl;
+  // }
   cout<<"-----------thetai---------------"<<endl;
   for(int i=0; i < testGraph._DAG_nodes.size();i++)
   {
