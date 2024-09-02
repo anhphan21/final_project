@@ -559,7 +559,8 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
         }
     }
     int num = my_stoi(numbers);
-    newFFname = letters + my_itos(num + 1);
+    num++;
+    newFFname = letters + my_itos(num);
     Module *newMff = new Module(newFFname, _dataBase->getBestCelltype(ffsV.size()), ffPos.first, ffPos.second);
     newMff->setIsFixed(false);
     newMff->clearPins();
@@ -632,6 +633,7 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
     // cout << "new FF name " << newMff->name() << " " << newMff->cellType()->getName() << endl;
     for (size_t i = 0; i < ffsV.size(); i++)
     {
+        _dataBase->delIntModule(ffsV[i]->No);
         for (size_t j = 0; j < _dataBase->getNumModules(); j++)
         {
             if (_dataBase->module(j) == ffsV[i])
@@ -653,6 +655,8 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
     }
     _dataBase->addModule(newMff);
     _dataBase->addFF(newMff);
+    _dataBase->addIntModule(num, newMff);
+    newMff->No = num;
     newMff->setCenterPosition(ffPos.first, ffPos.second);
     feasibleRegV.clear();
     ffsV.clear();
@@ -1117,51 +1121,55 @@ void Placement::netListGraph()
             vector<int> a;
             a.push_back(this->_dataBase->ff(i)->No);
             que.push_back(make_pair(this->_dataBase->ff(i)->OutPin(j), a));
-            //cout << __LINE__ <<endl;
+            // cout << __LINE__ <<endl;
         }
         while (!que.empty())
         {
-            //cout << __LINE__ << endl;
+            // cout << __LINE__ << endl;
             Module *moduleptr = que.front().first->module();
-            //cout << moduleptr->name() << endl;
-            //cout << "outpin: " << moduleptr->numOutPins() << endl;
-            //cout << moduleptr->cellType()->pinNum() << endl;
-            //cout << moduleptr->cellType();
-            
+            // cout << moduleptr->name() << endl;
+            // cout << "outpin: " << moduleptr->numOutPins() << endl;
+            // cout << moduleptr->cellType()->pinNum() << endl;
+            // cout << moduleptr->cellType();
 
             if (moduleptr->isFF() && moduleptr->name() != this->_dataBase->ff(i)->name())
             {
-                //cout << __LINE__ << endl;
-                //cout << "Bit num: "<< moduleptr->cellType()->getnumBit() << endl;
-                for(int i = 0;i < moduleptr->totnumPins(); i++)
-                {
-                    //cout << "pins: " << i << endl;
-                }
-                // cout << "net: " << moduleptr->pin(0)->net()->name() << endl;
-                // cout << "net: " << moduleptr->pin(0) << endl;
-                // cout << "net pin : " << moduleptr->pin(0)->net()->pin(1) << endl;
-                // cout << "net: " << moduleptr->pin(1)->net()->name() << endl;
-                // cout << "net: " << moduleptr->pin(2)->net()->name() << endl;
+                // cout << __LINE__ << endl;
+                // cout << "Bit num: "<< moduleptr->cellType()->getnumBit() << endl;
+                //  for(int i = 0;i < moduleptr->totnumPins(); i++)
+                //  {
+                //      //cout << "pins: " << i << endl;
+                //  }
+                //  cout << "net: " << moduleptr->pin(0)->net()->name() << endl;
+                //  cout << "net: " << moduleptr->pin(0) << endl;
+                //  cout << "net pin : " << moduleptr->pin(0)->net()->pin(1) << endl;
+                //  cout << "net: " << moduleptr->pin(1)->net()->name() << endl;
+                //  cout << "net: " << moduleptr->pin(2)->net()->name() << endl;
 
                 // que.front().second.size()-1 is moduleptr
                 // que.front().second.size()-2 is prelevel of moduleptr
                 Module *PreModule = this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 2]);
-                
-                //cout << __LINE__ << endl;
-                if(PreModule == NULL)
+                // cout << __LINE__ << endl;
+                if (PreModule == NULL)
                 {
-                    cout << "NULL ptr!!" <<endl;
+                    cout << "before : " << this->_dataBase->ff(i)->name() << endl;
+                    cout << "mod : " << moduleptr->name() << endl;
+                    cout << moduleptr->currentNumPins() << endl;
+                    cout << moduleptr->InPin(0)->net()->name() << endl;
+                    cout << moduleptr->InPin(0)->net()->pin(0)->module()->name() << endl;
+                    cout << moduleptr->InPin(0)->net()->pin(1)->module()->name() << endl;
+                    cout << "NULL ptr!!" << endl;
                 }
                 if (PreModule->isFF())
                 {
-                    //cout << __LINE__ << endl;
+                    // cout << __LINE__ << endl;
                     Module *temp;
                     temp = NULL;
                     this->_dataBase->ff(i)->_outputFF.insert(make_pair(temp, moduleptr));
                 }
                 if (!PreModule->isFF())
                 {
-                    //cout << __LINE__ << endl;
+                    // cout << __LINE__ << endl;
                     this->_dataBase->ff(i)->_outputFF.insert(make_pair(PreModule, moduleptr));
                 }
                 que.front().second.clear();
@@ -1181,13 +1189,13 @@ void Placement::netListGraph()
             {
                 for (int z = 0; z < moduleptr->OutPin(j)->net()->numPins(); z++)
                 {
-                    //cout << __LINE__ << endl;
+                    // cout << __LINE__ << endl;
                     bool IO_Design = 0;
                     if (moduleptr->OutPin(j)->net()->pin(z)->module() == NULL)
                     {
                         if (this->_dataBase->IODesign.find(moduleptr->OutPin(j)->net()->pin(z)->name()) != this->_dataBase->IODesign.end())
                         {
-                            //cout << __LINE__ << endl;
+                            // cout << __LINE__ << endl;
                             continue;
                         }
                         else
@@ -1246,15 +1254,15 @@ void Placement::netListGraph()
 void Placement::debankAllFF()
 {
     unsigned initFFnum = _dataBase->getNumFF();
-    // cout << "initFFnum: " << initFFnum << endl;
-    // cout << "module num " << _dataBase->getNumModules() << endl;
-    for (size_t i = 0; i < initFFnum; i++)
+    ModuleList tempList = _dataBase->getWholeffList();
+    for (size_t i = 0; i < tempList.size(); i++)
     {
-        if (_dataBase->ff(i)->cellType()->numBit() > 1)
+        if (tempList[i]->cellType()->numBit() > 1)
         {
             string Dname = _dataBase->ff(i)->name();
-            cout << "debank" << endl;
+            // cout << "debank" << endl;
             debankFFto1bit(Dname);
+            tempList[i] = NULL;
         }
     }
     return;
@@ -1279,6 +1287,10 @@ void Placement::debankFFto1bit(string ffname)
     {
         newPos.push_back(make_pair(target->centerX(), target->centerY()));
         Module *nff = new Module();
+        if (nff == nullptr)
+        {
+            cerr << "Memory allocation failed" << endl;
+        }
         newfflist.push_back(nff);
         newfflist[i]->setCellType(_dataBase->getBestCelltype(1));
         newfflist[i]->setPinsize(3);
@@ -1321,6 +1333,8 @@ void Placement::debankFFto1bit(string ffname)
         num++;
         nname = letters + my_itos(num);
         newfflist[i]->setName(nname);
+        _dataBase->addIntModule(num, newfflist[i]);
+        newfflist[i]->No = num;
     }
     // naming =================================================================
     newfflist[ffbit - 1]->setInPin(newfflist[ffbit - 1]->cellType()->clkPinIdx(), target->InPin(target->cellType()->clkPinIdx()));
@@ -1418,6 +1432,7 @@ void Placement::debankFFto1bit(string ffname)
             break;
         }
     }
+    _dataBase->delIntModule(target->No);
     delete target;
     target = NULL;
     for (size_t i = 0; i < ffbit; i++)
@@ -1456,6 +1471,7 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
         cout << "error: input isn't a clk" << endl;
         return maxClique;
     }
+    cout << "1" << endl;
     ModuleList targetFFs;
     vector<double> strip; // start pos of every part of strip
     vector<Edge> edges;   // Module, y , start x , end x
@@ -1517,6 +1533,7 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
+    cout << "2" << endl;
     if (strip.size() == 0 || edges.size() == 0)
     {
         edges.clear();
@@ -1536,7 +1553,7 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             // cout << edges[i + 1].ff->name() << " " << edges[i + 1].isIN << endl;
         }
     }
-
+    cout << "3" << endl;
     int counter = 0;
     // TODO: currently traverse every edge per strip, maybe a better O() way to implement
     for (size_t i = 0; i < strip.size() - 1; i++)
@@ -1651,16 +1668,18 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
+    cout << "4" << endl;
     if (maxClique.size() == 0)
     {
         edges.clear();
         strip.clear();
         return maxClique;
     }
+    cout << "5" << endl;
     // TODO: remove proper subset
     // clang-format off
     vector<set<Module *> > toRemove;
-    
+    cout <<maxClique.size()<<endl;
     for (set<set<Module*> >::iterator it1 = maxClique.begin(); it1 != maxClique.end(); ++it1)
     {
         for (set<set<Module*> >::iterator it2 = maxClique.begin(); it2 != maxClique.end(); ++it2)
@@ -1672,10 +1691,12 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
-    for (vector<set<Module*> >::const_iterator it = toRemove.begin(); it != toRemove.end(); ++it)
+    cout <<"6"<<endl;
+    for (size_t i = 0; i < toRemove.size(); i++)
     {
-        maxClique.erase(*it);
+        maxClique.erase(toRemove[i]);
     }
+    cout <<"8"<<endl;
     for (set<set<Module*> >::iterator it = maxClique.begin(); it != maxClique.end(); ) {
         if (it->empty()) 
         {
@@ -1687,6 +1708,7 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             ++it;
         }
     }
+    cout << "7" << endl;
     toRemove.clear();
     tempClique.clear();
     strip.clear();
@@ -2152,67 +2174,82 @@ void Placement::construct_DAG()
         }
     }
 
-    //test
-    // for(int i=0;i<_DAG_nodes.size();++i)
-    // {
-    //     cout<<_DAG_nodes[i]->getModule()->name()<<": ";
-    //     for(int j=0;j<_DAG_nodes[i]->getEdge().size();++j)
-    //     {
-    //         vector<pair<DAG_Node *,double > > buff = _DAG_nodes[i]->getEdge();
-    //         if(buff[j].first==NULL)
-    //         {
-    //          cout<<"fuck U~~"<<endl;
-    //         //     return;
-    //          }
-    //     }
-    //     // cout<<endl;
-    // }
+    // test
+    //  for(int i=0;i<_DAG_nodes.size();++i)
+    //  {
+    //      cout<<_DAG_nodes[i]->getModule()->name()<<": ";
+    //      for(int j=0;j<_DAG_nodes[i]->getEdge().size();++j)
+    //      {
+    //          vector<pair<DAG_Node *,double > > buff = _DAG_nodes[i]->getEdge();
+    //          if(buff[j].first==NULL)
+    //          {
+    //           cout<<"fuck U~~"<<endl;
+    //          //     return;
+    //           }
+    //      }
+    //      // cout<<endl;
+    //  }
 }
-
-
-
-void Placement::topologicalSortUtil(DAG_Node *node, stack<DAG_Node *> &Stack, vector<DAG_Node *> &visited) {
+// clang-format off
+void Placement::topologicalSortUtil(DAG_Node *node, stack<DAG_Node *> &Stack, vector<DAG_Node *> &visited)
+{
     visited.push_back(node);
-    
+
     vector<pair<DAG_Node *, double> > edges = node->getEdge();
-    for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) {
+    for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it)
+    {
         DAG_Node *adjNode = it->first;
-        if (find(visited.begin(), visited.end(), adjNode) == visited.end()) {
+        if (find(visited.begin(), visited.end(), adjNode) == visited.end())
+        {
             topologicalSortUtil(adjNode, Stack, visited);
         }
     }
 
-    
     Stack.push(node);
 }
 
 // 計算 DAG 中每個節點的最長路徑
-void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes) {
+void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes)
+{
     stack<DAG_Node *> Stack;
     vector<DAG_Node *> visited;
 
-     for (int i=0;i<nodes.size();i++) 
-     {
+    for (int i = 0; i < nodes.size(); i++)
+    {
         nodes[i]->setPreviousNode(NULL);
+        //---------------------------
+        //---------------------------
+        // if(nodes[i]->getModule()->isFF())
+        // {
+        //      nodes[i]->setwidth(5);     
+        // }
+        // else
+        // {
+        //      nodes[i]->setwidth(9000000000);
+        // }
         nodes[i]->setwidth(nodes[i]->getModule()->width());
         nodes[i]->setwstar(0);
         nodes[i]->setorder(i);
     }
     // 進行拓撲排序
-    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it) {
-    DAG_Node *node = *it;
-    if (find(visited.begin(), visited.end(), node) == visited.end()) {
-        topologicalSortUtil(node, Stack, visited);
-    }
+    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+    {
+        DAG_Node *node = *it;
+        if (find(visited.begin(), visited.end(), node) == visited.end())
+        {
+            topologicalSortUtil(node, Stack, visited);
+        }
     }
 
     // 動態規劃計算最長路徑
-    while (!Stack.empty()) {
+    while (!Stack.empty())
+    {
         DAG_Node *node = Stack.top();
         Stack.pop();
 
-        if (node->getLongestPath() == -DBL_MAX) {
-            node->setLongestPath(0);  
+        if (node->getLongestPath() == -DBL_MAX)
+        {
+            node->setLongestPath(0);
         }
 
        vector<pair<DAG_Node *, double> > edges = node->getEdge();
@@ -2220,7 +2257,16 @@ void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes) {
         DAG_Node *adjNode = it->first;
         double weight = it->second;
         if (node->getLongestPath() + weight > adjNode->getLongestPath()) {
-            adjNode->setwstar(node->getwidth()+node->getwstar());
+            if(node->isFF()==1)
+            {
+                adjNode->FFnum= (node->FFnum+1);
+                adjNode->setwstar(node->getwidth()+node->getwstar());
+            }
+            else
+            {
+                adjNode->FFnum= (node->FFnum);
+                adjNode->setwstar(node->getwstar());
+            }
             adjNode->setLongestPath(node->getLongestPath() + weight);
             adjNode->setPreviousNode(node);  
             adjNode->record = node->record;
@@ -2231,45 +2277,58 @@ void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes) {
     }
 }
 
-void Placement::printLongestPath(DAG_Node *node) {
-    if (node == NULL) return;
+void Placement::printLongestPath(DAG_Node *node)
+{
+    if (node == NULL)
+        return;
     printLongestPath(node->getPreviousNode());
-    cout << node->getName() <<" -> " ;
+    cout << node->getName() << " -> ";
 }
 
 void Placement::cal_rhoi()
 {
-    for(int i=0;i<this->_DAG_nodes.size();i++)
+    for (int i = 0; i < this->_DAG_nodes.size(); i++)
     {
+        // if(i==135752)
+        // {
+        //             cout<<"-----testing test-----"<<endl;
+        //             cout<<"Mname: "<<_DAG_nodes[i]->getModule()->name()<<endl;
+        // }
         double rhoi = -DBL_MAX;
-        if(_DAG_nodes[i]->isFF()==0)
+        if (_DAG_nodes[i]->isFF() == 0)
         {
+            
             //cout<<"NONONO"<<endl;
             rhoi = -DBL_MAX;
+            _DAG_nodes[i]->setrhoi(rhoi);
             continue;
         }
-        for(int j=0;j<=i;j++)
+        for (int j = 0; j <= i; j++)
         {
-        
-            if(i==j)
+
+            if (i == j)
             {
-                //cout<<"CASE1"<<endl;
                 rhoi = max(rhoi,double(0));
             }
-            else if(_DAG_nodes[i]->record.find(j) == _DAG_nodes[i]->record.end() || _DAG_nodes[j]->isFF()==0)
+            else if (_DAG_nodes[i]->record.find(j) == _DAG_nodes[i]->record.end() || _DAG_nodes[j]->isFF() == 0)
             {
                 
-                //cout<<"CASE2"<<endl;
                 rhoi = max(rhoi, -DBL_MAX);    
             }
             else
             {
-                //cout<<"CASE3"<<endl;
-                rhoi = max(rhoi,( _DAG_nodes[i]->getwstar()-_DAG_nodes[j]->getwstar() - (_DAG_nodes[i]->getX() - _DAG_nodes[j]->getX()) ));
+                 rhoi = max(rhoi,( _DAG_nodes[i]->getwstar()-_DAG_nodes[j]->getwstar() - (_DAG_nodes[i]->getX() - _DAG_nodes[j]->getX()) ));
+                //  if(i==135752)
+                //  {
+                //     //cout<<"CASE3"<<endl;
+                //     cout<<_DAG_nodes[i]->getModule()->width()<<endl;
+                //     cout<<"update: "<<rhoi<<" wstardiff:"<<_DAG_nodes[i]->getwstar()-_DAG_nodes[j]->getwstar()<<" xdiff: "<<(_DAG_nodes[i]->getX() - _DAG_nodes[j]->getX())<<" ON PATH FF: "<<_DAG_nodes[i]->FFnum-_DAG_nodes[j]->FFnum<<" "<<endl;
+                //  }
+            
             }
         }
+        
         _DAG_nodes[i]->setrhoi(rhoi);
-
 
     }
 }
@@ -2290,6 +2349,7 @@ void* calculate_thetai(void* arg) {
         double thetai = -DBL_MAX;
         if(placement->_DAG_nodes[i]->isFF() == 0) {
             thetai = -DBL_MAX;
+            placement->_DAG_nodes[i]->setthetai(thetai);
             continue;
         }
         for(int j = i; j < placement->_DAG_nodes.size(); j++) {
@@ -2338,7 +2398,6 @@ int Placement::contour_L()
     int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y() + _dataBase->row(_dataBase->getNumRows() - 1)->height();
     int row_bottom_boundary = _dataBase->row(0)->y();
 
-
     contour_Node *start = new contour_Node("outline_L");
     start->setMax_X(row_right_boundary);
     start->setMax_height(row_top_boundary);
@@ -2353,30 +2412,30 @@ int Placement::contour_L()
         {
             contour_Node *buff_con = new contour_Node(_DAG_nodes[i]->getModule()->name());
             contour_Node *target = start->search_big(_DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height());
-            contour_Node *target_min = start->search_small(_DAG_nodes[i]->getY());  
-            int max_X = start->findmax_X(target_min, target);                       
-            if(_DAG_nodes[i]->isFF() == true)
+            contour_Node *target_min = start->search_small(_DAG_nodes[i]->getY());
+            int max_X = start->findmax_X(target_min, target);
+            if (_DAG_nodes[i]->isFF() == true)
             {
-                int li = max_X - _DAG_nodes[i]->getX() + _DAG_nodes[i]->get_deltaY();  // deltaY should be 0
+                int li = max_X - _DAG_nodes[i]->getX() + _DAG_nodes[i]->get_deltaY(); // deltaY should be 0
                 _DAG_nodes[i]->set_li(li);
             }
-            if (target->getMax_height() == _DAG_nodes[i]->getY() +_DAG_nodes[i]->getModule()->height())
-                start->insertNode_big(buff_con, target);    
+            if (target->getMax_height() == _DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height())
+                start->insertNode_big(buff_con, target);
             else
                 start->insertNode_small(buff_con, target);
-            if(_DAG_nodes[i]->isFF() == true)
+            if (_DAG_nodes[i]->isFF() == true)
             {
                 buff_con->setMax_X(max_X + _DAG_nodes[i]->getModule()->width());
                 buff_con->setMax_height(_DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height());
             }
             else
             {
-                buff_con->setMax_X(_DAG_nodes[i]->getX()+_DAG_nodes[i]->getModule()->width());
+                buff_con->setMax_X(_DAG_nodes[i]->getX() + _DAG_nodes[i]->getModule()->width());
                 buff_con->setMax_height(_DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height());
             }
-            
+
             contour_Node *target_equal = start->search_small(_DAG_nodes[i]->getY()); // 確認x1對應的node是不是x本身
-            
+
             if (buff_con->getName() != target_equal->getName())
             { // contour有節點需要被刪掉或改xmax
                 // 刪掉中間的
@@ -2405,15 +2464,15 @@ int Placement::contour_L()
 
 int Placement::contour_R()
 {
-     int row_left_boundary = _dataBase->row(0)->x();
+    int row_left_boundary = _dataBase->row(0)->x();
     int row_right_boundary = _dataBase->row(0)->x() + _dataBase->row(0)->numSites() * _dataBase->row(0)->width();
     int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y() + _dataBase->row(_dataBase->getNumRows() - 1)->height();
     int row_bottom_boundary = _dataBase->row(0)->y();
 
     int buff;
-    for(int i=0;i<_DAG_nodes.size();++i)
+    for (int i = 0; i < _DAG_nodes.size(); ++i)
     {
-        buff = (-1)*_DAG_nodes[i]->getX();
+        buff = (-1) * _DAG_nodes[i]->getX();
         _DAG_nodes[i]->setX(buff);
     }
 
@@ -2430,19 +2489,19 @@ int Placement::contour_R()
         {
             contour_Node *buff_con = new contour_Node(_DAG_nodes[i]->getModule()->name());
             contour_Node *target = start->search_big(_DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height());
-            contour_Node *target_min = start->search_small(_DAG_nodes[i]->getY());  
-            int max_X = start->findmax_X(target_min, target);                       
-            if(_DAG_nodes[i]->isFF() == true)
+            contour_Node *target_min = start->search_small(_DAG_nodes[i]->getY());
+            int max_X = start->findmax_X(target_min, target);
+            if (_DAG_nodes[i]->isFF() == true)
             {
                 int ri = (- _DAG_nodes[i]->getX() + _DAG_nodes[i]->getModule()->width()) + max_X + _DAG_nodes[i]->get_deltaY();  // deltaY should be 0
                 _DAG_nodes[i]->set_ri(ri);
             }
-            if (target->getMax_height() == _DAG_nodes[i]->getY() +_DAG_nodes[i]->getModule()->height())
-                start->insertNode_big(buff_con, target);    
+            if (target->getMax_height() == _DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height())
+                start->insertNode_big(buff_con, target);
             else
                 start->insertNode_small(buff_con, target);
-            
-            if(_DAG_nodes[i]->isFF() == true)
+
+            if (_DAG_nodes[i]->isFF() == true)
             {
                 buff_con->setMax_X(max_X + _DAG_nodes[i]->getModule()->width());
                 buff_con->setMax_height(_DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height());
@@ -2452,9 +2511,9 @@ int Placement::contour_R()
                 buff_con->setMax_X(_DAG_nodes[i]->getX());
                 buff_con->setMax_height(_DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height());
             }
-            
+
             contour_Node *target_equal = start->search_small(_DAG_nodes[i]->getY()); // 確認x1對應的node是不是x本身
-            
+
             if (buff_con->getName() != target_equal->getName())
             { // contour有節點需要被刪掉或改xmax
                 // 刪掉中間的
@@ -2475,61 +2534,67 @@ int Placement::contour_R()
     }
     for(int i=0;i<_DAG_nodes.size();++i)
     {
-        buff = (-1)*_DAG_nodes[i]->getX();
+        buff = (-1) * _DAG_nodes[i]->getX();
         _DAG_nodes[i]->setX(buff);
     }
+    return 0;
 }
 
-int customCeil(double num) {
-    if (num == static_cast<int>(num)) {
+int customCeil(double num)
+{
+    if (num == static_cast<int>(num))
+    {
         return static_cast<int>(num);
-    } else {
+    }
+    else
+    {
         return static_cast<int>(ceil(num));
     }
 }
 
 void Placement::Displacement()
 {
-    for(int i=0,sizetmp=_dataBase->getNumFF(); i<sizetmp; ++i)
+    for (int i = 0, sizetmp = _dataBase->getNumFF(); i < sizetmp; ++i)
     {
         _name2Module[_dataBase->ff(i)->name()] = _dataBase->ff(i);
     }
 
-    for(int i = 0; i < _DAG_nodes.size() ;i++)
+    for (int i = 0; i < _DAG_nodes.size(); i++)
     {
         double mui = _DAG_nodes[i]->get_mui();
-        int li_yi =  _DAG_nodes[i]->get_li() - _DAG_nodes[i]->get_deltaY();
+        int li_yi = _DAG_nodes[i]->get_li() - _DAG_nodes[i]->get_deltaY();
         int ri_yi = _DAG_nodes[i]->get_deltaY() - _DAG_nodes[i]->get_ri();
         int displacement = 0;
         int x = 0;
-        if(_DAG_nodes[i]->isFF() == 1)
+        if (_DAG_nodes[i]->isFF() == 1)
         {
-            if(li_yi > customCeil(mui))
+
+            if (li_yi > customCeil(mui))
             {
                 // cout << "CASE 1: " << _DAG_nodes[i]->getX()<<" "<<li_yi << endl;
                 displacement = li_yi;
                 x = _DAG_nodes[i]->getX() + li_yi;
-                int y =  _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
-                _name2Module[_DAG_nodes[i]->getModule()->name()]->setPosition(x,y);
+                int y = _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
+                _name2Module[_DAG_nodes[i]->getModule()->name()]->setPosition(x, y);
                 // _DAG_nodes[i]->setX(x);
             }
-            else if(ri_yi < customCeil(mui))
+            else if (ri_yi < customCeil(mui))
             {
                 // cout << "CASE 2: " << _DAG_nodes[i]->getX()<<" "<< ri_yi << endl;
                 displacement = ri_yi;
                 x = _DAG_nodes[i]->getX() + ri_yi;
-                int y =  _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
-                _name2Module[_DAG_nodes[i]->getModule()->name()]->setPosition(x,y);
+                int y = _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
+                _name2Module[_DAG_nodes[i]->getModule()->name()]->setPosition(x, y);
             }
             else
             {
                 // cout << "CASE 3: " << _DAG_nodes[i]->getX()<<" "<< customCeil(mui) << endl;
                 displacement = customCeil(mui);
                 x = _DAG_nodes[i]->getX() + customCeil(mui);
-                int y =  _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
-                _name2Module[_DAG_nodes[i]->getModule()->name()]->setPosition(x,y);
+                int y = _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
+                _name2Module[_DAG_nodes[i]->getModule()->name()]->setPosition(x, y);
             }
         }
     }
-
+    return;
 }
