@@ -851,21 +851,6 @@ void Database::setPositive_slack() {
                 new_slack = 0;
             currentPin->getSlackInfor()->setSlack(new_slack);
 
-            //check overlapping
-            // if(new_dist == 0)
-            // {
-            //     _buffer.push_back(currentPin->module());
-            //     _buffer.push_back(currentPin->net()->OutputPin()->module());
-            //     cout<<"overlapping: "<<currentPin->module()->name()<<"/"<<currentPin->name()<<" ("
-            //     <<currentPin->x()<<","<<currentPin->y()<<") "
-            //     <<currentPin->module()->x()<<","<<currentPin->module()->y()<<" "<<
-            //     currentPin->module()->x()+currentPin->module()->width()<<","<<currentPin->module()->y()+currentPin->module()->height()
-            //     <<" -> "<<currentPin->net()->OutputPin()->module()->name()<<"/"<<currentPin->net()->OutputPin()->name()<<" ("
-            //     <<currentPin->net()->OutputPin()->x()<<","<<currentPin->net()->OutputPin()->y()<<") "
-            //     <<currentPin->net()->OutputPin()->module()->x()<<","<<currentPin->net()->OutputPin()->module()->y()<<" "
-            //     <<currentPin->net()->OutputPin()->module()->x()+currentPin->net()->OutputPin()->module()->width()<<","
-            //     <<currentPin->net()->OutputPin()->module()->y()+currentPin->net()->OutputPin()->module()->height()<<endl;
-            // }
         
             // 更新其它 Pins 的 slack
             for (int j = 0; j < currentPin->net()->numPins(); ++j) {
@@ -983,6 +968,7 @@ void Database::buildBestCelltype()
         }
         _bestCells[pow(2, i)] = cellv[bestid];
     }
+    _ffLibMaxBit = pow(2, _ffLib.size() - 1);
     return;
 }
 
