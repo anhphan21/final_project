@@ -6,6 +6,8 @@
 #include <cstdlib>
 // #include <ctime>
 #include <limits.h>
+#include <pthread.h>
+#include <unistd.h>
 #include <vector>
 #include <algorithm>
 #include <set>
@@ -557,7 +559,8 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
         }
     }
     int num = my_stoi(numbers);
-    newFFname = letters + my_itos(num + 1);
+    num++;
+    newFFname = letters + my_itos(num);
     Module *newMff = new Module(newFFname, _dataBase->getBestCelltype(ffsV.size()), ffPos.first, ffPos.second);
     newMff->setIsFixed(false);
     newMff->clearPins();
@@ -630,6 +633,7 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
     // cout << "new FF name " << newMff->name() << " " << newMff->cellType()->getName() << endl;
     for (size_t i = 0; i < ffsV.size(); i++)
     {
+        _dataBase->delIntModule(ffsV[i]->No);
         for (size_t j = 0; j < _dataBase->getNumModules(); j++)
         {
             if (_dataBase->module(j) == ffsV[i])
@@ -651,6 +655,8 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
     }
     _dataBase->addModule(newMff);
     _dataBase->addFF(newMff);
+    _dataBase->addIntModule(num, newMff);
+    newMff->No = num;
     newMff->setCenterPosition(ffPos.first, ffPos.second);
     feasibleRegV.clear();
     ffsV.clear();
@@ -1147,6 +1153,12 @@ void Placement::netListGraph()
                 // cout << __LINE__ << endl;
                 if (PreModule == NULL)
                 {
+                    cout << "before : " << this->_dataBase->ff(i)->name() << endl;
+                    cout << "mod : " << moduleptr->name() << endl;
+                    cout << moduleptr->currentNumPins() << endl;
+                    cout << moduleptr->InPin(0)->net()->name() << endl;
+                    cout << moduleptr->InPin(0)->net()->pin(0)->module()->name() << endl;
+                    cout << moduleptr->InPin(0)->net()->pin(1)->module()->name() << endl;
                     cout << "NULL ptr!!" << endl;
                 }
                 if (PreModule->isFF())
@@ -1245,14 +1257,17 @@ void Placement::debankAllFF()
     unsigned initFFnum = _dataBase->getNumFF();
     // cout << "initFFnum: " << initFFnum << endl;
     // cout << "module num " << _dataBase->getNumModules() << endl;
-    for (size_t i = 0; i < initFFnum; i++)
+    ModuleList tempList = _dataBase->getWholeffList();
+    for (size_t i = 0; i < tempList.size(); i++)
     {
-        if (_dataBase->ff(i)->cellType()->numBit() > 1)
+        if (tempList[i]->cellType()->numBit() > 1)
         {
-            string Dname = _dataBase->ff(i)->name();
+            string Dname = tempList[i]->name();
             debankFFto1bit(Dname);
+            tempList[i] = NULL;
         }
     }
+    tempList.clear();
     return;
 }
 
@@ -1273,11 +1288,6 @@ void Placement::debankFFto1bit(string ffname)
     newPos.clear();
     for (size_t i = 0; i < ffbit; i++)
     {
-        if (ffname == "C82501" && i == 3)
-        {
-            cout << "82051 :" << target->OutPin(i)->net()->name() << endl;
-            cout << target->OutPin(i)->name() << endl;
-        }
         newPos.push_back(make_pair(target->centerX(), target->centerY()));
         Module *nff = new Module();
         if (nff == nullptr)
@@ -1302,12 +1312,6 @@ void Placement::debankFFto1bit(string ffname)
         pinName = "Q";
         newfflist[i]->OutPin(0)->setPinName(pinName);
         newfflist[i]->OutPin(0)->setModulePtr(newfflist[i]);
-        if (ffname == "C82501" && i == 3)
-        {
-            cout << nff->name() << endl;
-            cout << "82051 :" << newfflist[i]->OutPin(0)->net()->name() << endl;
-            cout << nff->OutPin(0)->module()->name() << endl;
-        }
         // cout << "num out pins " << newfflist[i]->numOutPins() << endl;
     }
     // naming =================================================================
@@ -1332,18 +1336,8 @@ void Placement::debankFFto1bit(string ffname)
         num++;
         nname = letters + my_itos(num);
         newfflist[i]->setName(nname);
-        if (nname == "C107240")
-        {
-            cout << newfflist[i]->name() << endl;
-            cout << "net : " << newfflist[i]->InPin(0)->net()->name() << endl;
-        }
-        if (ffname == "C82501" && i == 3)
-        {
-            cout << newfflist[i]->name() << endl;
-            cout << newfflist[i]->OutPin(0)->module()->name() << endl;
-            cout << newfflist[i]->currentNumPins() << endl;
-            cout << newfflist[i]->OutPin(0)->net()->numPins() << endl;
-        }
+        _dataBase->addIntModule(num, newfflist[i]);
+        newfflist[i]->No = num;
     }
     // naming =================================================================
     newfflist[ffbit - 1]->setInPin(newfflist[ffbit - 1]->cellType()->clkPinIdx(), target->InPin(target->cellType()->clkPinIdx()));
@@ -1441,6 +1435,7 @@ void Placement::debankFFto1bit(string ffname)
             break;
         }
     }
+    _dataBase->delIntModule(target->No);
     delete target;
     target = NULL;
     for (size_t i = 0; i < ffbit; i++)
@@ -1479,6 +1474,7 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
         cout << "error: input isn't a clk" << endl;
         return maxClique;
     }
+    cout << "1" << endl;
     ModuleList targetFFs;
     vector<double> strip; // start pos of every part of strip
     vector<Edge> edges;   // Module, y , start x , end x
@@ -1540,6 +1536,7 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
+    cout << "2" << endl;
     if (strip.size() == 0 || edges.size() == 0)
     {
         edges.clear();
@@ -1559,7 +1556,7 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             // cout << edges[i + 1].ff->name() << " " << edges[i + 1].isIN << endl;
         }
     }
-
+    cout << "3" << endl;
     int counter = 0;
     // TODO: currently traverse every edge per strip, maybe a better O() way to implement
     for (size_t i = 0; i < strip.size() - 1; i++)
@@ -1674,18 +1671,21 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
+    cout << "4" << endl;
     if (maxClique.size() == 0)
     {
         edges.clear();
         strip.clear();
         return maxClique;
     }
+    cout << "5" << endl;
     // TODO: remove proper subset
     // clang-format off
     vector<set<Module *> > toRemove;
-    
+    cout <<maxClique.size()<<endl;
     for (set<set<Module*> >::iterator it1 = maxClique.begin(); it1 != maxClique.end(); ++it1)
     {
+        cout <<"iter"<<endl;
         for (set<set<Module*> >::iterator it2 = maxClique.begin(); it2 != maxClique.end(); ++it2)
         {
             if (it1 != it2 && isStrictSubset(*it1, *it2))
@@ -1695,10 +1695,12 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
-    for (vector<set<Module*> >::const_iterator it = toRemove.begin(); it != toRemove.end(); ++it)
+    cout <<"6"<<endl;
+    for (size_t i = 0; i < toRemove.size(); i++)
     {
-        maxClique.erase(*it);
+        maxClique.erase(toRemove[i]);
     }
+    cout <<"8"<<endl;
     for (set<set<Module*> >::iterator it = maxClique.begin(); it != maxClique.end(); ) {
         if (it->empty()) 
         {
@@ -1710,6 +1712,7 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             ++it;
         }
     }
+    cout << "7" << endl;
     toRemove.clear();
     tempClique.clear();
     strip.clear();
@@ -2218,6 +2221,16 @@ void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes)
     for (int i = 0; i < nodes.size(); i++)
     {
         nodes[i]->setPreviousNode(NULL);
+        //---------------------------
+        //---------------------------
+        // if(nodes[i]->getModule()->isFF())
+        // {
+        //      nodes[i]->setwidth(5);     
+        // }
+        // else
+        // {
+        //      nodes[i]->setwidth(9000000000);
+        // }
         nodes[i]->setwidth(nodes[i]->getModule()->width());
         nodes[i]->setwstar(0);
         nodes[i]->setorder(i);
@@ -2243,20 +2256,28 @@ void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes)
             node->setLongestPath(0);
         }
 
-        vector<pair<DAG_Node *, double> > edges = node->getEdge();
-        for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it)
-        {
-            DAG_Node *adjNode = it->first;
-            double weight = it->second;
-            if (node->getLongestPath() + weight > adjNode->getLongestPath())
+       vector<pair<DAG_Node *, double> > edges = node->getEdge();
+        for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) {
+        DAG_Node *adjNode = it->first;
+        double weight = it->second;
+        if (node->getLongestPath() + weight > adjNode->getLongestPath()) {
+            if(node->isFF()==1)
             {
-                adjNode->setwstar(node->getwidth() + node->getwstar());
-                adjNode->setLongestPath(node->getLongestPath() + weight);
-                adjNode->setPreviousNode(node);
-                adjNode->record = node->record;
-                adjNode->record.insert(node->getorder());
+                adjNode->FFnum= (node->FFnum+1);
+                adjNode->setwstar(node->getwidth()+node->getwstar());
             }
+            else
+            {
+                adjNode->FFnum= (node->FFnum);
+                adjNode->setwstar(node->getwstar());
+            }
+            adjNode->setLongestPath(node->getLongestPath() + weight);
+            adjNode->setPreviousNode(node);  
+            adjNode->record = node->record;
+            adjNode->record.insert(node->getorder());
         }
+    }
+
     }
 }
 
@@ -2272,11 +2293,18 @@ void Placement::cal_rhoi()
 {
     for (int i = 0; i < this->_DAG_nodes.size(); i++)
     {
+        // if(i==135752)
+        // {
+        //             cout<<"-----testing test-----"<<endl;
+        //             cout<<"Mname: "<<_DAG_nodes[i]->getModule()->name()<<endl;
+        // }
         double rhoi = -DBL_MAX;
         if (_DAG_nodes[i]->isFF() == 0)
         {
-            // cout<<"NONONO"<<endl;
+            
+            //cout<<"NONONO"<<endl;
             rhoi = -DBL_MAX;
+            _DAG_nodes[i]->setrhoi(rhoi);
             continue;
         }
         for (int j = 0; j <= i; j++)
@@ -2284,68 +2312,86 @@ void Placement::cal_rhoi()
 
             if (i == j)
             {
-                // cout<<"CASE1"<<endl;
-                rhoi = max(rhoi, double(0));
+                rhoi = max(rhoi,double(0));
             }
             else if (_DAG_nodes[i]->record.find(j) == _DAG_nodes[i]->record.end() || _DAG_nodes[j]->isFF() == 0)
             {
-                for (set<int>::iterator it = _DAG_nodes[i]->record.begin(); it != _DAG_nodes[i]->record.end(); ++it)
-                {
-                    // cout<<"i= "<<i <<" j= "<<j<<endl;
-                    // cout << *it << " ";
-                }
-
-                if (_DAG_nodes[i]->record.find(j) == _DAG_nodes[i]->record.end())
-                {
-                    // cout<<"O"<<endl;
-                }
-                // cout<<"CASE2"<<endl;
-                rhoi = max(rhoi, -DBL_MAX);
+                
+                rhoi = max(rhoi, -DBL_MAX);    
             }
             else
             {
-                // cout<<"CASE3"<<endl;
-                rhoi = max(rhoi, (_DAG_nodes[i]->getwstar() - _DAG_nodes[j]->getwstar() - (_DAG_nodes[i]->getX() - _DAG_nodes[j]->getX())));
+                 rhoi = max(rhoi,( _DAG_nodes[i]->getwstar()-_DAG_nodes[j]->getwstar() - (_DAG_nodes[i]->getX() - _DAG_nodes[j]->getX()) ));
+                //  if(i==135752)
+                //  {
+                //     //cout<<"CASE3"<<endl;
+                //     cout<<_DAG_nodes[i]->getModule()->width()<<endl;
+                //     cout<<"update: "<<rhoi<<" wstardiff:"<<_DAG_nodes[i]->getwstar()-_DAG_nodes[j]->getwstar()<<" xdiff: "<<(_DAG_nodes[i]->getX() - _DAG_nodes[j]->getX())<<" ON PATH FF: "<<_DAG_nodes[i]->FFnum-_DAG_nodes[j]->FFnum<<" "<<endl;
+                //  }
+            
             }
         }
+        
         _DAG_nodes[i]->setrhoi(rhoi);
+
     }
 }
 
-void Placement::cal_thetai()
-{
-    for (int i = 0; i < this->_DAG_nodes.size(); i++)
-    {
+struct ThreadData {
+    Placement* placement;
+    int start;
+    int end;
+};
+
+void* calculate_thetai(void* arg) {
+    ThreadData* data = (ThreadData*)arg;
+    Placement* placement = data->placement;
+    int start = data->start;
+    int end = data->end;
+
+    for(int i = start; i < end; i++) {
         double thetai = -DBL_MAX;
-        if (_DAG_nodes[i]->isFF() == 0)
-        {
+        if(placement->_DAG_nodes[i]->isFF() == 0) {
             thetai = -DBL_MAX;
+            placement->_DAG_nodes[i]->setthetai(thetai);
             continue;
         }
-        for (int j = i; j < _DAG_nodes.size(); j++)
-        {
-            // cout<<"i: "<<i<<" j: "<<j<<endl;
-            if (i == j)
-            {
-                // cout<<"CASE1"<<endl;
-                thetai = max(thetai, double(0));
+        for(int j = i; j < placement->_DAG_nodes.size(); j++) {
+            if(i == j) {
+                thetai = std::max(thetai, double(0));
             }
-            else if (_DAG_nodes[j]->record.find(i) == _DAG_nodes[j]->record.end() || _DAG_nodes[j]->isFF() == 0)
-            {
-                for (set<int>::iterator it = _DAG_nodes[j]->record.begin(); it != _DAG_nodes[j]->record.end(); ++it)
-                {
-                    // cout << *it << " ";
-                }
-                // cout<<"CASE2"<<endl;
-                thetai = max(thetai, -DBL_MAX);
+            else if(placement->_DAG_nodes[j]->record.find(i) == placement->_DAG_nodes[j]->record.end() || placement->_DAG_nodes[j]->isFF() == 0) {
+                thetai = std::max(thetai, -DBL_MAX);    
             }
-            else
-            {
-                // cout<<"CASE3"<<endl;
-                thetai = max(thetai, (_DAG_nodes[j]->getwstar() - _DAG_nodes[i]->getwstar() - (_DAG_nodes[j]->getX() - _DAG_nodes[i]->getX())));
+            else {
+                thetai = std::max(thetai, (placement->_DAG_nodes[j]->getwstar() - placement->_DAG_nodes[i]->getwstar() - (placement->_DAG_nodes[j]->getX() - placement->_DAG_nodes[i]->getX())));
             }
         }
-        _DAG_nodes[i]->setthetai(thetai);
+        placement->_DAG_nodes[i]->setthetai(thetai);
+    }
+
+    return NULL;
+}
+
+void Placement::cal_thetai() {
+     long num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+     cout<<"CPU num: "<<num_cpus<<endl;
+    const int num_threads = num_cpus/2;  // 可以根據 CPU 核心數調整
+    pthread_t threads[num_threads];
+    ThreadData thread_data[num_threads];
+
+    int nodes_per_thread = this->_DAG_nodes.size() / num_threads;
+
+    for(int i = 0; i < num_threads; i++) {
+        thread_data[i].placement = this;
+        thread_data[i].start = i * nodes_per_thread;
+        thread_data[i].end = (i == num_threads - 1) ? this->_DAG_nodes.size() : (i + 1) * nodes_per_thread;
+
+        pthread_create(&threads[i], NULL, calculate_thetai, &thread_data[i]);
+    }
+
+    for(int i = 0; i < num_threads; i++) {
+        pthread_join(threads[i], NULL);
     }
 }
 
@@ -2525,7 +2571,7 @@ void Placement::Displacement()
 
             if (li_yi > customCeil(mui))
             {
-                cout << "CASE 1" << endl;
+                cout << "CASE 1: " << li_yi << endl;
                 displacement = li_yi;
                 x = _DAG_nodes[i]->getX() + li_yi;
                 int y = _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
@@ -2534,7 +2580,7 @@ void Placement::Displacement()
             }
             else if (ri_yi < customCeil(mui))
             {
-                cout << "CASE 2" << endl;
+                cout << "CASE 2: " << ri_yi << endl;
                 displacement = ri_yi;
                 x = _DAG_nodes[i]->getX() + ri_yi;
                 int y = _name2Module[_DAG_nodes[i]->getModule()->name()]->y();

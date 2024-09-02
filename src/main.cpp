@@ -55,20 +55,20 @@ int main(int argc, char **argv)
   testDTB.buildBestCelltype();
   Placement testGraph;
   testGraph.setDatabase(&testDTB);
-  //testGraph.debankAllFF();
-  //cout << "Done debank!!!" << endl;
+  testGraph.debankAllFF();
+  cout << "Done debank!!!" << endl;
   testGraph.netListGraph();
   cout << "Done Lily Graph!!!" << endl;
   testGraph.windows();
   cout << "Done Weilun Graph!!!" << endl;
   // get clk net list
   NetList Cnets = testDTB.getClkNets();
-  for (size_t i = 0; i < 2; i++)
+  for (size_t j = 0; j < Cnets.size(); j++)
   {
-    for (size_t j = 0; j < Cnets.size(); j++)
-    {
-      // clang-format off
+    // clang-format off
+    cout <<"start "<<endl;
     set<set<Module *> > cliques = testGraph.calMaxClique(Cnets[j]);
+    cout <<"finish"<<endl;
     while (testGraph.getmaxCliqesize() != 0)
     {
       set<Module *> a = testGraph.getLargestCliqSet();
@@ -77,51 +77,27 @@ int main(int argc, char **argv)
       set<set<Module*> >c = testGraph.getwholeCliq();
       for (set<set<Module*> >::iterator it = c.begin(); it != c.end(); ++it)
       { // clang-format on
-          const set<Module *> &mySet = *it;
-          set<Module *> innerSet = mySet;
-          // cout << "-------------------------------" << endl;
-          // for (set<Module *>::iterator it2 = innerSet.begin(); it2 != innerSet.end(); ++it2)
-          // {
-          //   cout << (*it2)->name() << "  ";
-          // }
-          // cout << endl;
-          innerSet.clear();
-        }
-        a.clear();
-        b.clear();
-        c.clear();
+        const set<Module *> &mySet = *it;
+        set<Module *> innerSet = mySet;
+        // cout << "-------------------------------" << endl;
+        // for (set<Module *>::iterator it2 = innerSet.begin(); it2 != innerSet.end(); ++it2)
+        // {
+        //   cout << (*it2)->name() << "  ";
+        // }
+        // cout << endl;
+        innerSet.clear();
       }
-
-      cliques.clear();
-      testGraph.clearmaxCliq();
+      a.clear();
+      b.clear();
+      c.clear();
     }
+    cout << "done " << Cnets[j]->name() << endl;
+    cliques.clear();
+    testGraph.clearmaxCliq();
   }
-
-  // testDTB.printResult();
-  for (unsigned i = 0; i < testDTB.getNumClkNets(); i++)
-  {
-    NetList Cnets = testDTB.getClkNets();
-    for (size_t j = 0; j < Cnets.size(); j++)
-    {
-      // clang-format off
-      set<set<Module *> > cliques = testGraph.calMaxClique(Cnets[j]);
-      while (testGraph.getmaxCliqesize() != 0)
-      {
-        set<Module *> a = testGraph.getLargestCliqSet();
-        set<Module *> b = testGraph.adjustClique(Cnets[j], a);
-        testGraph.mergeMulti1bitFF(b);
-        set<set<Module*> >c = testGraph.getwholeCliq();
-        for (set<set<Module*> >::iterator it = c.begin(); it != c.end(); ++it)
-        { // clang-format on
-          const set<Module *> &mySet = *it;
-          set<Module *> innerSet = mySet;
-        }
-      }
-      testGraph.clearmaxCliq();
-    }
-  }
+  cout << "Done merging! " << endl;
   testGraph.construct_DAG();
-  
+
   cout << "Done DAG Graph!!!" << endl;
   // testGraph._DAG_nodes.clear();
   // Module *m1 = new Module();
@@ -144,7 +120,6 @@ int main(int argc, char **argv)
   // node4->setModule(testGraph.getDatabase()->getmodule()[2]);
   // node5->setModule(testGraph.getDatabase()->getmodule()[2]);
   // node6->setModule(testGraph.getDatabase()->getmodule()[2]);
-
 
   // node1->setName("N1");
   // node2->setName("N2");
@@ -170,9 +145,30 @@ int main(int argc, char **argv)
   // testGraph._DAG_nodes.push_back(node5);
   // testGraph._DAG_nodes.push_back(node6);
 
-  // testGraph.calculateLongestPaths(testGraph._DAG_nodes);
-  
-  //   for(int i=0; i< 6; i++)
+  // testGraph.getDatabase()->getmodule()[2]->setPosition(0,0);
+  // testGraph.getDatabase()->getmodule()[3]->setPosition(0,0);
+  // testGraph.getDatabase()->getmodule()[2]->cellType()->setFF(1);
+  // testGraph.getDatabase()->getmodule()[3]->cellType()->setFF(0);
+  // node1->setModule(testGraph.getDatabase()->getmodule()[2]);
+  // node3->setModule(testGraph.getDatabase()->getmodule()[3]);
+  // node4->setModule(testGraph.getDatabase()->getmodule()[2]);
+  // node2->setModule(testGraph.getDatabase()->getmodule()[3]);
+  // node1->setName("N1");
+  // node2->setName("N2");
+  // node3->setName("N3");
+  // node4->setName("N4");
+  // node1->addEdge(node2,90);
+  // node1->addEdge(node4,70);
+  // node2->addEdge(node3,7);
+  // node1->addEdge(node3,800);
+  // testGraph._DAG_nodes.push_back(node1);
+  // testGraph._DAG_nodes.push_back(node2);
+  // testGraph._DAG_nodes.push_back(node3);
+  // testGraph._DAG_nodes.push_back(node4);
+
+  testGraph.calculateLongestPaths(testGraph._DAG_nodes);
+
+  //   for(int i=0; i< 3; i++)
   //   {
   //     if(testGraph._DAG_nodes[i]->getPreviousNode()==NULL)
   //     {
@@ -181,32 +177,34 @@ int main(int argc, char **argv)
   // }
   // cout<<"Done LongestPath"<<endl;
   // testGraph.printLongestPath(node6);
-  cout<<"Done LongestPath"<<endl;
+  cout << "Done LongestPath" << endl;
 
   //  for (std::set<int>::iterator it = node6->record.begin(); it != node6->record.end(); ++it) {
   //       std::cout << *it << " ";
   //   }
 
-
-  cout<<"-----------Rhoi---------------"<<endl;
+  cout << "-----------Rhoi---------------" << endl;
   testGraph.cal_rhoi();
+  //  for(int i=0; i < testGraph._DAG_nodes.size();i++)
+  // {
+  //   if(testGraph._DAG_nodes[i]->isFF()&& testGraph._DAG_nodes[i]->getrhoi()>200000 )
+  //   cout<<"node"<<i<<" mName :  "<<testGraph._DAG_nodes[i]->getModule()->name()<<"  "<<testGraph._DAG_nodes[i]->getrhoi()<<" "<<testGraph._DAG_nodes[i]->isFF()<<endl;
+  // }
   // for(int i=0; i < testGraph._DAG_nodes.size();i++)
   // {
-  //   cout<<"node"<<i+1<<" :  "<<testGraph._DAG_nodes[i]->getrhoi()<<endl;
+
+  //   cout<<"node"<<i<<" :  "<<testGraph._DAG_nodes[i]->getrhoi()<<endl;
   // }
   cout << "Rho_i done!" << endl;
-  
-  cout<<"-----------thetai---------------"<<endl;
+
+  cout << "-----------thetai---------------" << endl;
   testGraph.cal_thetai();
-  // for(int i=0; i < testGraph._DAG_nodes.size();i++)
-  // {
-  //   cout<<"node"<<i+1<<" :  "<<testGraph._DAG_nodes[i]->getthetai()<<endl;
-  // }
+
   cout << "Theta_i done!" << endl;
 
-  // testGraph.contour_L();
-  // cout << "Done Contour_L Graph!!!" << endl;
-  
+  testGraph.contour_L();
+  cout << "Done Contour_L Graph!!!" << endl;
+
   testGraph.contour_R();
   cout << "Done Contour_R Graph!!!" << endl;
 

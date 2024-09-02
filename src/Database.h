@@ -93,9 +93,10 @@ public:
     int updateBinUtil();
 
     // get design property
-    ModuleList getmodule(){return _modules;}
+    ModuleList getmodule() { return _modules; }
     Module *module(unsigned moduleId) { return _modules[moduleId]; }
     Module *ff(unsigned ffId) { return _ffModules[ffId]; }
+    ModuleList getWholeffList() { return _ffModules; }
     Net *net(unsigned netId) { return _nets[netId]; }
     Pin *pin(unsigned pinId) { return _pins[pinId]; }
     Row *row(unsigned rowId) { return _rows[rowId]; }
@@ -139,6 +140,8 @@ public:
     double getBoundaryTop() const { return _boundaryTop; }
     Module *getStringModule(string moduleName) { return ModuleName2Ptr[moduleName]; }
     Module *getIntModule(int No) { return ModuleNo2Ptr[No]; }
+    void addIntModule(int num, Module *mod) { ModuleNo2Ptr[num] = mod; }
+    void delIntModule(int key) { ModuleNo2Ptr.erase(key); }
     double getBoundaryLeft() const { return _boundaryLeft; }
     double getBoundaryBottom() const { return _boundaryBottom; }
     double getBoundaryRight() const { return _boundaryRight; }
@@ -193,26 +196,24 @@ public:
     unsigned getDen(double) const;
     double totalCost(double) const;
 
-    int getbincol(){return _numBinCol;}
-    int getbinrow(){return _numBinRow;}
+    int getbincol() { return _numBinCol; }
+    int getbinrow() { return _numBinRow; }
     double getbinutil() const { return _binMaxUtil; }
     // let all slack be positive
     void setPositive_slack();
-    void adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius , double grid_width, double grid_height);
-    set<Pin *> getNegative_slack(){return _initial_negSlack;};
-    FFCell *getFFlib(int bit){return _ffLib[bit][0];}
+    void adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, double grid_width, double grid_height);
+    set<Pin *> getNegative_slack() { return _initial_negSlack; };
+    FFCell *getFFlib(int bit) { return _ffLib[bit][0]; }
 
     map<string, Pin *> IODesign;
 
-
-    map<string, int > OriginModuleN;
+    map<string, int> OriginModuleN;
     int record = 0;
 
+    vector<Module *> getbuffer() { return _buffer; }
+    double getBinHeight() { return _binHeight; }
+    double getBinWidth() { return _binWidth; }
 
-
-    vector<Module *> getbuffer(){return _buffer;}
-    double getBinHeight(){return _binHeight;}
-    double getBinWidth(){return _binWidth;}
 private:
     string _name; // Design Name
 
@@ -273,10 +274,6 @@ private:
 
     // void updateInitialSlackInfo();
     set<Pin *> _initial_negSlack;
-
-
-
-
 
     vector<Module *> _buffer;
 };
