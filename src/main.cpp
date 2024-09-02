@@ -55,8 +55,8 @@ int main(int argc, char **argv)
   testDTB.buildBestCelltype();
   Placement testGraph;
   testGraph.setDatabase(&testDTB);
-  //testGraph.debankAllFF();
-  //cout << "Done debank!!!" << endl;
+  // testGraph.debankAllFF();
+  // cout << "Done debank!!!" << endl;
   testGraph.netListGraph();
   cout << "Done Lily Graph!!!" << endl;
   testGraph.windows();

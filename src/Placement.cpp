@@ -1121,22 +1121,22 @@ void Placement::netListGraph()
         }
         while (!que.empty())
         {
-            //cout << __LINE__ << endl;
+            cout << __LINE__ << endl;
             Module *moduleptr = que.front().first->module();
-            //cout << moduleptr->name() << endl;
-            //cout << "outpin: " << moduleptr->numOutPins() << endl;
-            //cout << moduleptr->cellType()->pinNum() << endl;
-            //cout << moduleptr->cellType();
+            cout << moduleptr->name() << endl;
+            cout << "outpin: " << moduleptr->numOutPins() << endl;
+            cout << moduleptr->cellType()->pinNum() << endl;
+            cout << moduleptr->cellType() << endl;
             
 
             if (moduleptr->isFF() && moduleptr->name() != this->_dataBase->ff(i)->name())
             {
                 //cout << __LINE__ << endl;
                 //cout << "Bit num: "<< moduleptr->cellType()->getnumBit() << endl;
-                for(int i = 0;i < moduleptr->totnumPins(); i++)
-                {
-                    //cout << "pins: " << i << endl;
-                }
+                // for(int i = 0;i < moduleptr->totnumPins(); i++)
+                // {
+                //     //cout << "pins: " << i << endl;
+                // }
                 // cout << "net: " << moduleptr->pin(0)->net()->name() << endl;
                 // cout << "net: " << moduleptr->pin(0) << endl;
                 // cout << "net pin : " << moduleptr->pin(0)->net()->pin(1) << endl;
@@ -1146,7 +1146,8 @@ void Placement::netListGraph()
                 // que.front().second.size()-1 is moduleptr
                 // que.front().second.size()-2 is prelevel of moduleptr
                 Module *PreModule = this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 2]);
-                
+                cout<<this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 1])->name()<<endl;
+                cout<<this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 1])->InPin(0)->net()->name()<<endl;
                 //cout << __LINE__ << endl;
                 if(PreModule == NULL)
                 {
@@ -1245,6 +1246,15 @@ void Placement::netListGraph()
 
 void Placement::debankAllFF()
 {
+    for(int i=0;i<this->getDatabase()->getNumPins();i++)
+    {
+        
+        if(this->getDatabase()->pin(i)->module()==NULL)
+        {
+            cout << this->getDatabase()->pin(i)->name()<<" ";
+        }
+    }
+    cout<<endl;
     unsigned initFFnum = _dataBase->getNumFF();
     // cout << "initFFnum: " << initFFnum << endl;
     // cout << "module num " << _dataBase->getNumModules() << endl;
@@ -1253,10 +1263,20 @@ void Placement::debankAllFF()
         if (_dataBase->ff(i)->cellType()->numBit() > 1)
         {
             string Dname = _dataBase->ff(i)->name();
-            cout << "debank" << endl;
+            //cout << "debank" << endl;
             debankFFto1bit(Dname);
         }
     }
+    cout<<"start---"<<endl;
+    for(int i=0;i<this->getDatabase()->getNumPins();i++)
+    {
+        
+        if(this->getDatabase()->pin(i)->module()==NULL)
+        {
+            cout << this->getDatabase()->pin(i)->name()<<" ";
+        }
+    }
+    cout<<endl;
     return;
 }
 
