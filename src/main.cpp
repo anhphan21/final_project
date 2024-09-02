@@ -210,9 +210,17 @@ int main(int argc, char **argv)
   testGraph.contour_R();
   cout << "Done Contour_R Graph!!!" << endl;
 
-  cout << "----------start cal displacement----------" << endl;
   testGraph.Displacement();
+  cout << "Done displacement Graph!!!" << endl;
 
+  // for(int i=0; i < testGraph._DAG_nodes.size();i++)
+  // {
+  //   if(testGraph._DAG_nodes[i]->isFF())
+  //   {
+  //     cout<<"node"<<i+1<<" :  "<<testGraph._DAG_nodes[i]->getrhoi()<<"\t"<<testGraph._DAG_nodes[i]->getthetai()<<"\t";
+  //     cout<<testGraph._DAG_nodes[i]->get_li()<<"\t"<<testGraph._DAG_nodes[i]->get_ri()<<endl;
+  //   }
+  // }
   testDTB.outputTofile(argv[2]);
 
   // layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getbuffer());

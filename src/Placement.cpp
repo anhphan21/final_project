@@ -2473,6 +2473,11 @@ int Placement::contour_R()
             }
         }
     }
+    for(int i=0;i<_DAG_nodes.size();++i)
+    {
+        buff = (-1)*_DAG_nodes[i]->getX();
+        _DAG_nodes[i]->setX(buff);
+    }
 }
 
 int customCeil(double num) {
@@ -2499,10 +2504,9 @@ void Placement::Displacement()
         int x = 0;
         if(_DAG_nodes[i]->isFF() == 1)
         {
-            
             if(li_yi > customCeil(mui))
             {
-                cout << "CASE 1: " << li_yi << endl;
+                // cout << "CASE 1: " << _DAG_nodes[i]->getX()<<" "<<li_yi << endl;
                 displacement = li_yi;
                 x = _DAG_nodes[i]->getX() + li_yi;
                 int y =  _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
@@ -2511,7 +2515,7 @@ void Placement::Displacement()
             }
             else if(ri_yi < customCeil(mui))
             {
-                cout << "CASE 2: " << ri_yi << endl;
+                // cout << "CASE 2: " << _DAG_nodes[i]->getX()<<" "<< ri_yi << endl;
                 displacement = ri_yi;
                 x = _DAG_nodes[i]->getX() + ri_yi;
                 int y =  _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
@@ -2519,7 +2523,7 @@ void Placement::Displacement()
             }
             else
             {
-                cout << "CASE 3: " << customCeil(mui) << endl;
+                // cout << "CASE 3: " << _DAG_nodes[i]->getX()<<" "<< customCeil(mui) << endl;
                 displacement = customCeil(mui);
                 x = _DAG_nodes[i]->getX() + customCeil(mui);
                 int y =  _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
