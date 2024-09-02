@@ -2237,48 +2237,68 @@ void Placement::printLongestPath(DAG_Node *node) {
     cout << node->getName() <<" -> " ;
 }
 
-void Placement::cal_rhoi()
-{
-    for(int i=0;i<this->_DAG_nodes.size();i++)
-    {
-        double rhoi = -DBL_MAX;
-        if(_DAG_nodes[i]->isFF()==0)
-        {
-            //cout<<"NONONO"<<endl;
-            rhoi = -DBL_MAX;
-            continue;
-        }
-        for(int j=0;j<=i;j++)
-        {
-        
-            if(i==j)
-            {
-                //cout<<"CASE1"<<endl;
-                rhoi = max(rhoi,double(0));
-            }
-            else if(_DAG_nodes[i]->record.find(j) == _DAG_nodes[i]->record.end() || _DAG_nodes[j]->isFF()==0)
-            {
-                
-                //cout<<"CASE2"<<endl;
-                rhoi = max(rhoi, -DBL_MAX);    
-            }
-            else
-            {
-                //cout<<"CASE3"<<endl;
-                rhoi = max(rhoi,( _DAG_nodes[i]->getwstar()-_DAG_nodes[j]->getwstar() - (_DAG_nodes[i]->getX() - _DAG_nodes[j]->getX()) ));
-            }
-        }
-        _DAG_nodes[i]->setrhoi(rhoi);
-
-
-    }
-}
-
 struct ThreadData {
     Placement* placement;
     int start;
     int end;
 };
+
+void* calculate_rhoi(void* arg) {
+    ThreadData* data = (ThreadData*)arg;
+    Placement* placement = data->placement;
+    int start = data->start;
+    int end = data->end;
+
+    for(int i = start; i < end; i++) {
+        double rhoi = -DBL_MAX;
+        if(placement->_DAG_nodes[i]->isFF() == 0) {
+            rhoi = -DBL_MAX;
+            continue;
+        }
+        for(int j = 0; j <= i; j++) {
+            if(i == j) {
+                rhoi = std::max(rhoi, double(0));
+            }
+            else if(placement->_DAG_nodes[i]->record.find(j) == placement->_DAG_nodes[i]->record.end() || placement->_DAG_nodes[j]->isFF() == 0) {
+                rhoi = std::max(rhoi, -DBL_MAX);    
+            }
+            else {
+                rhoi = std::max(rhoi, (placement->_DAG_nodes[i]->getwstar() - placement->_DAG_nodes[j]->getwstar() - (placement->_DAG_nodes[i]->getX() - placement->_DAG_nodes[j]->getX())));
+            }
+        }
+        placement->_DAG_nodes[i]->setrhoi(rhoi);
+    }
+
+    return NULL;
+}
+
+void Placement::cal_rhoi() {
+    // 獲取 CPU 核心數
+    long num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+    if (num_cpus == -1) {
+        std::cerr << "Error getting CPU core count." << std::endl;
+        return;
+    }
+    
+    const int num_threads = num_cpus / 2;  // 使用一半的 CPU 核心數
+    pthread_t threads[num_threads];
+    ThreadData thread_data[num_threads];
+
+    int nodes_per_thread = this->_DAG_nodes.size() / num_threads;
+
+    for(int i = 0; i < num_threads; i++) {
+        thread_data[i].placement = this;
+        thread_data[i].start = i * nodes_per_thread;
+        thread_data[i].end = (i == num_threads - 1) ? this->_DAG_nodes.size() : (i + 1) * nodes_per_thread;
+
+        pthread_create(&threads[i], NULL, calculate_rhoi, &thread_data[i]);
+    }
+
+    for(int i = 0; i < num_threads; i++) {
+        pthread_join(threads[i], NULL);
+    }
+}
+
 
 void* calculate_thetai(void* arg) {
     ThreadData* data = (ThreadData*)arg;
