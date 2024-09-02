@@ -6,6 +6,8 @@
 #include <cstdlib>
 // #include <ctime>
 #include <limits.h>
+#include <pthread.h>
+#include <unistd.h>
 #include <vector>
 #include <algorithm>
 #include <set>
@@ -2272,41 +2274,60 @@ void Placement::cal_rhoi()
     }
 }
 
-void Placement::cal_thetai()
-{
-    for(int i=0;i<this->_DAG_nodes.size();i++)
-    {
+struct ThreadData {
+    Placement* placement;
+    int start;
+    int end;
+};
+
+void* calculate_thetai(void* arg) {
+    ThreadData* data = (ThreadData*)arg;
+    Placement* placement = data->placement;
+    int start = data->start;
+    int end = data->end;
+
+    for(int i = start; i < end; i++) {
         double thetai = -DBL_MAX;
-        if(_DAG_nodes[i]->isFF()==0)
-        {
+        if(placement->_DAG_nodes[i]->isFF() == 0) {
             thetai = -DBL_MAX;
             continue;
         }
-        for(int j=i;j<_DAG_nodes.size();j++)
-        {
-            //cout<<"i: "<<i<<" j: "<<j<<endl;
-            if(i==j)
-            {
-                //cout<<"CASE1"<<endl;
-                thetai = max(thetai,double(0));
+        for(int j = i; j < placement->_DAG_nodes.size(); j++) {
+            if(i == j) {
+                thetai = std::max(thetai, double(0));
             }
-            else if(_DAG_nodes[j]->record.find(i) == _DAG_nodes[j]->record.end() || _DAG_nodes[j]->isFF()==0)
-            {
-                 for (set<int>::iterator it = _DAG_nodes[j]->record.begin(); it != _DAG_nodes[j]->record.end(); ++it) {
-                     //cout << *it << " ";
-                    }
-                //cout<<"CASE2"<<endl;
-                thetai = max(thetai, -DBL_MAX);    
+            else if(placement->_DAG_nodes[j]->record.find(i) == placement->_DAG_nodes[j]->record.end() || placement->_DAG_nodes[j]->isFF() == 0) {
+                thetai = std::max(thetai, -DBL_MAX);    
             }
-            else
-            {
-                //cout<<"CASE3"<<endl;
-                thetai = max(thetai,( _DAG_nodes[j]->getwstar()-_DAG_nodes[i]->getwstar() - (_DAG_nodes[j]->getX() - _DAG_nodes[i]->getX()) ));
+            else {
+                thetai = std::max(thetai, (placement->_DAG_nodes[j]->getwstar() - placement->_DAG_nodes[i]->getwstar() - (placement->_DAG_nodes[j]->getX() - placement->_DAG_nodes[i]->getX())));
             }
         }
-        _DAG_nodes[i]->setthetai(thetai);
+        placement->_DAG_nodes[i]->setthetai(thetai);
+    }
 
+    return NULL;
+}
 
+void Placement::cal_thetai() {
+     long num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+     cout<<"CPU num: "<<num_cpus<<endl;
+    const int num_threads = num_cpus/2;  // 可以根據 CPU 核心數調整
+    pthread_t threads[num_threads];
+    ThreadData thread_data[num_threads];
+
+    int nodes_per_thread = this->_DAG_nodes.size() / num_threads;
+
+    for(int i = 0; i < num_threads; i++) {
+        thread_data[i].placement = this;
+        thread_data[i].start = i * nodes_per_thread;
+        thread_data[i].end = (i == num_threads - 1) ? this->_DAG_nodes.size() : (i + 1) * nodes_per_thread;
+
+        pthread_create(&threads[i], NULL, calculate_thetai, &thread_data[i]);
+    }
+
+    for(int i = 0; i < num_threads; i++) {
+        pthread_join(threads[i], NULL);
     }
 }
 
@@ -2481,7 +2502,7 @@ void Placement::Displacement()
             
             if(li_yi > customCeil(mui))
             {
-                cout << "CASE 1" << endl;
+                cout << "CASE 1: " << li_yi << endl;
                 displacement = li_yi;
                 x = _DAG_nodes[i]->getX() + li_yi;
                 int y =  _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
@@ -2490,7 +2511,7 @@ void Placement::Displacement()
             }
             else if(ri_yi < customCeil(mui))
             {
-                cout << "CASE 2" << endl;
+                cout << "CASE 2: " << ri_yi << endl;
                 displacement = ri_yi;
                 x = _DAG_nodes[i]->getX() + ri_yi;
                 int y =  _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
