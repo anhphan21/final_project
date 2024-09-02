@@ -2040,7 +2040,7 @@ void Placement::cal_rhoi()
         double rhoi = -DBL_MAX;
         if(_DAG_nodes[i]->isFF()==0)
         {
-            cout<<"NONONO"<<endl;
+            //cout<<"NONONO"<<endl;
             rhoi = -DBL_MAX;
             continue;
         }
@@ -2049,21 +2049,21 @@ void Placement::cal_rhoi()
         
             if(i==j)
             {
-                cout<<"CASE1"<<endl;
+                //cout<<"CASE1"<<endl;
                 rhoi = max(rhoi,double(0));
             }
             else if(_DAG_nodes[i]->record.find(j) == _DAG_nodes[i]->record.end() || _DAG_nodes[j]->isFF()==0)
             {
-                for (std::set<int>::iterator it = _DAG_nodes[i]->record.begin(); it != _DAG_nodes[i]->record.end(); ++it) {
-                     cout<<"i= "<<i <<" j= "<<j<<endl;
-                     std::cout << *it << " ";
+                for (set<int>::iterator it = _DAG_nodes[i]->record.begin(); it != _DAG_nodes[i]->record.end(); ++it) {
+                     //cout<<"i= "<<i <<" j= "<<j<<endl;
+                     //cout << *it << " ";
                     }
 
                 if(_DAG_nodes[i]->record.find(j) == _DAG_nodes[i]->record.end())
                 {
-                    cout<<"O"<<endl;
+                    //cout<<"O"<<endl;
                 }
-                cout<<"CASE2"<<endl;
+                //cout<<"CASE2"<<endl;
                 rhoi = max(rhoi, -DBL_MAX);    
             }
             else
@@ -2090,23 +2090,23 @@ void Placement::cal_thetai()
         }
         for(int j=i;j<_DAG_nodes.size();j++)
         {
-            cout<<"i: "<<i<<" j: "<<j<<endl;
+            //cout<<"i: "<<i<<" j: "<<j<<endl;
             if(i==j)
             {
-                cout<<"CASE1"<<endl;
+                //cout<<"CASE1"<<endl;
                 thetai = max(thetai,double(0));
             }
             else if(_DAG_nodes[j]->record.find(i) == _DAG_nodes[j]->record.end() || _DAG_nodes[j]->isFF()==0)
             {
-                 for (std::set<int>::iterator it = _DAG_nodes[j]->record.begin(); it != _DAG_nodes[j]->record.end(); ++it) {
-                     std::cout << *it << " ";
+                 for (set<int>::iterator it = _DAG_nodes[j]->record.begin(); it != _DAG_nodes[j]->record.end(); ++it) {
+                     //cout << *it << " ";
                     }
-                cout<<"CASE2"<<endl;
+                //cout<<"CASE2"<<endl;
                 thetai = max(thetai, -DBL_MAX);    
             }
             else
             {
-                cout<<"CASE3"<<endl;
+                //cout<<"CASE3"<<endl;
                 thetai = max(thetai,( _DAG_nodes[j]->getwstar()-_DAG_nodes[i]->getwstar() - (_DAG_nodes[j]->getX() - _DAG_nodes[i]->getX()) ));
             }
         }
