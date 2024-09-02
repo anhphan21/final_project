@@ -91,7 +91,6 @@ int main(int argc, char **argv)
       b.clear();
       c.clear();
     }
-    cout << "done " << Cnets[j]->name() << endl;
     cliques.clear();
     testGraph.clearmaxCliq();
   }
