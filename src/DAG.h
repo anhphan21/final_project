@@ -43,16 +43,18 @@ public:
     void setLongestPath(double path) {_longestPath = path;}
     DAG_Node* getPreviousNode() const { return _previousNode; }
     void setPreviousNode(DAG_Node* prevNode) { _previousNode = prevNode; }
-    
+     double      width;
     set<int>    record;
+    double FFnum = 0;
     int         get_li(){return _li;}
     int         get_ri(){return _ri;}
     double      get_mui() {return _mui;}
+    double      _mui;
 private:
     Module      *_m;
     string      _name;
     int order;
-    double      width;
+   
     double      wstar;
     double      _weight;
     double      rhoi;
@@ -63,7 +65,7 @@ private:
     bool        _isFF;
     int         _li;
     int         _ri;
-    double      _mui = (rhoi - thetai) / 2;
+
     vector<pair<DAG_Node *,double > > _edge;
 
     double _longestPath;

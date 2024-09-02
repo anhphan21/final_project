@@ -2194,6 +2194,16 @@ void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes) {
      for (int i=0;i<nodes.size();i++) 
      {
         nodes[i]->setPreviousNode(NULL);
+        //---------------------------
+        //---------------------------
+        // if(nodes[i]->getModule()->isFF())
+        // {
+        //      nodes[i]->setwidth(5);     
+        // }
+        // else
+        // {
+        //      nodes[i]->setwidth(9000000000);
+        // }
         nodes[i]->setwidth(nodes[i]->getModule()->width());
         nodes[i]->setwstar(0);
         nodes[i]->setorder(i);
@@ -2220,7 +2230,16 @@ void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes) {
         DAG_Node *adjNode = it->first;
         double weight = it->second;
         if (node->getLongestPath() + weight > adjNode->getLongestPath()) {
-            adjNode->setwstar(node->getwidth()+node->getwstar());
+            if(node->isFF()==1)
+            {
+                adjNode->FFnum= (node->FFnum+1);
+                adjNode->setwstar(node->getwidth()+node->getwstar());
+            }
+            else
+            {
+                adjNode->FFnum= (node->FFnum);
+                adjNode->setwstar(node->getwstar());
+            }
             adjNode->setLongestPath(node->getLongestPath() + weight);
             adjNode->setPreviousNode(node);  
             adjNode->record = node->record;
@@ -2237,68 +2256,59 @@ void Placement::printLongestPath(DAG_Node *node) {
     cout << node->getName() <<" -> " ;
 }
 
+void Placement::cal_rhoi()
+{
+    for(int i=0;i<this->_DAG_nodes.size();i++)
+    {
+        // if(i==135752)
+        // {
+        //             cout<<"-----testing test-----"<<endl;
+        //             cout<<"Mname: "<<_DAG_nodes[i]->getModule()->name()<<endl;
+        // }
+        double rhoi = -DBL_MAX;
+        if(_DAG_nodes[i]->isFF()==0)
+        {
+            
+            //cout<<"NONONO"<<endl;
+            rhoi = -DBL_MAX;
+            _DAG_nodes[i]->setrhoi(rhoi);
+            continue;
+        }
+        for(int j=0;j<=i;j++)
+        {
+        
+            if(i==j)
+            {
+                rhoi = max(rhoi,double(0));
+            }
+            else if(_DAG_nodes[i]->record.find(j) == _DAG_nodes[i]->record.end() || _DAG_nodes[j]->isFF()==0)
+            {
+                
+                rhoi = max(rhoi, -DBL_MAX);    
+            }
+            else
+            {
+                 rhoi = max(rhoi,( _DAG_nodes[i]->getwstar()-_DAG_nodes[j]->getwstar() - (_DAG_nodes[i]->getX() - _DAG_nodes[j]->getX()) ));
+                //  if(i==135752)
+                //  {
+                //     //cout<<"CASE3"<<endl;
+                //     cout<<_DAG_nodes[i]->getModule()->width()<<endl;
+                //     cout<<"update: "<<rhoi<<" wstardiff:"<<_DAG_nodes[i]->getwstar()-_DAG_nodes[j]->getwstar()<<" xdiff: "<<(_DAG_nodes[i]->getX() - _DAG_nodes[j]->getX())<<" ON PATH FF: "<<_DAG_nodes[i]->FFnum-_DAG_nodes[j]->FFnum<<" "<<endl;
+                //  }
+            
+            }
+        }
+        
+        _DAG_nodes[i]->setrhoi(rhoi);
+
+    }
+}
+
 struct ThreadData {
     Placement* placement;
     int start;
     int end;
 };
-
-void* calculate_rhoi(void* arg) {
-    ThreadData* data = (ThreadData*)arg;
-    Placement* placement = data->placement;
-    int start = data->start;
-    int end = data->end;
-
-    for(int i = start; i < end; i++) {
-        double rhoi = -DBL_MAX;
-        if(placement->_DAG_nodes[i]->isFF() == 0) {
-            rhoi = -DBL_MAX;
-            continue;
-        }
-        for(int j = 0; j <= i; j++) {
-            if(i == j) {
-                rhoi = std::max(rhoi, double(0));
-            }
-            else if(placement->_DAG_nodes[i]->record.find(j) == placement->_DAG_nodes[i]->record.end() || placement->_DAG_nodes[j]->isFF() == 0) {
-                rhoi = std::max(rhoi, -DBL_MAX);    
-            }
-            else {
-                rhoi = std::max(rhoi, (placement->_DAG_nodes[i]->getwstar() - placement->_DAG_nodes[j]->getwstar() - (placement->_DAG_nodes[i]->getX() - placement->_DAG_nodes[j]->getX())));
-            }
-        }
-        placement->_DAG_nodes[i]->setrhoi(rhoi);
-    }
-
-    return NULL;
-}
-
-void Placement::cal_rhoi() {
-    // 獲取 CPU 核心數
-    long num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
-    if (num_cpus == -1) {
-        std::cerr << "Error getting CPU core count." << std::endl;
-        return;
-    }
-    
-    const int num_threads = num_cpus / 2;  // 使用一半的 CPU 核心數
-    pthread_t threads[num_threads];
-    ThreadData thread_data[num_threads];
-
-    int nodes_per_thread = this->_DAG_nodes.size() / num_threads;
-
-    for(int i = 0; i < num_threads; i++) {
-        thread_data[i].placement = this;
-        thread_data[i].start = i * nodes_per_thread;
-        thread_data[i].end = (i == num_threads - 1) ? this->_DAG_nodes.size() : (i + 1) * nodes_per_thread;
-
-        pthread_create(&threads[i], NULL, calculate_rhoi, &thread_data[i]);
-    }
-
-    for(int i = 0; i < num_threads; i++) {
-        pthread_join(threads[i], NULL);
-    }
-}
-
 
 void* calculate_thetai(void* arg) {
     ThreadData* data = (ThreadData*)arg;
@@ -2310,6 +2320,7 @@ void* calculate_thetai(void* arg) {
         double thetai = -DBL_MAX;
         if(placement->_DAG_nodes[i]->isFF() == 0) {
             thetai = -DBL_MAX;
+            placement->_DAG_nodes[i]->setthetai(thetai);
             continue;
         }
         for(int j = i; j < placement->_DAG_nodes.size(); j++) {

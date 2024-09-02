@@ -123,17 +123,17 @@ int main(int argc, char **argv)
   testGraph.construct_DAG();
   
   cout << "Done DAG Graph!!!" << endl;
-  // testGraph._DAG_nodes.clear();
-  // Module *m1 = new Module();
-  // Module *m2 = new Module();
-  // Module *m3 = new Module();
-  // Module *m4 = new Module();
+  testGraph._DAG_nodes.clear();
+  Module *m1 = new Module();
+  Module *m2 = new Module();
+  Module *m3 = new Module();
+  Module *m4 = new Module();
   // Module *m5 = new Module();
   // Module *m6 = new Module();
-  // DAG_Node* node1 = new DAG_Node();
-  // DAG_Node* node2 = new DAG_Node();
-  // DAG_Node* node3 = new DAG_Node();
-  // DAG_Node* node4 = new DAG_Node();
+  DAG_Node* node1 = new DAG_Node();
+  DAG_Node* node2 = new DAG_Node();
+  DAG_Node* node3 = new DAG_Node();
+  DAG_Node* node4 = new DAG_Node();
   // DAG_Node* node5 = new DAG_Node();
   // DAG_Node* node6 = new DAG_Node();
   // testGraph.getDatabase()->getmodule()[2]->setPosition(0,0);
@@ -171,26 +171,27 @@ int main(int argc, char **argv)
   // testGraph._DAG_nodes.push_back(node6);
 
 
-  // testGraph.getDatabase()->getmodule()[2]->setPosition(0,0);
-  // testGraph.getDatabase()->getmodule()[3]->setPosition(0,0);
-  // testGraph.getDatabase()->getmodule()[2]->cellType()->setFF(1);
-  // testGraph.getDatabase()->getmodule()[3]->cellType()->setFF(0);
-  // node1->setModule(testGraph.getDatabase()->getmodule()[2]);
-  // node3->setModule(testGraph.getDatabase()->getmodule()[3]);
-  // node4->setModule(testGraph.getDatabase()->getmodule()[2]);
-  // node2->setModule(testGraph.getDatabase()->getmodule()[3]);
-  // node1->setName("N1");
-  // node2->setName("N2");
-  // node3->setName("N3");
-  // node4->setName("N4");
-  // node1->addEdge(node2,90);
-  // node1->addEdge(node4,70);
-  // node2->addEdge(node3,7);
-  // node1->addEdge(node3,800);
-  // testGraph._DAG_nodes.push_back(node1);
-  // testGraph._DAG_nodes.push_back(node2);
-  // testGraph._DAG_nodes.push_back(node3);
-  // testGraph._DAG_nodes.push_back(node4);
+  testGraph.getDatabase()->getmodule()[2]->setPosition(0,0);
+  testGraph.getDatabase()->getmodule()[3]->setPosition(0,0);
+  testGraph.getDatabase()->getmodule()[2]->cellType()->setFF(1);
+  testGraph.getDatabase()->getmodule()[3]->cellType()->setFF(0);
+  node1->setModule(testGraph.getDatabase()->getmodule()[2]);
+  node3->setModule(testGraph.getDatabase()->getmodule()[3]);
+  node4->setModule(testGraph.getDatabase()->getmodule()[2]);
+  node2->setModule(testGraph.getDatabase()->getmodule()[3]);
+  node1->setName("N1");
+  node2->setName("N2");
+  node3->setName("N3");
+  node4->setName("N4");
+  node1->addEdge(node2,90);
+  node1->addEdge(node4,70);
+  node2->addEdge(node3,7);
+  node1->addEdge(node3,800);
+  testGraph._DAG_nodes.push_back(node1);
+  testGraph._DAG_nodes.push_back(node2);
+  testGraph._DAG_nodes.push_back(node3);
+  testGraph._DAG_nodes.push_back(node4);
+
   testGraph.calculateLongestPaths(testGraph._DAG_nodes);
   
   //   for(int i=0; i< 3; i++)
@@ -207,26 +208,24 @@ int main(int argc, char **argv)
   //  for (std::set<int>::iterator it = node6->record.begin(); it != node6->record.end(); ++it) {
   //       std::cout << *it << " ";
   //   }
-
-
+  
   cout<<"-----------Rhoi---------------"<<endl;
   testGraph.cal_rhoi();
+  //  for(int i=0; i < testGraph._DAG_nodes.size();i++)
+  // {
+  //   if(testGraph._DAG_nodes[i]->isFF()&& testGraph._DAG_nodes[i]->getrhoi()>200000 )
+  //   cout<<"node"<<i<<" mName :  "<<testGraph._DAG_nodes[i]->getModule()->name()<<"  "<<testGraph._DAG_nodes[i]->getrhoi()<<" "<<testGraph._DAG_nodes[i]->isFF()<<endl;
+  // }
   for(int i=0; i < testGraph._DAG_nodes.size();i++)
   {
-    if(testGraph._DAG_nodes[i]->isFF()==1)
-    {
-        cout<<"FF output net name"<<testGraph._DAG_nodes[i]->getModule()->OutPin(0)->net()->name()<<endl;
-    }
-    // cout<<"node"<<i<<" :  "<<testGraph._DAG_nodes[i]->getrhoi()<<endl;
+    
+    cout<<"node"<<i<<" :  "<<testGraph._DAG_nodes[i]->getrhoi()<<endl;
   }
   cout << "Rho_i done!" << endl;
   
   cout<<"-----------thetai---------------"<<endl;
   testGraph.cal_thetai();
-  for(int i=0; i < testGraph._DAG_nodes.size();i++)
-  {
-    cout<<"node"<<i+1<<" :  "<<testGraph._DAG_nodes[i]->getthetai()<<endl;
-  }
+
   cout << "Theta_i done!" << endl;
 
   testGraph.contour_L();
