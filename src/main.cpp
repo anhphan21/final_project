@@ -170,7 +170,7 @@ int main(int argc, char **argv)
   // testGraph._DAG_nodes.push_back(node5);
   // testGraph._DAG_nodes.push_back(node6);
 
-  // testGraph.calculateLongestPaths(testGraph._DAG_nodes);
+  testGraph.calculateLongestPaths(testGraph._DAG_nodes);
   
   //   for(int i=0; i< 6; i++)
   //   {
@@ -204,16 +204,16 @@ int main(int argc, char **argv)
   // }
   cout << "Theta_i done!" << endl;
 
-  // testGraph.contour_L();
-  // cout << "Done Contour_L Graph!!!" << endl;
+  testGraph.contour_L();
+  cout << "Done Contour_L Graph!!!" << endl;
   
   testGraph.contour_R();
   cout << "Done Contour_R Graph!!!" << endl;
 
-  // cout << "----------start cal displacement----------" << endl;
-  // testGraph.Displacement();
+  cout << "----------start cal displacement----------" << endl;
+  testGraph.Displacement();
 
-  // testDTB.outputTofile(argv[2]);
+  testDTB.outputTofile(argv[2]);
 
   // layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getbuffer());
   return 0;
