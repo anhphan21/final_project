@@ -1121,12 +1121,12 @@ void Placement::netListGraph()
         }
         while (!que.empty())
         {
-            cout << __LINE__ << endl;
+            // cout << __LINE__ << endl;
             Module *moduleptr = que.front().first->module();
-            cout << moduleptr->name() << endl;
-            cout << "outpin: " << moduleptr->numOutPins() << endl;
-            cout << moduleptr->cellType()->pinNum() << endl;
-            cout << moduleptr->cellType() << endl;
+            // cout << moduleptr->name() << endl;
+            // cout << "outpin: " << moduleptr->numOutPins() << endl;
+            // cout << moduleptr->cellType()->pinNum() << endl;
+            // cout << moduleptr->cellType() << endl;
             
 
             if (moduleptr->isFF() && moduleptr->name() != this->_dataBase->ff(i)->name())
@@ -1149,10 +1149,10 @@ void Placement::netListGraph()
                 cout<<this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 1])->name()<<endl;
                 cout<<this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 1])->InPin(0)->net()->name()<<endl;
                 //cout << __LINE__ << endl;
-                if(PreModule == NULL)
-                {
-                    cout << "NULL ptr!!" <<endl;
-                }
+                // if(PreModule == NULL)
+                // {
+                //     cout << "NULL ptr!!" <<endl;
+                // }
                 if (PreModule->isFF())
                 {
                     //cout << __LINE__ << endl;
