@@ -2446,6 +2446,12 @@ int Placement::contour_L()
             }
         }
     }
+
+    // for(int i=0;i<_DAG_nodes.size();++i)
+    // {
+    //     if(_DAG_nodes[i]->isFF()==1)
+    //         cout<<_DAG_nodes[i]->getX()<<" "<<_DAG_nodes[i]->get_li()<<endl;
+    // }
 }
 
 int Placement::contour_R()
@@ -2463,7 +2469,7 @@ int Placement::contour_R()
     }
 
     contour_Node *start = new contour_Node("outline_L");
-    start->setMax_X(row_right_boundary);
+    start->setMax_X((-1)*row_right_boundary);
     start->setMax_height(row_top_boundary);
     start->insertNode_small(start, NULL);
 
@@ -2479,7 +2485,7 @@ int Placement::contour_R()
             int max_X = start->findmax_X(target_min, target);                       
             if(_DAG_nodes[i]->isFF() == true)
             {
-                int ri = (- _DAG_nodes[i]->getX() + _DAG_nodes[i]->getModule()->width()) - max_X + _DAG_nodes[i]->get_deltaY();  // deltaY should be 0
+                int ri = (- _DAG_nodes[i]->getX() + _DAG_nodes[i]->getModule()->width()) + max_X + _DAG_nodes[i]->get_deltaY();  // deltaY should be 0
                 _DAG_nodes[i]->set_ri(ri);
             }
             if (target->getMax_height() == _DAG_nodes[i]->getY() +_DAG_nodes[i]->getModule()->height())
@@ -2518,12 +2524,10 @@ int Placement::contour_R()
             }
         }
     }
-
     for(int i=0;i<_DAG_nodes.size();++i)
     {
         buff = (-1)*_DAG_nodes[i]->getX();
         _DAG_nodes[i]->setX(buff);
-        cout<<_DAG_nodes[i]->getX()<<endl;
     }
 }
 
@@ -2551,10 +2555,9 @@ void Placement::Displacement()
         int x = 0;
         if(_DAG_nodes[i]->isFF() == 1)
         {
-            
             if(li_yi > customCeil(mui))
             {
-                cout << "CASE 1: " << li_yi << endl;
+                // cout << "CASE 1: " << _DAG_nodes[i]->getX()<<" "<<li_yi << endl;
                 displacement = li_yi;
                 x = _DAG_nodes[i]->getX() + li_yi;
                 int y =  _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
@@ -2563,7 +2566,7 @@ void Placement::Displacement()
             }
             else if(ri_yi < customCeil(mui))
             {
-                cout << "CASE 2: " << ri_yi << endl;
+                // cout << "CASE 2: " << _DAG_nodes[i]->getX()<<" "<< ri_yi << endl;
                 displacement = ri_yi;
                 x = _DAG_nodes[i]->getX() + ri_yi;
                 int y =  _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
@@ -2571,7 +2574,7 @@ void Placement::Displacement()
             }
             else
             {
-                cout << "CASE 3: " << customCeil(mui) << endl;
+                // cout << "CASE 3: " << _DAG_nodes[i]->getX()<<" "<< customCeil(mui) << endl;
                 displacement = customCeil(mui);
                 x = _DAG_nodes[i]->getX() + customCeil(mui);
                 int y =  _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
