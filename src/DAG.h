@@ -43,7 +43,7 @@ public:
     void setLongestPath(double path) {_longestPath = path;}
     DAG_Node* getPreviousNode() const { return _previousNode; }
     void setPreviousNode(DAG_Node* prevNode) { _previousNode = prevNode; }
-     double      width;
+    double      width;
     set<int>    record;
     double FFnum = 0;
     int         get_li(){return _li;}
