@@ -1921,6 +1921,14 @@ bool compareModules(const Module *a, const Module *b)
     }
     return a->x() < b->x();
 }
+bool compareModules_2(const Module *a, const Module *b)
+{
+    if (a->y() == b->y())
+    {
+        return a->x() < b->x();
+    }
+    return a->y() < b->y();
+}
 int partition(std::vector<Module *> &modules, int low, int high)
 {
     Module *pivot = modules[high];
@@ -1928,7 +1936,7 @@ int partition(std::vector<Module *> &modules, int low, int high)
 
     for (int j = low; j < high; ++j)
     {
-        if (compareModules(modules[j], pivot))
+        if (compareModules_2(modules[j], pivot))
         {
             i++;
             std::swap(modules[i], modules[j]);
@@ -2597,4 +2605,32 @@ void Placement::Displacement()
         }
     }
     return;
+}
+
+
+bool Placement::checkwidth()
+{
+    int row_right_boundary = _dataBase->row(0)->x() + _dataBase->row(0)->numSites() * _dataBase->row(0)->width();
+    vector<Module *> modules = _dataBase->getmodule();
+    quickSort(modules, 0, modules.size() - 1);
+    int w=0;
+    int level=modules[0]->y();
+    for(int i=0;i<modules.size();++i)
+    {
+        if(level == modules[i]->y())
+        {
+            w += modules[i]->width();
+            if(w>row_right_boundary)
+                return false;
+        }
+        else
+        {
+            cout<<w<<endl;
+            level = modules[i]->y();
+            w = 0;
+            w += modules[i]->width();
+        }
+            
+    }
+    return true;
 }

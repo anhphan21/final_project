@@ -96,6 +96,7 @@ int main(int argc, char **argv)
   }
   cout << "Done merging! " << endl;
   testGraph.construct_DAG();
+  // cout<<testGraph.checkwidth()<<endl;
 
   cout << "Done DAG Graph!!!" << endl;
   // testGraph._DAG_nodes.clear();

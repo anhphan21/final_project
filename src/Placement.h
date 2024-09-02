@@ -114,6 +114,7 @@ public:
    
    DAG_NodeList _DAG_nodes;
    void Displacement();
+   bool checkwidth();
 private:
    Database *_dataBase;
    // construct graph
