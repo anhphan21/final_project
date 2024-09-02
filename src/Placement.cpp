@@ -1115,23 +1115,51 @@ void Placement::netListGraph()
             vector<int> a;
             a.push_back(this->_dataBase->ff(i)->No);
             que.push_back(make_pair(this->_dataBase->ff(i)->OutPin(j), a));
+            //cout << __LINE__ <<endl;
         }
         while (!que.empty())
         {
+            //cout << __LINE__ << endl;
             Module *moduleptr = que.front().first->module();
+            //cout << moduleptr->name() << endl;
+            //cout << "outpin: " << moduleptr->numOutPins() << endl;
+            //cout << moduleptr->cellType()->pinNum() << endl;
+            //cout << moduleptr->cellType();
+            
+
             if (moduleptr->isFF() && moduleptr->name() != this->_dataBase->ff(i)->name())
             {
-                // que.front().second.size()-1 is moduleptr BenZen
-                // que.front().second.size()-2 is prelevel Fatboy of moduleptr
+                //cout << __LINE__ << endl;
+                //cout << "Bit num: "<< moduleptr->cellType()->getnumBit() << endl;
+                for(int i = 0;i < moduleptr->totnumPins(); i++)
+                {
+                    //cout << "pins: " << i << endl;
+                }
+                // cout << "net: " << moduleptr->pin(0)->net()->name() << endl;
+                // cout << "net: " << moduleptr->pin(0) << endl;
+                // cout << "net pin : " << moduleptr->pin(0)->net()->pin(1) << endl;
+                // cout << "net: " << moduleptr->pin(1)->net()->name() << endl;
+                // cout << "net: " << moduleptr->pin(2)->net()->name() << endl;
+
+                // que.front().second.size()-1 is moduleptr
+                // que.front().second.size()-2 is prelevel of moduleptr
                 Module *PreModule = this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 2]);
+                
+                //cout << __LINE__ << endl;
+                if(PreModule == NULL)
+                {
+                    cout << "NULL ptr!!" <<endl;
+                }
                 if (PreModule->isFF())
                 {
+                    //cout << __LINE__ << endl;
                     Module *temp;
                     temp = NULL;
                     this->_dataBase->ff(i)->_outputFF.insert(make_pair(temp, moduleptr));
                 }
                 if (!PreModule->isFF())
                 {
+                    //cout << __LINE__ << endl;
                     this->_dataBase->ff(i)->_outputFF.insert(make_pair(PreModule, moduleptr));
                 }
                 que.front().second.clear();
@@ -1151,11 +1179,13 @@ void Placement::netListGraph()
             {
                 for (int z = 0; z < moduleptr->OutPin(j)->net()->numPins(); z++)
                 {
+                    //cout << __LINE__ << endl;
                     bool IO_Design = 0;
                     if (moduleptr->OutPin(j)->net()->pin(z)->module() == NULL)
                     {
                         if (this->_dataBase->IODesign.find(moduleptr->OutPin(j)->net()->pin(z)->name()) != this->_dataBase->IODesign.end())
                         {
+                            //cout << __LINE__ << endl;
                             continue;
                         }
                         else
@@ -2199,7 +2229,6 @@ void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes) {
     }
 }
 
-// 打印從起點到某個節點的最長路徑
 void Placement::printLongestPath(DAG_Node *node) {
     if (node == NULL) return;
     printLongestPath(node->getPreviousNode());
@@ -2241,7 +2270,7 @@ void Placement::cal_rhoi()
             }
             else
             {
-                cout<<"CASE3"<<endl;
+                //cout<<"CASE3"<<endl;
                 rhoi = max(rhoi,( _DAG_nodes[i]->getwstar()-_DAG_nodes[j]->getwstar() - (_DAG_nodes[i]->getX() - _DAG_nodes[j]->getX()) ));
             }
         }
@@ -2430,5 +2459,61 @@ int Placement::contour_R()
     {
         buff = (-1)*_DAG_nodes[i]->getX();
         _DAG_nodes[i]->setX(buff);
+        cout<<_DAG_nodes[i]->getX()<<endl;
     }
+}
+
+int customCeil(double num) {
+    if (num == static_cast<int>(num)) {
+        return static_cast<int>(num);
+    } else {
+        return static_cast<int>(ceil(num));
+    }
+}
+
+void Placement::Displacement()
+{
+    for(int i=0,sizetmp=_dataBase->getNumFF(); i<sizetmp; ++i)
+    {
+        _name2Module[_dataBase->ff(i)->name()] = _dataBase->ff(i);
+    }
+
+    for(int i = 0; i < _DAG_nodes.size() ;i++)
+    {
+        double mui = _DAG_nodes[i]->get_mui();
+        int li_yi =  _DAG_nodes[i]->get_li() - _DAG_nodes[i]->get_deltaY();
+        int ri_yi = _DAG_nodes[i]->get_deltaY() - _DAG_nodes[i]->get_ri();
+        int displacement = 0;
+        int x = 0;
+        if(_DAG_nodes[i]->isFF() == 1)
+        {
+            
+            if(li_yi > customCeil(mui))
+            {
+                cout << "CASE 1" << endl;
+                displacement = li_yi;
+                x = _DAG_nodes[i]->getX() + li_yi;
+                int y =  _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
+                _name2Module[_DAG_nodes[i]->getModule()->name()]->setPosition(x,y);
+                // _DAG_nodes[i]->setX(x);
+            }
+            else if(ri_yi < customCeil(mui))
+            {
+                cout << "CASE 2" << endl;
+                displacement = ri_yi;
+                x = _DAG_nodes[i]->getX() + ri_yi;
+                int y =  _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
+                _name2Module[_DAG_nodes[i]->getModule()->name()]->setPosition(x,y);
+            }
+            else
+            {
+                cout << "CASE 3: " << customCeil(mui) << endl;
+                displacement = customCeil(mui);
+                x = _DAG_nodes[i]->getX() + customCeil(mui);
+                int y =  _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
+                _name2Module[_DAG_nodes[i]->getModule()->name()]->setPosition(x,y);
+            }
+        }
+    }
+
 }

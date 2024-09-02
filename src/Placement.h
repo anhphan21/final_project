@@ -113,6 +113,7 @@ public:
    void clearmaxCliq() { _maxClique.clear(); }
    
    DAG_NodeList _DAG_nodes;
+   void Displacement();
 private:
    Database *_dataBase;
    // construct graph
@@ -126,6 +127,8 @@ private:
    map<pair<int ,int >,vector<DAG_Node *> > _Position2_DAG_Node;
    map<int , vector<DAG_Node *> > _x2_DAG_Node;
    set<set<Module *> > _maxClique;
+
+   map<string, Module* > _name2Module;
    // clang-format on
 };
 

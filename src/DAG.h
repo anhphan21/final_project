@@ -36,17 +36,18 @@ public:
     double   setrhoi(double a) {rhoi = a;}
     double   getthetai(){return thetai;}
     double   setthetai(double a) {thetai = a;}
-    int getorder() {return order;}
-    void setorder(int a){ order = a;}
+    int      getorder() {return order;}
+    void     setorder(int a){ order = a;}
     bool       isFF(){return _m->isFF();}
     double getLongestPath() const {return _longestPath;}
     void setLongestPath(double path) {_longestPath = path;}
     DAG_Node* getPreviousNode() const { return _previousNode; }
     void setPreviousNode(DAG_Node* prevNode) { _previousNode = prevNode; }
     
-    set<int> record;
+    set<int>    record;
     int         get_li(){return _li;}
     int         get_ri(){return _ri;}
+    double      get_mui() {return _mui;}
 private:
     Module      *_m;
     string      _name;
@@ -62,6 +63,7 @@ private:
     bool        _isFF;
     int         _li;
     int         _ri;
+    double      _mui = (rhoi - thetai) / 2;
     vector<pair<DAG_Node *,double > > _edge;
 
     double _longestPath;

@@ -55,8 +55,8 @@ int main(int argc, char **argv)
   testDTB.buildBestCelltype();
   Placement testGraph;
   testGraph.setDatabase(&testDTB);
-  testGraph.debankAllFF();
-  cout << "Done debank!!!" << endl;
+  //testGraph.debankAllFF();
+  //cout << "Done debank!!!" << endl;
   testGraph.netListGraph();
   cout << "Done Lily Graph!!!" << endl;
   testGraph.windows();
@@ -204,14 +204,17 @@ int main(int argc, char **argv)
   // }
   cout << "Theta_i done!" << endl;
 
-  testGraph.contour_L();
-  cout << "Done Contour_L Graph!!!" << endl;
+  // testGraph.contour_L();
+  // cout << "Done Contour_L Graph!!!" << endl;
   
   testGraph.contour_R();
   cout << "Done Contour_R Graph!!!" << endl;
 
-  // testDTB.outputTofile(argv[2]);
+  cout << "----------start cal displacement----------" << endl;
+  testGraph.Displacement();
 
-  // layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getbuffer());
+  testDTB.outputTofile(argv[2]);
+
+  layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getbuffer());
   return 0;
 }

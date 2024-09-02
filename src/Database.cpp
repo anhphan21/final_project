@@ -993,8 +993,7 @@ void Database::outputTofile(const string &filename)
         exit(1);
     }
     outFile << fixed;
-    // outFile << "CellInst " << getNumFF() << endl;
-    outFile << "CellInst " << getbuffer().size() << endl;
+    outFile << "CellInst " << getNumFF() << endl;
     // temp=============================
     string nname = _modules[_modules.size() - 1]->name();
     string letters;
