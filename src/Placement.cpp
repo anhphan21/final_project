@@ -1136,20 +1136,21 @@ void Placement::netListGraph()
             {
                 // cout << __LINE__ << endl;
                 // cout << "Bit num: "<< moduleptr->cellType()->getnumBit() << endl;
-                for (int i = 0; i < moduleptr->totnumPins(); i++)
-                {
-                    // cout << "pins: " << i << endl;
-                }
-                // cout << "net: " << moduleptr->pin(0)->net()->name() << endl;
-                // cout << "net: " << moduleptr->pin(0) << endl;
-                // cout << "net pin : " << moduleptr->pin(0)->net()->pin(1) << endl;
-                // cout << "net: " << moduleptr->pin(1)->net()->name() << endl;
-                // cout << "net: " << moduleptr->pin(2)->net()->name() << endl;
+                //  for(int i = 0;i < moduleptr->totnumPins(); i++)
+                //  {
+                //      //cout << "pins: " << i << endl;
+                //  }
+                //  cout << "net: " << moduleptr->pin(0)->net()->name() << endl;
+                //  cout << "net: " << moduleptr->pin(0) << endl;
+                //  cout << "net pin : " << moduleptr->pin(0)->net()->pin(1) << endl;
+                //  cout << "net: " << moduleptr->pin(1)->net()->name() << endl;
+                //  cout << "net: " << moduleptr->pin(2)->net()->name() << endl;
 
                 // que.front().second.size()-1 is moduleptr
                 // que.front().second.size()-2 is prelevel of moduleptr
                 Module *PreModule = this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 2]);
-
+                cout << this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 1])->name() << endl;
+                cout << this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 1])->InPin(0)->net()->name() << endl;
                 // cout << __LINE__ << endl;
                 if (PreModule == NULL)
                 {
@@ -1254,6 +1255,15 @@ void Placement::netListGraph()
 
 void Placement::debankAllFF()
 {
+    for (int i = 0; i < this->getDatabase()->getNumPins(); i++)
+    {
+
+        if (this->getDatabase()->pin(i)->module() == NULL)
+        {
+            cout << this->getDatabase()->pin(i)->name() << " ";
+        }
+    }
+    cout << endl;
     unsigned initFFnum = _dataBase->getNumFF();
     // cout << "initFFnum: " << initFFnum << endl;
     // cout << "module num " << _dataBase->getNumModules() << endl;
@@ -1262,12 +1272,22 @@ void Placement::debankAllFF()
     {
         if (tempList[i]->cellType()->numBit() > 1)
         {
-            string Dname = tempList[i]->name();
+            string Dname = _dataBase->ff(i)->name();
+            // cout << "debank" << endl;
             debankFFto1bit(Dname);
             tempList[i] = NULL;
         }
     }
-    tempList.clear();
+    cout << "start---" << endl;
+    for (int i = 0; i < this->getDatabase()->getNumPins(); i++)
+    {
+
+        if (this->getDatabase()->pin(i)->module() == NULL)
+        {
+            cout << this->getDatabase()->pin(i)->name() << " ";
+        }
+    }
+    cout << endl;
     return;
 }
 
@@ -1685,7 +1705,6 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
     cout <<maxClique.size()<<endl;
     for (set<set<Module*> >::iterator it1 = maxClique.begin(); it1 != maxClique.end(); ++it1)
     {
-        cout <<"iter"<<endl;
         for (set<set<Module*> >::iterator it2 = maxClique.begin(); it2 != maxClique.end(); ++it2)
         {
             if (it1 != it2 && isStrictSubset(*it1, *it2))
