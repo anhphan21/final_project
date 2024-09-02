@@ -1287,7 +1287,7 @@ void Placement::debankFFto1bit(string ffname)
     {
         newPos.push_back(make_pair(target->centerX(), target->centerY()));
         Module *nff = new Module();
-        if (nff == nullptr)
+        if (nff == NULL)
         {
             cerr << "Memory allocation failed" << endl;
         }
@@ -1471,7 +1471,7 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
         cout << "error: input isn't a clk" << endl;
         return maxClique;
     }
-    cout << "1" << endl;
+    // cout << "1" << endl;
     ModuleList targetFFs;
     vector<double> strip; // start pos of every part of strip
     vector<Edge> edges;   // Module, y , start x , end x
@@ -1533,7 +1533,7 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
-    cout << "2" << endl;
+    // cout << "2" << endl;
     if (strip.size() == 0 || edges.size() == 0)
     {
         edges.clear();
@@ -1553,7 +1553,7 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             // cout << edges[i + 1].ff->name() << " " << edges[i + 1].isIN << endl;
         }
     }
-    cout << "3" << endl;
+    // cout << "3" << endl;
     int counter = 0;
     // TODO: currently traverse every edge per strip, maybe a better O() way to implement
     for (size_t i = 0; i < strip.size() - 1; i++)
@@ -1574,7 +1574,7 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
                     counter++;
                     if (edges[j].isIN == false)
                     {
-                        cout << edges[j].startx << "  " << edges[j].endx << endl;
+                        // cout << edges[j].startx << "  " << edges[j].endx << endl;
                         for (size_t k = j; k < edges.size(); k++)
                         {
                             if (edges[j].y < edges[k].y)
@@ -1668,18 +1668,18 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
-    cout << "4" << endl;
+    // cout << "4" << endl;
     if (maxClique.size() == 0)
     {
         edges.clear();
         strip.clear();
         return maxClique;
     }
-    cout << "5" << endl;
+    // cout << "5" << endl;
     // TODO: remove proper subset
     // clang-format off
     vector<set<Module *> > toRemove;
-    cout <<maxClique.size()<<endl;
+    // cout <<maxClique.size()<<endl;
     for (set<set<Module*> >::iterator it1 = maxClique.begin(); it1 != maxClique.end(); ++it1)
     {
         for (set<set<Module*> >::iterator it2 = maxClique.begin(); it2 != maxClique.end(); ++it2)
@@ -1691,12 +1691,12 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
-    cout <<"6"<<endl;
+    // cout <<"6"<<endl;
     for (size_t i = 0; i < toRemove.size(); i++)
     {
         maxClique.erase(toRemove[i]);
     }
-    cout <<"8"<<endl;
+    // cout <<"8"<<endl;
     for (set<set<Module*> >::iterator it = maxClique.begin(); it != maxClique.end(); ) {
         if (it->empty()) 
         {
@@ -1708,7 +1708,7 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             ++it;
         }
     }
-    cout << "7" << endl;
+    // cout << "7" << endl;
     toRemove.clear();
     tempClique.clear();
     strip.clear();
