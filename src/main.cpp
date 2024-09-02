@@ -170,7 +170,7 @@ int main(int argc, char **argv)
   // testGraph._DAG_nodes.push_back(node5);
   // testGraph._DAG_nodes.push_back(node6);
 
-  // testGraph.calculateLongestPaths(testGraph._DAG_nodes);
+  testGraph.calculateLongestPaths(testGraph._DAG_nodes);
   
   //   for(int i=0; i< 6; i++)
   //   {
@@ -190,22 +190,22 @@ int main(int argc, char **argv)
 
   cout<<"-----------Rhoi---------------"<<endl;
   testGraph.cal_rhoi();
-  // for(int i=0; i < testGraph._DAG_nodes.size();i++)
-  // {
-  //   cout<<"node"<<i+1<<" :  "<<testGraph._DAG_nodes[i]->getrhoi()<<endl;
-  // }
+  for(int i=0; i < testGraph._DAG_nodes.size();i++)
+  {
+    cout<<"node"<<i+1<<" :  "<<testGraph._DAG_nodes[i]->getrhoi()<<endl;
+  }
   cout << "Rho_i done!" << endl;
   
   cout<<"-----------thetai---------------"<<endl;
   testGraph.cal_thetai();
-  // for(int i=0; i < testGraph._DAG_nodes.size();i++)
-  // {
-  //   cout<<"node"<<i+1<<" :  "<<testGraph._DAG_nodes[i]->getthetai()<<endl;
-  // }
+  for(int i=0; i < testGraph._DAG_nodes.size();i++)
+  {
+    cout<<"node"<<i+1<<" :  "<<testGraph._DAG_nodes[i]->getthetai()<<endl;
+  }
   cout << "Theta_i done!" << endl;
 
-  // testGraph.contour_L();
-  // cout << "Done Contour_L Graph!!!" << endl;
+  testGraph.contour_L();
+  cout << "Done Contour_L Graph!!!" << endl;
   
   testGraph.contour_R();
   cout << "Done Contour_R Graph!!!" << endl;

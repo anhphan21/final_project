@@ -2490,7 +2490,7 @@ void Placement::Displacement()
             
             if(li_yi > customCeil(mui))
             {
-                cout << "CASE 1" << endl;
+                cout << "CASE 1: " << li_yi << endl;
                 displacement = li_yi;
                 x = _DAG_nodes[i]->getX() + li_yi;
                 int y =  _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
@@ -2499,7 +2499,7 @@ void Placement::Displacement()
             }
             else if(ri_yi < customCeil(mui))
             {
-                cout << "CASE 2" << endl;
+                cout << "CASE 2: " << ri_yi << endl;
                 displacement = ri_yi;
                 x = _DAG_nodes[i]->getX() + ri_yi;
                 int y =  _name2Module[_DAG_nodes[i]->getModule()->name()]->y();
