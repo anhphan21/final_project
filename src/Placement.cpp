@@ -2256,15 +2256,7 @@ void Placement::cal_rhoi()
             }
             else if(_DAG_nodes[i]->record.find(j) == _DAG_nodes[i]->record.end() || _DAG_nodes[j]->isFF()==0)
             {
-                for (set<int>::iterator it = _DAG_nodes[i]->record.begin(); it != _DAG_nodes[i]->record.end(); ++it) {
-                     //cout<<"i= "<<i <<" j= "<<j<<endl;
-                     //cout << *it << " ";
-                    }
-
-                if(_DAG_nodes[i]->record.find(j) == _DAG_nodes[i]->record.end())
-                {
-                    //cout<<"O"<<endl;
-                }
+                
                 //cout<<"CASE2"<<endl;
                 rhoi = max(rhoi, -DBL_MAX);    
             }
@@ -2382,6 +2374,12 @@ int Placement::contour_L()
             }
         }
     }
+
+    // for(int i=0;i<_DAG_nodes.size();++i)
+    // {
+    //     if(_DAG_nodes[i]->isFF()==1)
+    //         cout<<_DAG_nodes[i]->getX()<<" "<<_DAG_nodes[i]->get_li()<<endl;
+    // }
 }
 
 int Placement::contour_R()
@@ -2399,7 +2397,7 @@ int Placement::contour_R()
     }
 
     contour_Node *start = new contour_Node("outline_L");
-    start->setMax_X(row_right_boundary);
+    start->setMax_X((-1)*row_right_boundary);
     start->setMax_height(row_top_boundary);
     start->insertNode_small(start, NULL);
 
@@ -2415,7 +2413,7 @@ int Placement::contour_R()
             int max_X = start->findmax_X(target_min, target);                       
             if(_DAG_nodes[i]->isFF() == true)
             {
-                int ri = (- _DAG_nodes[i]->getX() + _DAG_nodes[i]->getModule()->width()) - max_X + _DAG_nodes[i]->get_deltaY();  // deltaY should be 0
+                int ri = (- _DAG_nodes[i]->getX() + _DAG_nodes[i]->getModule()->width()) + max_X + _DAG_nodes[i]->get_deltaY();  // deltaY should be 0
                 _DAG_nodes[i]->set_ri(ri);
             }
             if (target->getMax_height() == _DAG_nodes[i]->getY() +_DAG_nodes[i]->getModule()->height())
@@ -2453,13 +2451,6 @@ int Placement::contour_R()
                     start->deleteNode(target_equal);
             }
         }
-    }
-
-    for(int i=0;i<_DAG_nodes.size();++i)
-    {
-        buff = (-1)*_DAG_nodes[i]->getX();
-        _DAG_nodes[i]->setX(buff);
-        cout<<_DAG_nodes[i]->getX()<<endl;
     }
 }
 

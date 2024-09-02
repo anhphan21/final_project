@@ -210,11 +210,11 @@ int main(int argc, char **argv)
   testGraph.contour_R();
   cout << "Done Contour_R Graph!!!" << endl;
 
-  cout << "----------start cal displacement----------" << endl;
-  testGraph.Displacement();
+  // cout << "----------start cal displacement----------" << endl;
+  // testGraph.Displacement();
 
-  testDTB.outputTofile(argv[2]);
+  // testDTB.outputTofile(argv[2]);
 
-  layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getbuffer());
+  // layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getbuffer());
   return 0;
 }
