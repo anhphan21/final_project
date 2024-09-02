@@ -1152,12 +1152,12 @@ void Placement::netListGraph()
                 // cout << __LINE__ << endl;
                 if (PreModule == NULL)
                 {
-                    cout << "before : " << this->_dataBase->ff(i)->name() << endl;
-                    cout << "mod : " << moduleptr->name() << endl;
-                    cout << moduleptr->currentNumPins() << endl;
-                    cout << moduleptr->InPin(0)->net()->name() << endl;
-                    cout << moduleptr->InPin(0)->net()->pin(0)->module()->name() << endl;
-                    cout << moduleptr->InPin(0)->net()->pin(1)->module()->name() << endl;
+                    // cout << "before : " << this->_dataBase->ff(i)->name() << endl;
+                    // cout << "mod : " << moduleptr->name() << endl;
+                    // cout << moduleptr->currentNumPins() << endl;
+                    // cout << moduleptr->InPin(0)->net()->name() << endl;
+                    // cout << moduleptr->InPin(0)->net()->pin(0)->module()->name() << endl;
+                    // cout << moduleptr->InPin(0)->net()->pin(1)->module()->name() << endl;
                     cout << "NULL ptr!!" << endl;
                 }
                 if (PreModule->isFF())
@@ -1259,12 +1259,13 @@ void Placement::debankAllFF()
     {
         if (tempList[i]->cellType()->numBit() > 1)
         {
-            string Dname = _dataBase->ff(i)->name();
+            string Dname = tempList[i]->name();
             // cout << "debank" << endl;
             debankFFto1bit(Dname);
             tempList[i] = NULL;
         }
     }
+    tempList.clear();
     return;
 }
 
