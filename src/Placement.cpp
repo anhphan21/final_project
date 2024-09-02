@@ -1287,7 +1287,7 @@ void Placement::debankFFto1bit(string ffname)
     {
         newPos.push_back(make_pair(target->centerX(), target->centerY()));
         Module *nff = new Module();
-        if (nff == nullptr)
+        if (nff == NULL)
         {
             cerr << "Memory allocation failed" << endl;
         }
