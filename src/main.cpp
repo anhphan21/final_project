@@ -53,13 +53,9 @@ int main(int argc, char **argv)
   testDTB.parser(argv[1]);
   cout << "Done parser!!!" << endl;
 
-  ModuleList ttt = testDTB.getmodule(); 
+  
 
-  vector<Module> mods;
-  for(int i = 0; i < ttt.size(); ++i)
-  {
-    mods.push_back(*ttt[i]);
-  }
+
   testDTB.setPositive_slack();
   cout << "Done positive slack!!!" << endl;
 
@@ -115,21 +111,55 @@ int main(int argc, char **argv)
 
   testGraph.cal_rhoi();
   cout << "Rho_i done!" << endl;
-
+  // for(int i=0; i < testGraph._DAG_nodes.size();i++)
+  // {
+  //   if(testGraph._DAG_nodes[i]->isFF() && testGraph._DAG_nodes[i]->getrhoi()>500)
+  //   {
+  //     cout<<"node"<<i<<" mName :  "<< testGraph._DAG_nodes[i]->getModule()->name()<<"  "<<testGraph._DAG_nodes[i]->getrhoi()<<" "<<testGraph._DAG_nodes[i]->isFF()<<endl;
+  //   }
+  // }
+  // for(int i=0; i < testGraph._DAG_nodes.size();i++)
+  // {
+  //   if(testGraph._DAG_nodes[i]->isFF() && testGraph._DAG_nodes[i]->getrhoi()>500)
+  //   {
+  //     cout<<"node"<<i<<" :  "<<testGraph._DAG_nodes[i]->getrhoi()<<endl;
+  //   }
+  // }
   testGraph.cal_thetai();
   cout << "Theta_i done!" << endl;
+  // for(int i=0; i < testGraph._DAG_nodes.size();i++)
+  // {
+  //   if(testGraph._DAG_nodes[i]->isFF()&& testGraph._DAG_nodes[i]->getthetai()>0 )
+  //   cout<<"node"<<i<<" mName :  "<<testGraph._DAG_nodes[i]->getModule()->name()<<"  "<<testGraph._DAG_nodes[i]->getthetai()<<" "<<testGraph._DAG_nodes[i]->isFF()<<endl;
+  // }
+  // for(int i=0; i < testGraph._DAG_nodes.size();i++)
+  // {
+  //   if(testGraph._DAG_nodes[i]->isFF() && testGraph._DAG_nodes[i]->getthetai()>500)
+  //   {
+  //     cout<<"node"<<i<<" :  "<<testGraph._DAG_nodes[i]->getthetai()<<endl;
+  //   }
+  
+  // }
 
-  testGraph.contour_L();
-  cout << "Done Contour_L Graph!!!" << endl;
+  // testGraph.contour_L();
+  // cout << "Done Contour_L Graph!!!" << endl;
 
-  testGraph.contour_R();
-  cout << "Done Contour_R Graph!!!" << endl;
+  // testGraph.contour_R();
+  // cout << "Done Contour_R Graph!!!" << endl;
 
-  cout << "----------start cal displacement----------" << endl;
-  testGraph.Displacement();
-  cout << "Done Displacement!!!" << endl;
+  // cout << "----------start cal displacement----------" << endl;
+  // testGraph.Displacement();
+  // cout << "Done Displacement!!!" << endl;
   // testDTB.outputTofile(argv[2]);
 
-  layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getmodule());
+  // ModuleList ttt = testDTB.getmodule(); 
+
+  // vector<Module> mods;
+  // for(int i = 0; i < ttt.size(); ++i)
+  // {
+  //   mods.push_back(*ttt[i]);
+  // }
+
+  // layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), mods);
   return 0;
 }
