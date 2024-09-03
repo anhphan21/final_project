@@ -1922,14 +1922,7 @@ bool compareModules(const Module *a, const Module *b)
     }
     return a->x() < b->x();
 }
-bool compareModules_2(const Module *a, const Module *b)
-{
-    if (a->y() == b->y())
-    {
-        return a->x() < b->x();
-    }
-    return a->y() < b->y();
-}
+
 int partition(std::vector<Module *> &modules, int low, int high)
 {
     Module *pivot = modules[high];
@@ -1937,7 +1930,7 @@ int partition(std::vector<Module *> &modules, int low, int high)
 
     for (int j = low; j < high; ++j)
     {
-        if (compareModules_2(modules[j], pivot))
+        if (compareModules(modules[j], pivot))
         {
             i++;
             std::swap(modules[i], modules[j]);
@@ -1956,6 +1949,44 @@ void quickSort(std::vector<Module *> &modules, int low, int high)
         quickSort(modules, pi + 1, high);
     }
 }
+
+bool compareModules_dag(const DAG_Node *a, const DAG_Node *b)
+{
+    if (a->getX() == b->getX())
+    {
+        return a->getY() < b->getY();
+    }
+    return a->getX() < b->getX();
+}
+
+int partition_dag(std::vector<DAG_Node *> &modules, int low, int high)
+{
+    DAG_Node *pivot = modules[high];
+    int i = low - 1;
+
+    for (int j = low; j < high; ++j)
+    {
+        if (compareModules_dag(modules[j], pivot))
+        {
+            i++;
+            std::swap(modules[i], modules[j]);
+        }
+    }
+    std::swap(modules[i + 1], modules[high]);
+    return i + 1;
+}
+void quickSort_dag(std::vector<DAG_Node *> &modules, int low, int high)
+{
+    if (low < high)
+    {
+        int pi = partition_dag(modules, low, high);
+
+        quickSort_dag(modules, low, pi - 1);
+        quickSort_dag(modules, pi + 1, high);
+    }
+}
+
+
 double moduleOverlap_X(Module *a, Module *b)
 {
     double L = max(a->x(), b->x());
@@ -2407,8 +2438,9 @@ int Placement::contour_L()
     int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y() + _dataBase->row(_dataBase->getNumRows() - 1)->height();
     int row_bottom_boundary = _dataBase->row(0)->y();
 
+    quickSort_dag( _DAG_nodes,0, _DAG_nodes.size()-1);
     contour_Node *start = new contour_Node("outline_L");
-    start->setMax_X(row_right_boundary);
+    start->setMax_X(row_left_boundary);
     start->setMax_height(row_top_boundary);
     start->insertNode_small(start, NULL);
 
@@ -2428,6 +2460,7 @@ int Placement::contour_L()
                 int li = max_X - _DAG_nodes[i]->getX() + _DAG_nodes[i]->get_deltaY(); // deltaY should be 0
                 _DAG_nodes[i]->set_li(li);
             }
+
             if (target->getMax_height() == _DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height())
                 start->insertNode_big(buff_con, target);
             else
@@ -2484,7 +2517,8 @@ int Placement::contour_R()
         buff = (-1) * _DAG_nodes[i]->getX();
         _DAG_nodes[i]->setX(buff);
     }
-
+    quickSort_dag( _DAG_nodes,0, _DAG_nodes.size()-1);
+    
     contour_Node *start = new contour_Node("outline_L");
     start->setMax_X((-1)*row_right_boundary);
     start->setMax_height(row_top_boundary);
@@ -2545,6 +2579,8 @@ int Placement::contour_R()
     {
         buff = (-1) * _DAG_nodes[i]->getX();
         _DAG_nodes[i]->setX(buff);
+        if(_DAG_nodes[i]->isFF())
+            cout<<_DAG_nodes[i]->get_li()+_DAG_nodes[i]->get_ri()<<endl;
     }
     return 0;
 }
@@ -2606,32 +2642,4 @@ void Placement::Displacement()
         }
     }
     return;
-}
-
-
-bool Placement::checkwidth()
-{
-    int row_right_boundary = _dataBase->row(0)->x() + _dataBase->row(0)->numSites() * _dataBase->row(0)->width();
-    vector<Module *> modules = _dataBase->getmodule();
-    quickSort(modules, 0, modules.size() - 1);
-    int w=0;
-    int level=modules[0]->y();
-    for(int i=0;i<modules.size();++i)
-    {
-        if(level == modules[i]->y())
-        {
-            w += modules[i]->width();
-            if(w>row_right_boundary)
-                return false;
-        }
-        else
-        {
-            cout<<w<<endl;
-            level = modules[i]->y();
-            w = 0;
-            w += modules[i]->width();
-        }
-            
-    }
-    return true;
 }
