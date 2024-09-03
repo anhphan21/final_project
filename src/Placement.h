@@ -80,7 +80,8 @@ public:
    void construct_DAG();
    int contour_L();
    int contour_R();
-   
+   void contourL_HY();
+   void contourR_HY();
    unsigned getmaxCliqesize(){ return _maxClique.size(); }
    // clang-format off
    set<Module*> getLargestCliqSet()
@@ -124,6 +125,7 @@ public:
       return;
    }
    void assignNeedM();
+   bool checkwidth();
 private:
    Database *_dataBase;
    // construct graph
