@@ -2983,7 +2983,7 @@ void Placement::contourR_HY()
                 double bigy = smally + _DAG_nodes[i]->getModule()->height();
                 double xx = _DAG_nodes[i]->getModule()->width();
                 double rightX = updateHcontour(smally, bigy, xx, root, true);
-                double ri = rightX - _DAG_nodes[i]->getX() + _DAG_nodes[i]->get_deltaY(); // deltaY should be 0
+                double ri = rightX + xx - _DAG_nodes[i]->getX() + _DAG_nodes[i]->get_deltaY(); // deltaY should be 0
                 _DAG_nodes[i]->set_ri(ri);
             }
             else
