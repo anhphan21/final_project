@@ -1006,6 +1006,7 @@ void Database::outputTofile(const string &filename)
             letters += nname[i];
     }
     int num = atoi(numbers.c_str());
+    
     for (size_t i = 0; i < _ffModules.size(); ++i)
     {
         num++;

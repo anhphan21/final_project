@@ -2541,7 +2541,7 @@ int Placement::contour_R()
     {
         buff = (-1) * _DAG_nodes[i]->getX();
         _DAG_nodes[i]->setX(buff);
-        cout<<_DAG_nodes[i]->getX()<<endl;
+        // cout<<_DAG_nodes[i]->getX()<<endl;
     }
     return 0;
 }
@@ -2623,7 +2623,7 @@ bool Placement::checkwidth()
         }
         else
         {
-            cout<<w<<endl;
+            // cout<<w<<endl;
             level = modules[i]->y();
             w = 0;
             w += modules[i]->width();

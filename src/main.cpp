@@ -7,7 +7,7 @@
 #include "DatabaseDef.h"
 #include "Placement.h"
 
-void layout(const string &filename, const int x, const int y, vector<Module *> module)
+void layout(const string &filename, const int x, const int y, vector<Module> &module)
 {
   // Open the output file
   ofstream fout((filename + ".las").c_str(), ios::out);
@@ -23,20 +23,23 @@ void layout(const string &filename, const int x, const int y, vector<Module *> m
   fout << "line 0 0 " << 0 << " " << y << " gray" << endl;
   fout << "line 0 " << y << " " << x << " " << y << " gray" << endl;
   fout << "line " << x << " 0 " << x << " " << y << " gray" << endl;
-
-  for (unsigned int i = 0; i < module.size(); ++i)
+  int m = module.size();
+  for (size_t i = 0; i < m; ++i)
   {
-    if (module[i]->isFF())
+    if (module[i].isFF())
     {
-      fout << "rect " << module[i]->x() << " " << module[i]->y() << " "
-           << module[i]->x() + module[i]->width() << " " << module[i]->y() + module[i]->height() << " "
-           << "gray" << " name " << module[i]->name() << endl;
+      fout << "rect " << module[i].x() << " " << module[i].y() << " "
+           << module[i].x() + module[i].width() << " " << module[i].y() + module[i].height() << " gray" << " name " << module[i].name() << "\n" ;
+          //  << "gray" << endl;
+          //  << "gray" << " name " << module[i].name() << endl;     
     }
     else
     {
-      fout << "rect " << module[i]->x() << " " << module[i]->y() << " "
-           << module[i]->x() + module[i]->width() << " " << module[i]->y() + module[i]->height() << " "
-           << "red" << " name " << module[i]->name() << endl;
+      fout << "rect " << module[i].x() << " " << module[i].y() << " "
+           << module[i].x() + module[i].width() << " " << module[i].y() + module[i].height() << " red" << " name " << module[i].name() << "\n" ;
+      // fout << "rect " << module[i]->x() << " " << module[i]->y() << " "
+      //      << module[i]->x() + module[i]->width() << " " << module[i]->y() + module[i]->height() << " "
+      //      << "red" << " name " << module[i]->name() << endl;
     }
   }
 
@@ -49,6 +52,14 @@ int main(int argc, char **argv)
   Database testDTB;
   testDTB.parser(argv[1]);
   cout << "Done parser!!!" << endl;
+
+  ModuleList ttt = testDTB.getmodule(); 
+
+  vector<Module> mods;
+  for(int i = 0; i < ttt.size(); ++i)
+  {
+    mods.push_back(*ttt[i]);
+  }
   testDTB.setPositive_slack();
   cout << "Done positive slack!!!" << endl;
 
@@ -210,9 +221,9 @@ int main(int argc, char **argv)
 
   cout << "----------start cal displacement----------" << endl;
   testGraph.Displacement();
+  cout << "----------done----------" << endl;
+  //testDTB.outputTofile(argv[2]);
 
-  testDTB.outputTofile(argv[2]);
-
-  layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getbuffer());
+  // layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getmodule());
   return 0;
 }
