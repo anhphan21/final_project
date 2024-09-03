@@ -17,13 +17,13 @@ class Placement
 public:
    Placement()
    {
-       _nodes.resize(1);
-       _nodes[0] = NULL;
-
+      _nodes.resize(1);
+      _nodes[0] = NULL;
+      _moduleNeedAss.clear();
    };
    void mainLoop();
    void constructFeasible(Module *ff);
-   
+
    void cal_rhoi();
    void cal_thetai();
    Rhombus *findInputRegion(Module *ff);
@@ -32,8 +32,8 @@ public:
    void windows();
    void constructGraph();
    void printLongestPath(DAG_Node *node);
-   void calculateLongestPaths(std::vector<DAG_Node*>& nodes);
-   void topologicalSortUtil(DAG_Node* node, std::stack<DAG_Node*>& Stack, std::vector<DAG_Node*>& visited);
+   void calculateLongestPaths(std::vector<DAG_Node *> &nodes);
+   void topologicalSortUtil(DAG_Node *node, std::stack<DAG_Node *> &Stack, std::vector<DAG_Node *> &visited);
    // clang-format off
    set<set<Module *> > calMaxClique(Net *targetNet);
    set<Module*> adjustClique(Net *targetNet , set<Module*> targetClique);
@@ -42,7 +42,6 @@ public:
    // clang-format on
    double cal_cost(Module *ff1, Module *ff2);
    double cal_total_cost();
-   
 
    NodeList findMST();
    void netListGraph();
@@ -114,6 +113,17 @@ public:
    
    DAG_NodeList _DAG_nodes;
    void Displacement();
+   // row assignment ////////
+   void DelmoduleAss(Module* mod)
+   {
+      vector<Module*>::iterator it = find(_moduleNeedAss.begin(), _moduleNeedAss.end(), mod);
+      if (it != _moduleNeedAss.end()) 
+      {
+         _moduleNeedAss.erase(it);
+      }
+      return;
+   }
+   void assignNeedM();
 private:
    Database *_dataBase;
    // construct graph
@@ -129,6 +139,8 @@ private:
    set<set<Module *> > _maxClique;
 
    map<string, Module* > _name2Module;
+   // modules needed to be assigned 
+   vector<Module*> _moduleNeedAss;
    // clang-format on
 };
 

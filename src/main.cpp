@@ -66,9 +66,7 @@ int main(int argc, char **argv)
   for (size_t j = 0; j < Cnets.size(); j++)
   {
     // clang-format off
-    cout <<"start "<<endl;
     set<set<Module *> > cliques = testGraph.calMaxClique(Cnets[j]);
-    cout <<"finish"<<endl;
     while (testGraph.getmaxCliqesize() != 0)
     {
       set<Module *> a = testGraph.getLargestCliqSet();
@@ -95,6 +93,9 @@ int main(int argc, char **argv)
     testGraph.clearmaxCliq();
   }
   cout << "Done merging! " << endl;
+  // testDTB.buildEachRowWidth();
+  // testGraph.assignNeedM();
+  cout << "done assign" << endl;
   testGraph.construct_DAG();
 
   cout << "Done DAG Graph!!!" << endl;

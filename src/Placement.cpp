@@ -20,6 +20,7 @@
 #include <stack>
 using namespace std;
 
+#define modWidThres 0.95
 #define leafthresold 0.75 // TODO: can be changed
 // #define __DBL_MAX__ 1.7976931348623158e+308 /* max value */
 struct Edges // for calMaxClique
@@ -634,6 +635,7 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
     for (size_t i = 0; i < ffsV.size(); i++)
     {
         _dataBase->delIntModule(ffsV[i]->No);
+        DelmoduleAss(ffsV[i]);
         for (size_t j = 0; j < _dataBase->getNumModules(); j++)
         {
             if (_dataBase->module(j) == ffsV[i])
@@ -661,6 +663,7 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
     feasibleRegV.clear();
     ffsV.clear();
     ffs.clear();
+    _moduleNeedAss.push_back(newMff);
     // row assignment//////////////////////////////////////////////
     double upperY, lowerY;
     double targetPosY = 0;
@@ -689,7 +692,7 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
         rowID--;
     }
 
-    // row assignment//////////////////////////////////////////////
+    // row assignment //////////////////////////////////////////////
     upperY = 0;
     lowerY = 0;
     double targetDobX = 0;
@@ -1361,9 +1364,11 @@ void Placement::debankFFto1bit(string ffname)
         // add pin into database
         _dataBase->addPin(newCLK);
     }
+    // postion //////////////////////////////////////////
     for (size_t i = 0; i < ffbit; i++)
     {
         newfflist[i]->setCenterPosition(newPos[i].first, newPos[i].second);
+        _moduleNeedAss.push_back(newfflist[i]);
     }
     double upperY, lowerY;
     double targetPosY = 0;
@@ -1472,7 +1477,6 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
         cout << "error: input isn't a clk" << endl;
         return maxClique;
     }
-    cout << "1" << endl;
     ModuleList targetFFs;
     vector<double> strip; // start pos of every part of strip
     vector<Edge> edges;   // Module, y , start x , end x
@@ -1534,7 +1538,6 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
-    cout << "2" << endl;
     if (strip.size() == 0 || edges.size() == 0)
     {
         edges.clear();
@@ -1554,7 +1557,6 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             // cout << edges[i + 1].ff->name() << " " << edges[i + 1].isIN << endl;
         }
     }
-    cout << "3" << endl;
     int counter = 0;
     // TODO: currently traverse every edge per strip, maybe a better O() way to implement
     for (size_t i = 0; i < strip.size() - 1; i++)
@@ -1575,7 +1577,6 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
                     counter++;
                     if (edges[j].isIN == false)
                     {
-                        cout << edges[j].startx << "  " << edges[j].endx << endl;
                         for (size_t k = j; k < edges.size(); k++)
                         {
                             if (edges[j].y < edges[k].y)
@@ -1669,18 +1670,15 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
-    cout << "4" << endl;
     if (maxClique.size() == 0)
     {
         edges.clear();
         strip.clear();
         return maxClique;
     }
-    cout << "5" << endl;
     // TODO: remove proper subset
     // clang-format off
     vector<set<Module *> > toRemove;
-    cout <<maxClique.size()<<endl;
     for (set<set<Module*> >::iterator it1 = maxClique.begin(); it1 != maxClique.end(); ++it1)
     {
         for (set<set<Module*> >::iterator it2 = maxClique.begin(); it2 != maxClique.end(); ++it2)
@@ -1692,12 +1690,10 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
-    cout <<"6"<<endl;
     for (size_t i = 0; i < toRemove.size(); i++)
     {
         maxClique.erase(toRemove[i]);
     }
-    cout <<"8"<<endl;
     for (set<set<Module*> >::iterator it = maxClique.begin(); it != maxClique.end(); ) {
         if (it->empty()) 
         {
@@ -1709,7 +1705,6 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             ++it;
         }
     }
-    cout << "7" << endl;
     toRemove.clear();
     tempClique.clear();
     strip.clear();
@@ -2594,4 +2589,75 @@ void Placement::Displacement()
         }
     }
     return;
+}
+// clang-format on
+void Placement::assignNeedM()
+{
+    double rowYdis = _dataBase->row(1)->y() - _dataBase->row(0)->y();
+    if (rowYdis < 0)
+    {
+        cout << "error: row isn't in increasing order" << endl;
+    }
+    unsigned maxrowID = _dataBase->getNumRows() - 1;
+    for (size_t i = 0; i < _moduleNeedAss.size(); i++)
+    {
+        while (_dataBase->row(maxrowID)->y() + _moduleNeedAss[i]->height() > _dataBase->getBoundaryTop())
+        {
+            maxrowID--;
+        }
+        double upperY, lowerY;
+        double temp = (_moduleNeedAss[i]->x() - _dataBase->row(0)->x());
+        if (temp < 0)
+        {
+            temp = 0;
+        }
+        int idx = round(temp / _dataBase->row(0)->width());
+        if (idx < 0)
+        {
+            cout << "error: idx < 0" << endl;
+        }
+        while (idx > _dataBase->row(0)->numSites() - 1)
+        {
+            idx--;
+        }
+        int idy = round((_moduleNeedAss[i]->y() - _dataBase->row(0)->y()) / rowYdis);
+        if (idy < 0)
+        {
+            cout << "error: idy < 0" << endl;
+        }
+
+        // boundary condition
+        int idTop = idy;
+        int idBot = idy;
+        while (idy > maxrowID)
+        {
+            idy--;
+        }
+        while (_dataBase->row(idy)->getModWid() + _moduleNeedAss[i]->cellType()->getWidth() >
+               (_dataBase->getBoundaryRight() - _dataBase->getBoundaryLeft()) * modWidThres)
+        {
+            if (idTop < maxrowID)
+            {
+                idTop++;
+            }
+            if (idBot > 0)
+            {
+                idBot--;
+            }
+            if (_dataBase->row(idTop)->getModWid() + _moduleNeedAss[i]->cellType()->getWidth() <=
+                (_dataBase->getBoundaryRight() - _dataBase->getBoundaryLeft()) * modWidThres)
+            {
+                idy = idTop;
+                break;
+            }
+            if (_dataBase->row(idBot)->getModWid() + _moduleNeedAss[i]->cellType()->getWidth() <=
+                (_dataBase->getBoundaryRight() - _dataBase->getBoundaryLeft()) * modWidThres)
+            {
+                idy = idBot;
+                break;
+            }
+        }
+        _moduleNeedAss[i]->setPosition(_dataBase->row(idy)->x() + idx * _dataBase->row(idy)->width(), _dataBase->row(idy)->y());
+        _dataBase->row(idy)->incModWid(_moduleNeedAss[i]->cellType()->getWidth());
+    }
 }
