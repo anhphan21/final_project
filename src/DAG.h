@@ -25,8 +25,8 @@ public:
     vector<pair<DAG_Node *,double > > getEdge(){return _edge;}
     Module *getModule(){return _m;}
     string  getName(){return _name;}
-    double     getX(){return _x;}
-    double     getY(){return _y;}
+    double     getX()const{return _x;}
+    double     getY()const{return _y;}
     double     get_deltaY(){return _deltaY;}
     void     setwstar (double a) {wstar= a;}
     double   getwstar ()         {return wstar;}
@@ -136,6 +136,7 @@ public:
         return max;
     }
 
+    
     contour_Node *search_big(int y)
     {
         contour_Node *curr = _head;
