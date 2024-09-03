@@ -2491,6 +2491,14 @@ int Placement::contour_L()
                     start->deleteNode(target_equal);
             }
         }
+       
+    }
+     contour_Node* ptr = start->gethead();
+    while(ptr != ptr->gettail())
+    { 
+        cout<<" : "<<ptr->getMax_X()<<" "<<ptr->getMax_height()<<endl;
+        ptr = ptr->getnext();
+
     }
 
     // for(int i=0;i<_DAG_nodes.size();++i)
@@ -2577,6 +2585,13 @@ int Placement::contour_R()
         _DAG_nodes[i]->setX(buff);
         if(_DAG_nodes[i]->isFF())
             cout<<_DAG_nodes[i]->get_li()+_DAG_nodes[i]->get_ri()<<endl;
+    }
+     contour_Node* ptr = start->gethead();
+    while(ptr != ptr->gettail())
+    { 
+        cout<<" : "<<ptr->getMax_X()<<" "<<ptr->getMax_height()<<endl;
+        ptr = ptr->getnext();
+
     }
     return 0;
 }

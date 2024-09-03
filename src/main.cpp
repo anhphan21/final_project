@@ -106,11 +106,11 @@ int main(int argc, char **argv)
   testGraph.construct_DAG();
   cout << "Done DAG Graph!!!" << endl;
 
-  testGraph.calculateLongestPaths(testGraph._DAG_nodes);
-  cout << "Done LongestPath" << endl;
+  // testGraph.calculateLongestPaths(testGraph._DAG_nodes);
+  // cout << "Done LongestPath" << endl;
 
-  testGraph.cal_rhoi();
-  cout << "Rho_i done!" << endl;
+  // testGraph.cal_rhoi();
+  // cout << "Rho_i done!" << endl;
   // for(int i=0; i < testGraph._DAG_nodes.size();i++)
   // {
   //   if(testGraph._DAG_nodes[i]->isFF() && testGraph._DAG_nodes[i]->getrhoi()>500)
@@ -125,8 +125,8 @@ int main(int argc, char **argv)
   //     cout<<"node"<<i<<" :  "<<testGraph._DAG_nodes[i]->getrhoi()<<endl;
   //   }
   // }
-  testGraph.cal_thetai();
-  cout << "Theta_i done!" << endl;
+  // testGraph.cal_thetai();
+  // cout << "Theta_i done!" << endl;
   // for(int i=0; i < testGraph._DAG_nodes.size();i++)
   // {
   //   if(testGraph._DAG_nodes[i]->isFF()&& testGraph._DAG_nodes[i]->getthetai()>0 )
@@ -141,11 +141,45 @@ int main(int argc, char **argv)
   
   // }
 
-  // testGraph.contour_L();
-  // cout << "Done Contour_L Graph!!!" << endl;
 
-  // testGraph.contour_R();
-  // cout << "Done Contour_R Graph!!!" << endl;
+  testGraph._DAG_nodes.clear();
+  DAG_Node* node1 = new DAG_Node();
+  DAG_Node* node2 = new DAG_Node();
+  DAG_Node* node3 = new DAG_Node();
+  testGraph.getDatabase()->getmodule()[1]->setPosition(5,0);
+  testGraph.getDatabase()->getmodule()[1]->cellType()->setHeight(5);
+  testGraph.getDatabase()->getmodule()[1]->cellType()->setWidth(5);
+  node1->setModule(testGraph.getDatabase()->getmodule()[1]);
+  node1->setwidth(5);
+  node1->setX(5);
+  node1->setY(0);
+
+testGraph.getDatabase()->getmodule()[2]->setPosition(11,100);
+  testGraph.getDatabase()->getmodule()[2]->cellType()->setHeight(5);
+  testGraph.getDatabase()->getmodule()[2]->cellType()->setWidth(5);
+  node2->setModule(testGraph.getDatabase()->getmodule()[2]);
+  node2->setwidth(5);
+  node2->setX(11);
+  node2->setY(100);
+
+testGraph.getDatabase()->getmodule()[6]->setPosition(16,100);
+  testGraph.getDatabase()->getmodule()[6]->cellType()->setHeight(5);
+  testGraph.getDatabase()->getmodule()[6]->cellType()->setWidth(5);
+  node3->setModule(testGraph.getDatabase()->getmodule()[6]);
+  node3->setwidth(5);
+  node3->setX(16);
+  node3->setY(100);
+
+   testGraph._DAG_nodes.push_back(node2);
+   testGraph._DAG_nodes.push_back(node1);
+   testGraph._DAG_nodes.push_back(node3);
+
+  testGraph.contour_L();
+  cout << "Done Contour_L Graph!!!" << endl;
+
+  testGraph.contour_R();
+  cout << "Done Contour_R Graph!!!" << endl;
+
 
   // cout << "----------start cal displacement----------" << endl;
   // testGraph.Displacement();
