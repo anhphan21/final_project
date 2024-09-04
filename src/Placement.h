@@ -80,8 +80,6 @@ public:
    unsigned getNum_DAG_Node() { return _DAG_nodes.size(); }
    void construct_DAG_L();
    void construct_DAG_R();
-   int contour_L();
-   int contour_R();
    
    unsigned getmaxCliqesize(){ return _maxClique.size(); }
    // clang-format off

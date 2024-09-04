@@ -111,12 +111,6 @@ int main(int argc, char **argv)
   testGraph.cal_thetai();
   cout << "Theta_i done!" << endl;
 
-  // testGraph.contour_L();
-  // cout << "Done Contour_L Graph!!!" << endl;
-
-  // testGraph.contour_R();
-  // cout << "Done Contour_R Graph!!!" << endl;
-
   cout << "----------start cal displacement----------" << endl;
   testGraph.Displacement();
   cout << "Done Displacement!!!" << endl;
