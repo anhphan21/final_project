@@ -15,6 +15,7 @@ public:
     void    setModule(Module *m){_m = m;}
     void    setName(string n){_name = n;}
     void    addEdge(DAG_Node *node, double weight){_edge.push_back({node, weight});}
+    void    addEdge_r(DAG_Node *node, double weight){_edge_r.push_back({node, weight});}
     void    setX(double x){_x = x;}
     void    setY(double y){_y = y;}
     void    set_deltaY(double y){_deltaY = y;}
@@ -23,6 +24,7 @@ public:
     int     set_ri(int ri){_ri = ri;}
 
     vector<pair<DAG_Node *,double > > getEdge(){return _edge;}
+    vector<pair<DAG_Node *,double > > getEdge_r(){return _edge_r;}
     Module *getModule(){return _m;}
     string  getName(){return _name;}
     double     getX()const{return _x;}
@@ -67,6 +69,7 @@ private:
     int         _ri;
 
     vector<pair<DAG_Node *,double > > _edge;
+    vector<pair<DAG_Node *,double > > _edge_r;
 
     double _longestPath;
     DAG_Node* _previousNode;

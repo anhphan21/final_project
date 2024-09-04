@@ -99,11 +99,15 @@ int main(int argc, char **argv)
   testGraph.construct_DAG_L();
   cout << "Done DAG_L Graph!!!" << endl;
 
-  testGraph.construct_DAG_R();
-  cout << "Done DAG_R Graph!!!" << endl;
+  // testGraph.construct_DAG_R();
+  // cout << "Done DAG_R Graph!!!" << endl;
 
-  testGraph.calculateLongestPaths(testGraph._DAG_nodes);
+  testGraph.calculateLongestPaths_L(testGraph._DAG_nodes);
   cout << "Done LongestPath" << endl;
+
+  
+  testGraph.calculateLongestPaths_R(testGraph._DAG_nodes);
+  cout << "Done LongestPath R" << endl;
 
   testGraph.cal_rhoi();
   cout << "Rho_i done!" << endl;

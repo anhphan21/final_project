@@ -2132,6 +2132,7 @@ void Placement::construct_DAG_L()
                     if (isDuplicate(L->getEdge(), {it->second[k], weight}) == 0)
                     {
                         L->addEdge(it->second[k], weight);
+                        it->second[k]->addEdge_r(L, weight);
                     }
                     is_find = true;
                     break;
@@ -2177,6 +2178,7 @@ void Placement::construct_DAG_L()
                             if (isDuplicate(_DAG_nodes[i]->getEdge(), {it->second[k], weight}) == 0)
                             {
                                 _DAG_nodes[i]->addEdge(it->second[k], weight);
+                                it->second[k]->addEdge_r(_DAG_nodes[i], weight);
                             }
                             is_find = true;
                             break;
@@ -2196,6 +2198,7 @@ void Placement::construct_DAG_L()
                     {
                         double weight = _DAG_nodes[i]->getX() + _DAG_nodes[i]->getModule()->width() - R->getX();
                         _DAG_nodes[i]->addEdge(R, weight);
+                        R->addEdge_r(_DAG_nodes[i], weight);
                         is_find = true;
                     }
                     --curr_level;
@@ -2206,7 +2209,7 @@ void Placement::construct_DAG_L()
         { // gate
             double weight = (-1)*_DAG_nodes[i]->getModule()->width();
             _DAG_nodes[i]->addEdge(_DAG_nodes[i + 1], weight); // L -> R
-
+            _DAG_nodes[i+1]->addEdge_r(_DAG_nodes[i], weight); // L -> R
             int curr_level = _DAG_nodes[i]->getY() / RowHeight;
             int i_total_level = (_DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height()) / RowHeight;
             if ((int)_DAG_nodes[i]->getModule()->height() % (int)RowHeight != 0)
@@ -2225,6 +2228,7 @@ void Placement::construct_DAG_L()
                             if (isDuplicate(_DAG_nodes[i]->getEdge(), {it->second[k], weight}) == 0)
                             {
                                 _DAG_nodes[i + 1]->addEdge(it->second[k], weight); // R連接
+                                it->second[k]->addEdge_r(_DAG_nodes[i + 1], weight); // R連接
                             }
                             is_find = true;
                             break;
@@ -2243,6 +2247,7 @@ void Placement::construct_DAG_L()
                     {
                         double weight = _DAG_nodes[i]->getX() + _DAG_nodes[i]->getModule()->width() - R->getX();
                         _DAG_nodes[i + 1]->addEdge(R, weight); // R連接
+                        R->addEdge_r(_DAG_nodes[i + 1], weight); // R連接
                         is_find = true;
                     }
                     --curr_level;
@@ -2465,7 +2470,7 @@ void Placement::construct_DAG_R()
 
 }
 // clang-format off
-void Placement::topologicalSortUtil(DAG_Node *node, stack<DAG_Node *> &Stack, vector<DAG_Node *> &visited)
+void Placement::topologicalSortUtil_L(DAG_Node *node, stack<DAG_Node *> &Stack, vector<DAG_Node *> &visited)
 {
     visited.push_back(node);
 
@@ -2475,7 +2480,7 @@ void Placement::topologicalSortUtil(DAG_Node *node, stack<DAG_Node *> &Stack, ve
         DAG_Node *adjNode = it->first;
         if (find(visited.begin(), visited.end(), adjNode) == visited.end())
         {
-            topologicalSortUtil(adjNode, Stack, visited);
+            topologicalSortUtil_L(adjNode, Stack, visited);
         }
     }
 
@@ -2483,7 +2488,7 @@ void Placement::topologicalSortUtil(DAG_Node *node, stack<DAG_Node *> &Stack, ve
 }
 
 // 計算 DAG 中每個節點的最長路徑
-void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes)
+void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
 {
     stack<DAG_Node *> Stack;
     vector<DAG_Node *> visited;
@@ -2511,7 +2516,7 @@ void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes)
         DAG_Node *node = *it;
         if (find(visited.begin(), visited.end(), node) == visited.end())
         {
-            topologicalSortUtil(node, Stack, visited);
+            topologicalSortUtil_L(node, Stack, visited);
         }
     }
 
@@ -2527,6 +2532,91 @@ void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes)
         }
 
        vector<pair<DAG_Node *, double> > edges = node->getEdge();
+        for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) {
+        DAG_Node *adjNode = it->first;
+        double weight = it->second;
+        if (node->getLongestPath() + weight > adjNode->getLongestPath()) {
+            if(node->isFF()==1)
+            {
+                adjNode->FFnum= (node->FFnum+1);
+                adjNode->setwstar(node->getwidth()+node->getwstar());
+            }
+            else
+            {
+                adjNode->FFnum= (node->FFnum);
+                adjNode->setwstar(node->getwstar());
+            }
+            adjNode->setLongestPath(node->getLongestPath() + weight);
+            adjNode->setPreviousNode(node);  
+            adjNode->record = node->record;
+            adjNode->record.insert(node->getorder());
+        }
+    }
+
+    }
+}
+void Placement::topologicalSortUtil_R(DAG_Node *node, stack<DAG_Node *> &Stack, vector<DAG_Node *> &visited)
+{
+    visited.push_back(node);
+
+    vector<pair<DAG_Node *, double> > edges = node->getEdge_r();
+    for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it)
+    {
+        DAG_Node *adjNode = it->first;
+        if (find(visited.begin(), visited.end(), adjNode) == visited.end())
+        {
+            topologicalSortUtil_R(adjNode, Stack, visited);
+        }
+    }
+
+    Stack.push(node);
+}
+
+// 計算 DAG 中每個節點的最長路徑
+void Placement::calculateLongestPaths_R(vector<DAG_Node *> &nodes)
+{
+    stack<DAG_Node *> Stack;
+    vector<DAG_Node *> visited;
+
+    for (int i = 0; i < nodes.size(); i++)
+    {
+        nodes[i]->setPreviousNode(NULL);
+        //---------------------------
+        //---------------------------
+        // if(nodes[i]->getModule()->isFF())
+        // {
+        //      nodes[i]->setwidth(5);     
+        // }
+        // else
+        // {
+        //      nodes[i]->setwidth(9000000000);
+        // }
+        nodes[i]->setwidth(nodes[i]->getModule()->width());
+        nodes[i]->setwstar(0);
+        nodes[i]->setorder(i);
+    }
+    // 進行拓撲排序
+    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+    {
+        DAG_Node *node = *it;
+        if (find(visited.begin(), visited.end(), node) == visited.end())
+        {
+            topologicalSortUtil_R(node, Stack, visited);
+        }
+    }
+
+    // 動態規劃計算最長路徑
+    while (!Stack.empty())
+    {
+        DAG_Node *node = Stack.top();
+        Stack.pop();
+
+        if (node->getLongestPath() == -DBL_MAX)
+        {
+            node->setLongestPath(0);
+        }
+
+       vector<pair<DAG_Node *, double> > edges = node->getEdge_r();
         for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) {
         DAG_Node *adjNode = it->first;
         double weight = it->second;
