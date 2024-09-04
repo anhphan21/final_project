@@ -20,6 +20,7 @@
 #include <stack>
 using namespace std;
 
+#define modWidThres 1
 #define leafthresold 0.75 // TODO: can be changed
 // #define __DBL_MAX__ 1.7976931348623158e+308 /* max value */
 struct Edges // for calMaxClique
@@ -634,6 +635,7 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
     for (size_t i = 0; i < ffsV.size(); i++)
     {
         _dataBase->delIntModule(ffsV[i]->No);
+        DelmoduleAss(ffsV[i]);
         for (size_t j = 0; j < _dataBase->getNumModules(); j++)
         {
             if (_dataBase->module(j) == ffsV[i])
@@ -661,55 +663,56 @@ void Placement::mergeMulti1bitFF(set<Module *> ffs)
     feasibleRegV.clear();
     ffsV.clear();
     ffs.clear();
+    _moduleNeedAss.push_back(newMff);
     // row assignment//////////////////////////////////////////////
-    double upperY, lowerY;
-    double targetPosY = 0;
-    unsigned rowID = 0;
-    for (size_t i = 0; i < _dataBase->getNumRows() - 1; i++)
-    {
-        lowerY = _dataBase->row(i)->y();
-        upperY = _dataBase->row(i + 1)->y();
-        if (newMff->y() >= lowerY && newMff->y() < upperY)
-        {
-            rowID = i;
-            break;
-        }
-    }
-    if ((newMff->y() - lowerY) > (upperY - newMff->y()))
-    {
-        targetPosY = upperY;
-        rowID++;
-    }
-    else
-    {
-        targetPosY = lowerY;
-    }
-    while (_dataBase->row(rowID)->y() + newMff->height() > _dataBase->getBoundaryTop())
-    {
-        rowID--;
-    }
+    // double upperY, lowerY;
+    // double targetPosY = 0;
+    // unsigned rowID = 0;
+    // for (size_t i = 0; i < _dataBase->getNumRows() - 1; i++)
+    // {
+    //     lowerY = _dataBase->row(i)->y();
+    //     upperY = _dataBase->row(i + 1)->y();
+    //     if (newMff->y() >= lowerY && newMff->y() < upperY)
+    //     {
+    //         rowID = i;
+    //         break;
+    //     }
+    // }
+    // if ((newMff->y() - lowerY) > (upperY - newMff->y()))
+    // {
+    //     targetPosY = upperY;
+    //     rowID++;
+    // }
+    // else
+    // {
+    //     targetPosY = lowerY;
+    // }
+    // while (_dataBase->row(rowID)->y() + newMff->height() > _dataBase->getBoundaryTop())
+    // {
+    //     rowID--;
+    // }
 
-    // row assignment//////////////////////////////////////////////
-    upperY = 0;
-    lowerY = 0;
-    double targetDobX = 0;
-    unsigned targetPosX = 0;
-    if (newMff->x() < _dataBase->row(rowID)->x())
-    {
-        newMff->setPosition(_dataBase->row(rowID)->x(), targetPosY);
-    }
-    else
-    {
-        targetDobX = (newMff->x() - _dataBase->row(rowID)->x()) / _dataBase->row(rowID)->width();
-        targetPosX = static_cast<unsigned>(round(targetDobX));
-        newMff->setPosition(_dataBase->row(rowID)->x() + targetPosX * _dataBase->row(rowID)->width(), targetPosY);
-    }
-    // check boundary
-    while (newMff->x() + newMff->width() > _dataBase->getBoundaryRight())
-    {
-        targetPosX--;
-        newMff->setPosition(_dataBase->row(rowID)->x() + targetPosX * _dataBase->row(rowID)->width(), targetPosY);
-    }
+    // row assignment //////////////////////////////////////////////
+    // upperY = 0;
+    // lowerY = 0;
+    // double targetDobX = 0;
+    // unsigned targetPosX = 0;
+    // if (newMff->x() < _dataBase->row(rowID)->x())
+    // {
+    //     newMff->setPosition(_dataBase->row(rowID)->x(), targetPosY);
+    // }
+    // else
+    // {
+    //     targetDobX = (newMff->x() - _dataBase->row(rowID)->x()) / _dataBase->row(rowID)->width();
+    //     targetPosX = static_cast<unsigned>(round(targetDobX));
+    //     newMff->setPosition(_dataBase->row(rowID)->x() + targetPosX * _dataBase->row(rowID)->width(), targetPosY);
+    // }
+    // // check boundary
+    // while (newMff->x() + newMff->width() > _dataBase->getBoundaryRight())
+    // {
+    //     targetPosX--;
+    //     newMff->setPosition(_dataBase->row(rowID)->x() + targetPosX * _dataBase->row(rowID)->width(), targetPosY);
+    // }
     return;
 }
 void Placement::setNodesize(unsigned size)
@@ -1125,12 +1128,12 @@ void Placement::netListGraph()
         }
         while (!que.empty())
         {
-            // cout << __LINE__ << endl;
+            // // cout << __LINE__ << endl;
             Module *moduleptr = que.front().first->module();
-            // cout << moduleptr->name() << endl;
-            // cout << "outpin: " << moduleptr->numOutPins() << endl;
-            // cout << moduleptr->cellType()->pinNum() << endl;
-            // cout << moduleptr->cellType();
+            // // cout << moduleptr->name() << endl;
+            // // cout << "outpin: " << moduleptr->numOutPins() << endl;
+            // // cout << moduleptr->cellType()->pinNum() << endl;
+            // // cout << moduleptr->cellType();
 
             if (moduleptr->isFF() && moduleptr->name() != this->_dataBase->ff(i)->name())
             {
@@ -1149,17 +1152,13 @@ void Placement::netListGraph()
                 // que.front().second.size()-1 is moduleptr
                 // que.front().second.size()-2 is prelevel of moduleptr
                 Module *PreModule = this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 2]);
+                cout << this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 1])->name() << endl;
+                cout << this->getDatabase()->getIntModule(que.front().second[que.front().second.size() - 1])->InPin(0)->net()->name() << endl;
                 // cout << __LINE__ << endl;
-                if (PreModule == NULL)
-                {
-                    // cout << "before : " << this->_dataBase->ff(i)->name() << endl;
-                    // cout << "mod : " << moduleptr->name() << endl;
-                    // cout << moduleptr->currentNumPins() << endl;
-                    // cout << moduleptr->InPin(0)->net()->name() << endl;
-                    // cout << moduleptr->InPin(0)->net()->pin(0)->module()->name() << endl;
-                    // cout << moduleptr->InPin(0)->net()->pin(1)->module()->name() << endl;
-                    cout << "NULL ptr!!" << endl;
-                }
+                //  if(PreModule == NULL)
+                //  {
+                //      cout << "NULL ptr!!" <<endl;
+                //  }
                 if (PreModule->isFF())
                 {
                     // cout << __LINE__ << endl;
@@ -1260,7 +1259,6 @@ void Placement::debankAllFF()
         if (tempList[i]->cellType()->numBit() > 1)
         {
             string Dname = tempList[i]->name();
-            // cout << "debank" << endl;
             debankFFto1bit(Dname);
             tempList[i] = NULL;
         }
@@ -1310,7 +1308,6 @@ void Placement::debankFFto1bit(string ffname)
         pinName = "Q";
         newfflist[i]->OutPin(0)->setPinName(pinName);
         newfflist[i]->OutPin(0)->setModulePtr(newfflist[i]);
-        // cout << "num out pins " << newfflist[i]->numOutPins() << endl;
     }
     // naming =================================================================
     string nname = _dataBase->module(_dataBase->getNumModules() - 1)->name();
@@ -1361,61 +1358,63 @@ void Placement::debankFFto1bit(string ffname)
         // add pin into database
         _dataBase->addPin(newCLK);
     }
+    // postion //////////////////////////////////////////
     for (size_t i = 0; i < ffbit; i++)
     {
         newfflist[i]->setCenterPosition(newPos[i].first, newPos[i].second);
+        _moduleNeedAss.push_back(newfflist[i]);
     }
-    double upperY, lowerY;
-    double targetPosY = 0;
-    unsigned rowID = 0;
-    for (size_t i = 0; i < _dataBase->getNumRows() - 1; i++)
-    {
-        lowerY = _dataBase->row(i)->y();
-        upperY = _dataBase->row(i + 1)->y();
-        if (newfflist[0]->y() >= lowerY && newfflist[0]->y() < upperY)
-        {
-            rowID = i;
-            break;
-        }
-    }
-    if ((newfflist[0]->y() - lowerY) > (upperY - newfflist[0]->y()))
-    {
-        targetPosY = upperY;
-        rowID++;
-    }
-    else
-    {
-        targetPosY = lowerY;
-    }
-    while (_dataBase->row(rowID)->y() + newfflist[0]->height() > _dataBase->getBoundaryTop())
-    {
-        rowID--;
-    }
-    upperY = 0;
-    lowerY = 0;
-    double targetDobX = 0;
-    unsigned targetPosX = 0;
-    if (newfflist[0]->x() < _dataBase->row(rowID)->x())
-    {
-        for (size_t i = 0; i < newfflist.size(); i++)
-        {
-            newfflist[i]->setPosition(_dataBase->row(rowID)->x(), targetPosY);
-        }
-    }
-    else
-    {
-        targetDobX = (newfflist[0]->x() - _dataBase->row(rowID)->x()) / _dataBase->row(rowID)->width();
-        targetPosX = static_cast<unsigned>(round(targetDobX));
-        for (size_t i = 0; i < newfflist.size(); i++)
-        {
-            newfflist[0]->setPosition(_dataBase->row(rowID)->x() + targetPosX * _dataBase->row(rowID)->width(), targetPosY);
-        }
-    }
-    while (newfflist[0]->x() + newfflist[0]->width() > _dataBase->getBoundaryRight())
-    {
-        targetPosX--;
-        newfflist[0]->setPosition(_dataBase->row(rowID)->x() + targetPosX * _dataBase->row(rowID)->width(), targetPosY);
-    }
+    // double upperY, lowerY;
+    // double targetPosY = 0;
+    // unsigned rowID = 0;
+    // for (size_t i = 0; i < _dataBase->getNumRows() - 1; i++)
+    // {
+    //     lowerY = _dataBase->row(i)->y();
+    //     upperY = _dataBase->row(i + 1)->y();
+    //     if (newfflist[0]->y() >= lowerY && newfflist[0]->y() < upperY)
+    //     {
+    //         rowID = i;
+    //         break;
+    //     }
+    // }
+    // if ((newfflist[0]->y() - lowerY) > (upperY - newfflist[0]->y()))
+    // {
+    //     targetPosY = upperY;
+    //     rowID++;
+    // }
+    // else
+    // {
+    //     targetPosY = lowerY;
+    // }
+    // while (_dataBase->row(rowID)->y() + newfflist[0]->height() > _dataBase->getBoundaryTop())
+    // {
+    //     rowID--;
+    // }
+    // upperY = 0;
+    // lowerY = 0;
+    // double targetDobX = 0;
+    // unsigned targetPosX = 0;
+    // if (newfflist[0]->x() < _dataBase->row(rowID)->x())
+    // {
+    //     for (size_t i = 0; i < newfflist.size(); i++)
+    //     {
+    //         newfflist[i]->setPosition(_dataBase->row(rowID)->x(), targetPosY);
+    //     }
+    // }
+    // else
+    // {
+    //     targetDobX = (newfflist[0]->x() - _dataBase->row(rowID)->x()) / _dataBase->row(rowID)->width();
+    //     targetPosX = static_cast<unsigned>(round(targetDobX));
+    //     for (size_t i = 0; i < newfflist.size(); i++)
+    //     {
+    //         newfflist[0]->setPosition(_dataBase->row(rowID)->x() + targetPosX * _dataBase->row(rowID)->width(), targetPosY);
+    //     }
+    // }
+    // while (newfflist[0]->x() + newfflist[0]->width() > _dataBase->getBoundaryRight())
+    // {
+    //     targetPosX--;
+    //     newfflist[0]->setPosition(_dataBase->row(rowID)->x() + targetPosX * _dataBase->row(rowID)->width(), targetPosY);
+    // }
     ////////////////////////////////////////////////
     for (size_t i = 0; i < _dataBase->getNumModules(); i++)
     {
@@ -1472,7 +1471,6 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
         cout << "error: input isn't a clk" << endl;
         return maxClique;
     }
-    // cout << "1" << endl;
     ModuleList targetFFs;
     vector<double> strip; // start pos of every part of strip
     vector<Edge> edges;   // Module, y , start x , end x
@@ -1534,7 +1532,6 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
-    // cout << "2" << endl;
     if (strip.size() == 0 || edges.size() == 0)
     {
         edges.clear();
@@ -1554,7 +1551,6 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             // cout << edges[i + 1].ff->name() << " " << edges[i + 1].isIN << endl;
         }
     }
-    // cout << "3" << endl;
     int counter = 0;
     // TODO: currently traverse every edge per strip, maybe a better O() way to implement
     for (size_t i = 0; i < strip.size() - 1; i++)
@@ -1575,7 +1571,6 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
                     counter++;
                     if (edges[j].isIN == false)
                     {
-                        // cout << edges[j].startx << "  " << edges[j].endx << endl;
                         for (size_t k = j; k < edges.size(); k++)
                         {
                             if (edges[j].y < edges[k].y)
@@ -1669,18 +1664,15 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
-    // cout << "4" << endl;
     if (maxClique.size() == 0)
     {
         edges.clear();
         strip.clear();
         return maxClique;
     }
-    // cout << "5" << endl;
     // TODO: remove proper subset
     // clang-format off
     vector<set<Module *> > toRemove;
-    // cout <<maxClique.size()<<endl;
     for (set<set<Module*> >::iterator it1 = maxClique.begin(); it1 != maxClique.end(); ++it1)
     {
         for (set<set<Module*> >::iterator it2 = maxClique.begin(); it2 != maxClique.end(); ++it2)
@@ -1692,12 +1684,10 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             }
         }
     }
-    // cout <<"6"<<endl;
     for (size_t i = 0; i < toRemove.size(); i++)
     {
         maxClique.erase(toRemove[i]);
     }
-    // cout <<"8"<<endl;
     for (set<set<Module*> >::iterator it = maxClique.begin(); it != maxClique.end(); ) {
         if (it->empty()) 
         {
@@ -1709,7 +1699,6 @@ set<set<Module *> > Placement::calMaxClique(Net * targetNet)
             ++it;
         }
     }
-    // cout << "7" << endl;
     toRemove.clear();
     tempClique.clear();
     strip.clear();
@@ -2027,6 +2016,11 @@ void quickSort_dag(std::vector<DAG_Node *> &modules, int low, int high)
 double moduleOverlap_X(Module *i, Module *j)
 {
     return (i->width()-(j->x() - i->x()));
+    return (i->width()-(j->x() - i->x()));
+}
+double moduleOverlap_X_r(Module *i, Module *j)
+{
+    return (j->width()-(i->x() - j->x()));
 }
 double moduleOverlap_X_r(Module *i, Module *j)
 {
@@ -2483,7 +2477,10 @@ void Placement::topologicalSortUtil_L(DAG_Node *node, stack<DAG_Node *> &Stack, 
             topologicalSortUtil_L(adjNode, Stack, visited);
         }
     }
-
+    if(node==NULL)
+    {
+        cout<<"YAHOO"<<endl;
+    }
     Stack.push(node);
 }
 
@@ -2509,6 +2506,7 @@ void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
         nodes[i]->setwidth(nodes[i]->getModule()->width());
         nodes[i]->setwstar(0);
         nodes[i]->setorder(i);
+        nodes[i]->setPreviousGate(NULL);
     }
     // 進行拓撲排序
     for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
@@ -2535,14 +2533,16 @@ void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
         for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) {
         DAG_Node *adjNode = it->first;
         double weight = it->second;
-        if (node->getLongestPath() + weight > adjNode->getLongestPath()) {
+
             if(node->isFF()==1)
             {
+                adjNode->setPreviousGate(node->getPreviousGate());
                 adjNode->FFnum= (node->FFnum+1);
                 adjNode->setwstar(node->getwidth()+node->getwstar());
             }
             else
             {
+                adjNode->setPreviousGate(node);
                 adjNode->FFnum= (node->FFnum);
                 adjNode->setwstar(node->getwstar());
             }
@@ -2550,16 +2550,42 @@ void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
             adjNode->setPreviousNode(node);  
             adjNode->record = node->record;
             adjNode->record.insert(node->getorder());
-        }
     }
 
     }
+
+    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+    {
+        DAG_Node *node = *it;
+        if(node->isFF()==1)
+        {
+            // cout<<"node name: "<<node->getName()<<endl;
+            if(node->getPreviousGate()!= NULL)
+            {
+            // cout<<"CASE1"<<endl;
+            // cout<<"Previous Gate: "<<node->getPreviousGate()->getName()<<endl;
+             node->set_li( node->getLongestPath() - node->getPreviousGate()->getLongestPath());
+            }
+            else
+            {
+                // cout<<"CASE2"<<endl;
+                node->set_li(node->getLongestPath());
+            }
+        }
+        else
+        {
+            // cout<<"CASE3"<<endl;
+            node->set_li(-DBL_MAX);
+        }
+    }
+
 }
+
 void Placement::topologicalSortUtil_R(DAG_Node *node, stack<DAG_Node *> &Stack, vector<DAG_Node *> &visited)
 {
     visited.push_back(node);
 
-    vector<pair<DAG_Node *, double> > edges = node->getEdge_r();
+     vector<pair<DAG_Node *, double> > edges = node->getEdge_r();
     for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it)
     {
         DAG_Node *adjNode = it->first;
@@ -2568,11 +2594,10 @@ void Placement::topologicalSortUtil_R(DAG_Node *node, stack<DAG_Node *> &Stack, 
             topologicalSortUtil_R(adjNode, Stack, visited);
         }
     }
-
     Stack.push(node);
 }
 
-// 計算 DAG 中每個節點的最長路徑
+
 void Placement::calculateLongestPaths_R(vector<DAG_Node *> &nodes)
 {
     stack<DAG_Node *> Stack;
@@ -2594,6 +2619,7 @@ void Placement::calculateLongestPaths_R(vector<DAG_Node *> &nodes)
         nodes[i]->setwidth(nodes[i]->getModule()->width());
         nodes[i]->setwstar(0);
         nodes[i]->setorder(i);
+        nodes[i]->setPreviousGate(NULL);
     }
     // 進行拓撲排序
     for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
@@ -2616,18 +2642,23 @@ void Placement::calculateLongestPaths_R(vector<DAG_Node *> &nodes)
             node->setLongestPath(0);
         }
 
-       vector<pair<DAG_Node *, double> > edges = node->getEdge_r();
+        vector<pair<DAG_Node *, double> > edges = node->getEdge_r();
         for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) {
         DAG_Node *adjNode = it->first;
         double weight = it->second;
-        if (node->getLongestPath() + weight > adjNode->getLongestPath()) {
+        if(node==NULL)
+        {
+            cout<<"YAHOO"<<endl;
+        }
             if(node->isFF()==1)
             {
+                adjNode->setPreviousGate(node->getPreviousGate());
                 adjNode->FFnum= (node->FFnum+1);
                 adjNode->setwstar(node->getwidth()+node->getwstar());
             }
             else
             {
+                adjNode->setPreviousGate(node);
                 adjNode->FFnum= (node->FFnum);
                 adjNode->setwstar(node->getwstar());
             }
@@ -2635,11 +2666,38 @@ void Placement::calculateLongestPaths_R(vector<DAG_Node *> &nodes)
             adjNode->setPreviousNode(node);  
             adjNode->record = node->record;
             adjNode->record.insert(node->getorder());
-        }
     }
 
     }
+
+    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+    {
+        DAG_Node *node = *it;
+        if(node->isFF()==1)
+        {
+            // cout<<"node name: "<<node->getName()<<endl;
+            if(node->getPreviousGate()!= NULL)
+            {
+            // cout<<"CASE1"<<endl;
+            // cout<<"Previous Gate: "<<node->getPreviousGate()->getName()<<endl;
+             node->set_ri( node->getLongestPath() - node->getPreviousGate()->getLongestPath());
+            }
+            else
+            {
+                // cout<<"CASE2"<<endl;
+                node->set_ri(node->getLongestPath());
+            }
+        }
+        else
+        {
+            // cout<<"CASE3"<<endl;
+            node->set_ri(-DBL_MAX);
+        }
+    }
+
 }
+
+
 
 void Placement::printLongestPath(DAG_Node *node)
 {
@@ -2734,8 +2792,8 @@ void* calculate_thetai(void* arg) {
 }
 
 void Placement::cal_thetai() {
-     long num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
-     cout<<"CPU num: "<<num_cpus<<endl;
+    long num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+    cout<<"CPU num: "<<num_cpus<<endl;
     const int num_threads = num_cpus/2;  // 可以根據 CPU 核心數調整
     pthread_t threads[num_threads];
     ThreadData thread_data[num_threads];
@@ -2814,4 +2872,75 @@ void Placement::Displacement()
         }
     }
     return;
+}
+// clang-format on
+void Placement::assignNeedM()
+{
+    double rowYdis = _dataBase->row(1)->y() - _dataBase->row(0)->y();
+    if (rowYdis < 0)
+    {
+        cout << "error: row isn't in increasing order" << endl;
+    }
+    unsigned maxrowID = _dataBase->getNumRows() - 1;
+    for (size_t i = 0; i < _moduleNeedAss.size(); i++)
+    {
+        while (_dataBase->row(maxrowID)->y() + _moduleNeedAss[i]->height() > _dataBase->getBoundaryTop())
+        {
+            maxrowID--;
+        }
+        double upperY, lowerY;
+        double temp = (_moduleNeedAss[i]->x() - _dataBase->row(0)->x());
+        if (temp < 0)
+        {
+            temp = 0;
+        }
+        int idx = round(temp / _dataBase->row(0)->width());
+        if (idx < 0)
+        {
+            cout << "error: idx < 0" << endl;
+        }
+        while (idx > _dataBase->row(0)->numSites() - 1)
+        {
+            idx--;
+        }
+        int idy = round((_moduleNeedAss[i]->y() - _dataBase->row(0)->y()) / rowYdis);
+        if (idy < 0)
+        {
+            cout << "error: idy < 0" << endl;
+        }
+
+        // boundary condition
+        int idTop = idy;
+        int idBot = idy;
+        while (idy > maxrowID)
+        {
+            idy--;
+        }
+        while (_dataBase->row(idy)->getModWid() + _moduleNeedAss[i]->cellType()->getWidth() >
+               (_dataBase->getBoundaryRight() - _dataBase->getBoundaryLeft()) * modWidThres)
+        {
+            if (idTop < maxrowID)
+            {
+                idTop++;
+            }
+            if (idBot > 0)
+            {
+                idBot--;
+            }
+            if (_dataBase->row(idTop)->getModWid() + _moduleNeedAss[i]->cellType()->getWidth() <=
+                (_dataBase->getBoundaryRight() - _dataBase->getBoundaryLeft()) * modWidThres)
+            {
+                idy = idTop;
+                break;
+            }
+            if (_dataBase->row(idBot)->getModWid() + _moduleNeedAss[i]->cellType()->getWidth() <=
+                (_dataBase->getBoundaryRight() - _dataBase->getBoundaryLeft()) * modWidThres)
+            {
+                idy = idBot;
+                break;
+            }
+        }
+        _moduleNeedAss[i]->setPosition(_dataBase->row(idy)->x() + idx * _dataBase->row(idy)->width(), _dataBase->row(idy)->y());
+        _dataBase->row(idy)->incModWid(_moduleNeedAss[i]->cellType()->getWidth());
+    }
 }

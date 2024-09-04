@@ -7,7 +7,7 @@
 #include "DatabaseDef.h"
 #include "Placement.h"
 
-void layout(const string &filename, const int x, const int y, vector<Module *> module)
+void layout(const string &filename, const int x, const int y, vector<Module> &module)
 {
   // Open the output file
   ofstream fout((filename + ".las").c_str(), ios::out);
@@ -23,20 +23,23 @@ void layout(const string &filename, const int x, const int y, vector<Module *> m
   fout << "line 0 0 " << 0 << " " << y << " gray" << endl;
   fout << "line 0 " << y << " " << x << " " << y << " gray" << endl;
   fout << "line " << x << " 0 " << x << " " << y << " gray" << endl;
-
-  for (unsigned int i = 0; i < module.size(); ++i)
+  int m = module.size();
+  for (size_t i = 0; i < m; ++i)
   {
-    if (module[i]->isFF())
+    if (module[i].isFF())
     {
-      fout << "rect " << module[i]->x() << " " << module[i]->y() << " "
-           << module[i]->x() + module[i]->width() << " " << module[i]->y() + module[i]->height() << " "
-           << "gray" << " name " << module[i]->name() << endl;
+      fout << "rect " << module[i].x() << " " << module[i].y() << " "
+           << module[i].x() + module[i].width() << " " << module[i].y() + module[i].height() << " gray" << " name " << module[i].name() << "\n";
+      //  << "gray" << endl;
+      //  << "gray" << " name " << module[i].name() << endl;
     }
     else
     {
-      fout << "rect " << module[i]->x() << " " << module[i]->y() << " "
-           << module[i]->x() + module[i]->width() << " " << module[i]->y() + module[i]->height() << " "
-           << "red" << " name " << module[i]->name() << endl;
+      fout << "rect " << module[i].x() << " " << module[i].y() << " "
+           << module[i].x() + module[i].width() << " " << module[i].y() + module[i].height() << " red" << " name " << module[i].name() << "\n";
+      // fout << "rect " << module[i]->x() << " " << module[i]->y() << " "
+      //      << module[i]->x() + module[i]->width() << " " << module[i]->y() + module[i]->height() << " "
+      //      << "red" << " name " << module[i]->name() << endl;
     }
   }
 
@@ -49,6 +52,7 @@ int main(int argc, char **argv)
   Database testDTB;
   testDTB.parser(argv[1]);
   cout << "Done parser!!!" << endl;
+
   testDTB.setPositive_slack();
   cout << "Done positive slack!!!" << endl;
 
@@ -66,9 +70,7 @@ int main(int argc, char **argv)
   for (size_t j = 0; j < Cnets.size(); j++)
   {
     // clang-format off
-    // cout <<"start "<<endl;
     set<set<Module *> > cliques = testGraph.calMaxClique(Cnets[j]);
-    // cout <<"finish"<<endl;
     while (testGraph.getmaxCliqesize() != 0)
     {
       set<Module *> a = testGraph.getLargestCliqSet();
@@ -95,7 +97,9 @@ int main(int argc, char **argv)
     testGraph.clearmaxCliq();
   }
   cout << "Done merging! " << endl;
-
+  testDTB.buildEachRowWidth();
+  testGraph.assignNeedM();
+  cout << "done assign" << endl;
   testGraph.construct_DAG_L();
   cout << "Done DAG_L Graph!!!" << endl;
 
@@ -111,17 +115,82 @@ int main(int argc, char **argv)
 
   testGraph.cal_rhoi();
   cout << "Rho_i done!" << endl;
-
+//   // for(int i=0; i < testGraph._DAG_nodes.size();i++)
+//   // {
+//   //   if(testGraph._DAG_nodes[i]->isFF() && testGraph._DAG_nodes[i]->getrhoi()>500)
+//   //   {
+//   //     cout<<"node"<<i<<" mName :  "<< testGraph._DAG_nodes[i]->getModule()->name()<<"  "<<testGraph._DAG_nodes[i]->getrhoi()<<" "<<testGraph._DAG_nodes[i]->isFF()<<endl;
+//   //   }
+//   // }
+//   // for(int i=0; i < testGraph._DAG_nodes.size();i++)
+//   // {
+//   //   if(testGraph._DAG_nodes[i]->isFF() && testGraph._DAG_nodes[i]->getrhoi()>500)
+//   //   {
+//   //     cout<<"node"<<i<<" :  "<<testGraph._DAG_nodes[i]->getrhoi()<<endl;
+//   //   }
+//   // }
   testGraph.cal_thetai();
   cout << "Theta_i done!" << endl;
+//   // for(int i=0; i < testGraph._DAG_nodes.size();i++)
+//   // {
+//   //   if(testGraph._DAG_nodes[i]->isFF()&& testGraph._DAG_nodes[i]->getthetai()>0 )
+//   //   cout<<"node"<<i<<" mName :  "<<testGraph._DAG_nodes[i]->getModule()->name()<<"  "<<testGraph._DAG_nodes[i]->getthetai()<<" "<<testGraph._DAG_nodes[i]->isFF()<<endl;
+//   // }
+//   // for(int i=0; i < testGraph._DAG_nodes.size();i++)
+//   // {
+//   //   if(testGraph._DAG_nodes[i]->isFF() && testGraph._DAG_nodes[i]->getthetai()>500)
+//   //   {
+//   //     cout<<"node"<<i<<" :  "<<testGraph._DAG_nodes[i]->getthetai()<<endl;
+//   //   }
+
+//   // }
+
+
+
+// // testGraph.getDatabase()->getmodule()[2]->setPosition(11,100);
+// //   testGraph.getDatabase()->getmodule()[2]->cellType()->setHeight(5);
+// //   testGraph.getDatabase()->getmodule()[2]->cellType()->setWidth(5);
+// //   node2->setModule(testGraph.getDatabase()->getmodule()[2]);
+// //   node2->setwidth(5);
+// //   node2->setX(11);
+// //   node2->setY(100);
+
+// // testGraph.getDatabase()->getmodule()[6]->setPosition(16,100);
+// //   testGraph.getDatabase()->getmodule()[6]->cellType()->setHeight(5);
+// //   testGraph.getDatabase()->getmodule()[6]->cellType()->setWidth(5);
+// //   node3->setModule(testGraph.getDatabase()->getmodule()[6]);
+// //   node3->setwidth(5);
+// //   node3->setX(16);
+// //   node3->setY(100);
+
+// //    testGraph._DAG_nodes.push_back(node2);
+// //    testGraph._DAG_nodes.push_back(node1);
+// //    testGraph._DAG_nodes.push_back(node3);
+
+//   // testGraph.contour_L();
+//   // cout << "Done Contour_L Graph!!!" << endl;
+//   // testGraph.contourL_HY();
+//   cout << "Done Contour_L Graph!!!" << endl;
+
+//   // testGraph.contourR_HY();
+//   // cout << "Done Contour_R Graph!!!" << endl;
+//   // testGraph.contour_R();
+//   cout << "Done Contour_R Graph!!!" << endl;
+
 
   cout << "----------start cal displacement----------" << endl;
   testGraph.Displacement();
   cout << "Done Displacement!!!" << endl;
-  
-  // cout<< testGraph.cal_total_cost()<<endl;
-  // testDTB.outputTofile(argv[2]);
+  //testDTB.outputTofile(argv[2]);
 
-  layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getmodule());
+  ModuleList ttt = testDTB.getmodule();
+
+  vector<Module> mods;
+  for(int i = 0; i < ttt.size(); ++i)
+  {
+    mods.push_back(*ttt[i]);
+  }
+
+  layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), mods);
   return 0;
 }

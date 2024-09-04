@@ -17,15 +17,16 @@ class Placement
 public:
    Placement()
    {
-       _nodes.resize(1);
-       _nodes[0] = NULL;
-
+      _nodes.resize(1);
+      _nodes[0] = NULL;
+      _moduleNeedAss.clear();
    };
    void mainLoop();
    void constructFeasible(Module *ff);
-   
+
    void cal_rhoi();
    void cal_thetai();
+   void cal_li();
    Rhombus *findInputRegion(Module *ff);
    vector<Rhombus *> findOutputRegion(Module *ff);
    bool overlap_ornot(vector<Rhombus *> &input_rhombus, double &leftBound, double &rightBound, double &botBound, double &topBound);
@@ -44,7 +45,6 @@ public:
    // clang-format on
    double cal_cost(Module *ff1, Module *ff2);
    double cal_total_cost();
-   
 
    NodeList findMST();
    void netListGraph();
@@ -75,7 +75,7 @@ public:
    Database *getDatabase() { return _dataBase; }
    map<string, vector<Module *> > CLKNetModule;
    vector<pair<vector<string>, string> > latch_record;
-
+   void legalize();
    //DAG
    DAG_Node *DAGnode(unsigned nodeId){ return _DAG_nodes[nodeId];}
    void add_DAG_nodes(DAG_Node *node) { _DAG_nodes.push_back(node); }
@@ -112,7 +112,23 @@ public:
    }
    set<set<Module*> > getwholeCliq(){ return _maxClique; }
    void clearmaxCliq() { _maxClique.clear(); }
+   void assignNeedM();
+
+   void calculateLongestPaths_L(std::vector<DAG_Node*>& nodes);
+   void topologicalSortUtil_L(DAG_Node* node, std::stack<DAG_Node*>& Stack, std::vector<DAG_Node*>& visited);
+   void calculateLongestPaths_R(std::vector<DAG_Node*>& nodes);
+   void topologicalSortUtil_R(DAG_Node* node, std::stack<DAG_Node*>& Stack, std::vector<DAG_Node*>& visited);
    
+   void DelmoduleAss(Module* mod)
+   {
+      vector<Module*>::iterator it = find(_moduleNeedAss.begin(), _moduleNeedAss.end(), mod);
+      if (it != _moduleNeedAss.end()) 
+      {
+         _moduleNeedAss.erase(it);
+      }
+      return;
+   }
+
    DAG_NodeList _DAG_nodes;
    DAG_NodeList _DAG_nodes_reverse;
    void Displacement();
@@ -131,7 +147,7 @@ private:
    set<set<Module *> > _maxClique;
 
    map<string, Module* > _name2Module;
-
+   vector<Module*> _moduleNeedAss;
    map<int ,int > _y2xmax;
    // clang-format on
 };

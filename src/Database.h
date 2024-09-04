@@ -190,8 +190,7 @@ public:
     void debankFF();
     Pin *FindPrePin(Pin *inputPin);
     void updateInitialSlackInfo();
-    void printResult();
-
+    void buildEachRowWidth();
     double getTNS() const;
     unsigned getDen(double) const;
     double totalCost(double) const;
@@ -213,6 +212,7 @@ public:
     vector<Module *> getbuffer() { return _buffer; }
     double getBinHeight() { return _binHeight; }
     double getBinWidth() { return _binWidth; }
+    bool IsonSite(Module *tar);
 
 private:
     string _name; // Design Name

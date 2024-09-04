@@ -5,11 +5,11 @@ using namespace std;
 class DAG_Node
 {
 public:
-    DAG_Node():_m(NULL),_deltaY(0)
+    DAG_Node() : _m(NULL), _deltaY(0)
     {
         _edge.clear();
-        for(int i=0;i<_edge.size();++i)
-            _edge[i].first=NULL;
+        for (int i = 0; i < _edge.size(); ++i)
+            _edge[i].first = NULL;
     }
     ~DAG_Node();
     void    setModule(Module *m){_m = m;}
@@ -48,31 +48,37 @@ public:
     double      width;
     set<int>    record;
     double FFnum = 0;
-    int         get_li(){return _li;}
-    int         get_ri(){return _ri;}
-    double      get_mui() {return _mui;}
-    double      _mui;
+    int get_li() { return _li; }
+    int get_ri() { return _ri; }
+    double get_mui() { return _mui; }
+    double _mui;
+
+    vector<pair<DAG_Node *,double > > _edge_r;
+    vector<pair<DAG_Node *,double > > getEdge_r(){return _edge_r;}
+    void    addEdge_r(DAG_Node *node, double weight){_edge_r.push_back({node, weight});}
+
 private:
-    Module      *_m;
-    string      _name;
+    Module *_m;
+    string _name;
     int order;
-   
-    double      wstar;
-    double      _weight;
-    double      rhoi;
-    double      thetai;
-    double      _x;
-    double      _y;
-    double      _deltaY=0;
-    bool        _isFF;
-    int         _li;
-    int         _ri;
+
+    double wstar;
+    double _weight;
+    double rhoi;
+    double thetai;
+    double _x;
+    double _y;
+    double _deltaY = 0;
+    bool _isFF;
+    int _li;
+    int _ri;
 
     vector<pair<DAG_Node *,double > > _edge;
     vector<pair<DAG_Node *,double > > _edge_r;
 
     double _longestPath;
-    DAG_Node* _previousNode;
+    DAG_Node *_previousNode;
+    DAG_Node *_previousGate;
 };
 
 
