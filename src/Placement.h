@@ -26,6 +26,7 @@ public:
 
    void cal_rhoi();
    void cal_thetai();
+   void cal_li();
    Rhombus *findInputRegion(Module *ff);
    vector<Rhombus *> findOutputRegion(Module *ff);
    bool overlap_ornot(vector<Rhombus *> &input_rhombus, double &leftBound, double &rightBound, double &botBound, double &topBound);
@@ -82,8 +83,6 @@ public:
    int contour_R();
    void contourL_HY();
    void contourR_HY();
-   int contour_L_Lily();
-   void contourR_lily();
 
    unsigned getmaxCliqesize(){ return _maxClique.size(); }
    // clang-format off

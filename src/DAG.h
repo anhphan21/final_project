@@ -43,6 +43,9 @@ public:
     void setLongestPath(double path) { _longestPath = path; }
     DAG_Node *getPreviousNode() const { return _previousNode; }
     void setPreviousNode(DAG_Node *prevNode) { _previousNode = prevNode; }
+    DAG_Node *getPreviousGate() { return _previousGate; }
+    void setPreviousGate(DAG_Node *prevGate) { _previousGate = prevGate; }
+
     double width;
     set<int> record;
     double FFnum = 0;
@@ -71,6 +74,7 @@ private:
 
     double _longestPath;
     DAG_Node *_previousNode;
+    DAG_Node *_previousGate;
 };
 
 class contour_Node

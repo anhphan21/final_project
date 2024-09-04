@@ -2258,6 +2258,7 @@ void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes)
         nodes[i]->setwidth(nodes[i]->getModule()->width());
         nodes[i]->setwstar(0);
         nodes[i]->setorder(i);
+        nodes[i]->setPreviousGate(NULL);
     }
     // 進行拓撲排序
     for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
@@ -2284,14 +2285,16 @@ void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes)
         for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) {
         DAG_Node *adjNode = it->first;
         double weight = it->second;
-        if (node->getLongestPath() + weight > adjNode->getLongestPath()) {
+
             if(node->isFF()==1)
             {
+                adjNode->setPreviousGate(node->getPreviousGate());
                 adjNode->FFnum= (node->FFnum+1);
                 adjNode->setwstar(node->getwidth()+node->getwstar());
             }
             else
             {
+                adjNode->setPreviousGate(node);
                 adjNode->FFnum= (node->FFnum);
                 adjNode->setwstar(node->getwstar());
             }
@@ -2299,11 +2302,38 @@ void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes)
             adjNode->setPreviousNode(node);  
             adjNode->record = node->record;
             adjNode->record.insert(node->getorder());
-        }
     }
 
     }
+
+    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+    {
+        DAG_Node *node = *it;
+        if(node->isFF()==1)
+        {
+            // cout<<"node name: "<<node->getName()<<endl;
+            if(node->getPreviousGate()!= NULL)
+            {
+            // cout<<"CASE1"<<endl;
+            // cout<<"Previous Gate: "<<node->getPreviousGate()->getName()<<endl;
+             node->set_li( node->getLongestPath() - node->getPreviousGate()->getLongestPath());
+            }
+            else
+            {
+                // cout<<"CASE2"<<endl;
+                node->set_li(node->getLongestPath());
+            }
+        }
+        else
+        {
+            // cout<<"CASE3"<<endl;
+            node->set_li(-DBL_MAX);
+        }
+    }
+
 }
+
+
 
 void Placement::printLongestPath(DAG_Node *node)
 {
@@ -2701,366 +2731,5 @@ void Placement::assignNeedM()
         }
         _moduleNeedAss[i]->setPosition(_dataBase->row(idy)->x() + idx * _dataBase->row(idy)->width(), _dataBase->row(idy)->y());
         _dataBase->row(idy)->incModWid(_moduleNeedAss[i]->cellType()->getWidth());
-    }
-}
-// will return root
-double updateHcontour(double small_y, double big_y, double ffWidth, Hcontour *_HconRoot, bool is_FF)
-{
-    // check for out of bound
-    // set Y(find x range max y)================================================================
-    Hcontour *target = _HconRoot;
-    vector<Hcontour *> tempHlist;
-    double maxWid = 0;
-    while (target != NULL)
-    {
-        if (target->getbigY() <= small_y)
-        {
-            target = target->getNext();
-            continue;
-        }
-        else // bigX > smallx
-        {
-            tempHlist.push_back(target);
-            if (target->getbigY() >= big_y)
-            {
-                break;
-            }
-            target = target->getNext();
-        }
-    }
-    int Hcontoursize = tempHlist.size();
-    for (int i = 0; i < Hcontoursize; i++)
-    {
-        if (tempHlist[i]->getWid() > maxWid)
-        {
-            maxWid = tempHlist[i]->getWid();
-        }
-    }
-    // set Y(find x range max y)================================================================
-    // Update Hcontour==========================================================================
-    int contourWid = maxWid + ffWidth;
-    if (is_FF == false)
-    {
-        contourWid = ffWidth;
-    }
-
-    // if (contourWid > fpmaxY)
-    // {
-    //     fpmaxY = contourY;
-    // }
-    if (Hcontoursize > 0)
-    {
-        // case 1 前後貼齊
-        if (tempHlist[0]->getsmallY() == small_y && tempHlist[Hcontoursize - 1]->getbigY() == big_y)
-        {
-            Hcontour *temp = NULL;
-            // Hcontoursize == 1
-            if (Hcontoursize == 1)
-            {
-                tempHlist[0]->setWid(contourWid);
-                temp = tempHlist[0];
-            }
-            else
-            {
-                temp = new Hcontour(small_y, big_y, contourWid);
-                if (tempHlist[0]->getPrev() != NULL)
-                {
-                    tempHlist[0]->getPrev()->setNext(temp);
-                    temp->setPrev(tempHlist[0]->getPrev());
-                }
-                else
-                {
-                    _HconRoot = temp;
-                }
-                if (tempHlist[Hcontoursize - 1]->getNext() != NULL)
-                {
-                    tempHlist[Hcontoursize - 1]->getNext()->setPrev(temp);
-                    temp->setNext(tempHlist[Hcontoursize - 1]->getNext());
-                }
-                if (tempHlist[0]->getPrev() == NULL && tempHlist[Hcontoursize - 1]->getNext() == NULL)
-                {
-                    _HconRoot = temp;
-                }
-                for (int i = 0; i < Hcontoursize; i++)
-                {
-                    free(tempHlist[i]);
-                }
-                _HconRoot = temp;
-            }
-        }
-        // case 2 前不貼齊 後貼齊
-        else if (tempHlist[0]->getsmallY() < small_y && tempHlist[Hcontoursize - 1]->getbigY() == big_y)
-        {
-            Hcontour *temp = new Hcontour(small_y, big_y, contourWid);
-            temp->setNext(tempHlist[Hcontoursize - 1]->getNext());
-            if (tempHlist[Hcontoursize - 1]->getNext() != NULL)
-            {
-                tempHlist[Hcontoursize - 1]->getNext()->setPrev(temp);
-            }
-            tempHlist[0]->setbigY(small_y);
-            tempHlist[0]->setNext(temp);
-            temp->setPrev(tempHlist[0]);
-            if (Hcontoursize > 1)
-            {
-                for (int i = 1; i < Hcontoursize; i++)
-                {
-                    free(tempHlist[i]);
-                }
-            }
-            _HconRoot = temp;
-        }
-        // case 3 後不貼齊 前貼齊
-        else if (tempHlist[0]->getsmallY() == small_y && tempHlist[Hcontoursize - 1]->getbigY() > big_y)
-        {
-            Hcontour *temp = new Hcontour(small_y, big_y, contourWid);
-            temp->setPrev(tempHlist[0]->getPrev());
-            if (tempHlist[0]->getPrev() != NULL)
-            {
-                tempHlist[0]->getPrev()->setNext(temp);
-            }
-            tempHlist[Hcontoursize - 1]->setsmallY(big_y);
-            tempHlist[Hcontoursize - 1]->setPrev(temp);
-            temp->setNext(tempHlist[Hcontoursize - 1]);
-            _HconRoot = temp;
-            if (Hcontoursize > 1)
-            {
-                for (int i = 0; i < Hcontoursize - 1; i++)
-                {
-                    free(tempHlist[i]);
-                }
-            }
-        }
-        // case 4 :前後不貼齊 or out of bounds
-        else
-        {
-            if (tempHlist[Hcontoursize - 1]->getbigY() > big_y)
-            {
-                // 只有一個
-                Hcontour *temp = new Hcontour(small_y, big_y, contourWid);
-                if (Hcontoursize == 1)
-                {
-                    Hcontour *merge = new Hcontour(big_y, tempHlist[Hcontoursize - 1]->getbigY(), tempHlist[Hcontoursize - 1]->getWid());
-                    merge->setNext(tempHlist[0]->getNext());
-                    if (tempHlist[0]->getNext() != NULL)
-                    {
-                        tempHlist[0]->getNext()->setPrev(merge);
-                    }
-                    tempHlist[0]->setbigY(small_y);
-                    tempHlist[0]->setNext(temp);
-                    temp->setPrev(tempHlist[0]);
-                    temp->setNext(merge);
-                    merge->setPrev(temp);
-                }
-                else
-                {
-                    tempHlist[0]->setbigY(small_y);
-                    tempHlist[Hcontoursize - 1]->setsmallY(big_y);
-                    tempHlist[0]->setNext(temp);
-                    tempHlist[Hcontoursize - 1]->setPrev(temp);
-                    temp->setNext(tempHlist[Hcontoursize - 1]);
-                    temp->setPrev(tempHlist[0]);
-                    _HconRoot = temp;
-                    if (Hcontoursize > 2)
-                    {
-                        for (int i = 1; i < Hcontoursize - 1; i++)
-                        {
-                            free(tempHlist[i]);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                Hcontour *temp = new Hcontour(small_y, big_y, contourWid);
-                // out of bound case 1 : 前貼齊
-                if (tempHlist[0]->getsmallY() == small_y)
-                {
-                    temp->setPrev(tempHlist[0]->getPrev());
-                    if (tempHlist[0]->getPrev() != NULL)
-                    {
-                        tempHlist[0]->getPrev()->setNext(temp);
-                    }
-                    _HconRoot = temp;
-                    for (int i = 0; i < Hcontoursize; i++)
-                    {
-                        free(tempHlist[i]);
-                    }
-                }
-                // out of bound case 2 : 前不貼齊
-                else
-                {
-                    tempHlist[0]->setbigY(small_y);
-                    temp->setPrev(tempHlist[0]);
-                    tempHlist[0]->setNext(temp);
-                    for (int i = 1; i < Hcontoursize; i++)
-                    {
-                        free(tempHlist[i]);
-                    }
-                    temp->setNext(NULL);
-                    _HconRoot = temp;
-                }
-            }
-        }
-    }
-    // 全 out of bound
-    else
-    {
-        cout << "error: out of bound" << endl;
-        // Hcontour *temp = new Hcontour(smallx, bigx, contourY);
-        // Hcontour *tail = _HconRoot;
-        // while (tail->getNext() != NULL)
-        // {
-        //     tail = tail->getNext();
-        // }
-        // temp->setPrev(tail);
-        // tail->setNext(temp);
-    }
-    // update Hconroot
-    while (_HconRoot->getPrev() != NULL)
-    {
-        _HconRoot = _HconRoot->getPrev();
-    }
-    return maxWid;
-}
-void Placement::contourL_HY()
-{
-    double row_left_boundary = _dataBase->row(0)->x();
-    double row_right_boundary = _dataBase->row(0)->x() + _dataBase->row(0)->numSites() * _dataBase->row(0)->width();
-    double row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y() + _dataBase->row(_dataBase->getNumRows() - 1)->height();
-    double row_bottom_boundary = _dataBase->row(0)->y();
-    Hcontour *root = new Hcontour(0, row_top_boundary, 0);
-    quickSort_dag(_DAG_nodes, 0, _DAG_nodes.size() - 1);
-
-    for (int i = 0, sizetmp = _DAG_nodes.size(); i < sizetmp; ++i)
-    {
-        if (_DAG_nodes[i]->getModule() != NULL)
-        {
-            if (_DAG_nodes[i]->isFF() == true)
-            {
-                double smally = _DAG_nodes[i]->getY();
-                double bigy = smally + _DAG_nodes[i]->getModule()->height();
-                double xx = _DAG_nodes[i]->getModule()->width();
-                double leftX = updateHcontour(smally, bigy, xx, root, true);
-                double li = leftX - _DAG_nodes[i]->getX() + _DAG_nodes[i]->get_deltaY(); // deltaY should be 0
-                _DAG_nodes[i]->set_li(li);
-            }
-            else
-            {
-                double smally = _DAG_nodes[i]->getY();
-                double bigy = smally + _DAG_nodes[i]->getModule()->height();
-                double xx = _DAG_nodes[i]->getModule()->width() + _DAG_nodes[i]->getX();
-                double leftX = updateHcontour(smally, bigy, xx, root, false);
-            }
-        }
-    }
-}
-void Placement::contourR_HY()
-{
-    double row_left_boundary = _dataBase->row(0)->x();
-    double row_right_boundary = _dataBase->row(0)->x() + _dataBase->row(0)->numSites() * _dataBase->row(0)->width();
-    double row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y() + _dataBase->row(_dataBase->getNumRows() - 1)->height();
-    double row_bottom_boundary = _dataBase->row(0)->y();
-    int buff;
-    for (int i = 0; i < _DAG_nodes.size(); ++i)
-    {
-        buff = (-1) * _DAG_nodes[i]->getX();
-        _DAG_nodes[i]->setX(buff);
-    }
-    quickSort_dag(_DAG_nodes, 0, _DAG_nodes.size() - 1);
-    Hcontour *root = new Hcontour(0, row_top_boundary, 0);
-    for (int i = 0; i < _DAG_nodes.size(); ++i)
-    {
-        buff = (-1) * _DAG_nodes[i]->getX();
-        _DAG_nodes[i]->setX(buff);
-    }
-    for (int i = 0, sizetmp = _DAG_nodes.size(); i < sizetmp; ++i)
-    {
-        if (_DAG_nodes[i]->getModule() != NULL)
-        {
-            if (_DAG_nodes[i]->isFF() == true)
-            {
-                double smally = _DAG_nodes[i]->getY();
-                double bigy = smally + _DAG_nodes[i]->getModule()->height();
-                double xx = _DAG_nodes[i]->getModule()->width();
-                double rightX = updateHcontour(smally, bigy, xx, root, true);
-                double ri = rightX + xx - _DAG_nodes[i]->getX() + _DAG_nodes[i]->get_deltaY(); // deltaY should be 0
-                _DAG_nodes[i]->set_ri(ri);
-            }
-            else
-            {
-                double smally = _DAG_nodes[i]->getY();
-                double bigy = smally + _DAG_nodes[i]->getModule()->height();
-                double xx = _DAG_nodes[i]->getModule()->width() + _DAG_nodes[i]->getX();
-                double rightX = updateHcontour(smally, bigy, xx, root, false);
-            }
-        }
-    }
-}
-
-int Placement::contour_L_Lily()
-{
-    int row_left_boundary = _dataBase->row(0)->x();
-    int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y() + _dataBase->row(_dataBase->getNumRows() - 1)->height();
-
-    quickSort_dag(_DAG_nodes, 0, _DAG_nodes.size() - 1);
-
-    contour_Node *start = new contour_Node("outline_L");
-    start->setMax_X(row_left_boundary);
-    start->setMax_height(row_top_boundary);
-    start->insertNode_small(start, NULL);
-
-
-
-    for (int i = 0, sizetmp = _DAG_nodes.size(); i < sizetmp; ++i)
-    {
-        if (_DAG_nodes[i]->getModule() != NULL)
-        {
-            contour_Node *buff_con = new contour_Node(_DAG_nodes[i]->getModule()->name());
-            contour_Node *target = start->search_big(_DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height());
-
-            // 同時進行 max_X 和 height 的處理
-            int max_X = start->findmax_X(start, target);
-            if (_DAG_nodes[i]->isFF())
-            {
-                int li = max_X - _DAG_nodes[i]->getX();
-                _DAG_nodes[i]->set_li(li);
-            }
-
-            // 插入 contour node 並檢查重疊
-            if (target->getMax_height() == _DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height())
-                start->insertNode_big(buff_con, target);
-            else
-                start->insertNode_small(buff_con, target);
-
-            // 設定最大 X 和高度
-            buff_con->setMax_X(_DAG_nodes[i]->getX() + _DAG_nodes[i]->getModule()->width());
-            buff_con->setMax_height(_DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height());
-
-            // 更新 contour 節點並刪除冗餘的節點
-            contour_Node *target_equal = start->search_small(_DAG_nodes[i]->getY());
-            if (buff_con->getName() != target_equal->getName())
-            {
-                target_equal->setnext(buff_con);
-                buff_con->setprev(target_equal);
-                target_equal->setMax_height(_DAG_nodes[i]->getY());
-
-                if (target_equal->getprev() != NULL && target_equal->getprev()->getMax_height() == target_equal->getMax_height())
-                    start->deleteNode(target_equal);
-            }
-        }
-    }
-}
-
-
-void Placement::legalize()
-{
-    double row_left_boundary = _dataBase->row(0)->x();
-    double row_right_boundary = _dataBase->row(0)->x() + _dataBase->row(0)->numSites() * _dataBase->row(0)->width();
-    double row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y() + _dataBase->row(_dataBase->getNumRows() - 1)->height();
-    double row_bottom_boundary = _dataBase->row(0)->y();
-    int displayment;
-    for(int i = 0 ; int num = _DAG_nodes.size(); i < num ; i++)
-    {
-        if(_DAG_nodes[i]->isFF() == 0) //表示他是gate
     }
 }
