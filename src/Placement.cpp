@@ -2024,13 +2024,14 @@ void quickSort_dag(std::vector<DAG_Node *> &modules, int low, int high)
 }
 
 
-double moduleOverlap_X(Module *a, Module *b)
+double moduleOverlap_X(Module *i, Module *j)
 {
-    double L = max(a->x(), b->x());
-    double R = min(a->x() + a->width(), b->x() + b->width());
-    return (R - L);
+    return (i->width()-(j->x() - i->x()));
 }
-
+double moduleOverlap_X_r(Module *i, Module *j)
+{
+    return (j->width()-(i->x() - j->x()));
+}
 bool compareNodes(const pair<DAG_Node *, double> &a, const pair<DAG_Node *, double> &b)
 {
     return a.first == b.first;
@@ -2324,7 +2325,7 @@ void Placement::construct_DAG_R()
             {
                 if ((it->second[k]->getY() / RowHeight == curr_level) && (it->second[k] != R))
                 {
-                    double weight = R->getX() - it->second[k]->getX();
+                    double weight = it->second[k]->getX() + it->second[k]->getModule()->width() - R->getX();
                     if (isDuplicate(R->getEdge(), {it->second[k], weight}) == 0)
                     {
                         R->addEdge(it->second[k], weight);
@@ -2369,7 +2370,7 @@ void Placement::construct_DAG_R()
                     {
                         if ((it->second[k]->getY() / RowHeight == curr_level) && (it->second[k] != _DAG_nodes_reverse[i]))
                         {
-                            double weight = moduleOverlap_X(_DAG_nodes_reverse[i]->getModule(), it->second[k]->getModule());
+                            double weight = moduleOverlap_X_r(_DAG_nodes_reverse[i]->getModule(), it->second[k]->getModule());
                             if (isDuplicate(_DAG_nodes_reverse[i]->getEdge(), {it->second[k], weight}) == 0)
                             {
                                 _DAG_nodes_reverse[i]->addEdge(it->second[k], weight);
@@ -2417,7 +2418,7 @@ void Placement::construct_DAG_R()
                     {
                         if ((it->second[k]->getY() / RowHeight == curr_level) && (it->second[k] != _DAG_nodes_reverse[i]))
                         {
-                            double weight = moduleOverlap_X(_DAG_nodes_reverse[i]->getModule(), it->second[k]->getModule());
+                            double weight = moduleOverlap_X_r(_DAG_nodes_reverse[i]->getModule(), it->second[k]->getModule());
                             if (isDuplicate(_DAG_nodes_reverse[i]->getEdge(), {it->second[k], weight}) == 0)
                             {
                                 _DAG_nodes_reverse[i + 1]->addEdge(it->second[k], weight); // R連接
