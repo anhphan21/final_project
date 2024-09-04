@@ -3,5 +3,5 @@ make clean
 make
 clear
 cd bin
-./merge ../benchmark/testcase2_0812 output2_merge.txt
+./contour_lily ../benchmark/testcase2_0812 output2_lily.txt
 cd ..
