@@ -5,71 +5,72 @@ using namespace std;
 class DAG_Node
 {
 public:
-    DAG_Node():_m(NULL),_deltaY(0)
+    DAG_Node() : _m(NULL), _deltaY(0)
     {
         _edge.clear();
-        for(int i=0;i<_edge.size();++i)
-            _edge[i].first=NULL;
+        for (int i = 0; i < _edge.size(); ++i)
+            _edge[i].first = NULL;
     }
     ~DAG_Node();
-    void    setModule(Module *m){_m = m;}
-    void    setName(string n){_name = n;}
-    void    addEdge(DAG_Node *node, double weight){_edge.push_back({node, weight});}
-    void    setX(double x){_x = x;}
-    void    setY(double y){_y = y;}
-    void    set_deltaY(double y){_deltaY = y;}
-    bool    set_isFF(bool isFF){_isFF = isFF;}
-    int     set_li(int li){_li = li;}
-    int     set_ri(int ri){_ri = ri;}
-
-    vector<pair<DAG_Node *,double > > getEdge(){return _edge;}
-    Module *getModule(){return _m;}
-    string  getName(){return _name;}
-    double     getX()const{return _x;}
-    double     getY()const{return _y;}
-    double     get_deltaY(){return _deltaY;}
-    void     setwstar (double a) {wstar= a;}
-    double   getwstar ()         {return wstar;}
-    void     setwidth (double a) {width= a;}
-    double   getwidth ()         {return width;}
-    double   getrhoi() {return rhoi;}
-    double   setrhoi(double a) {rhoi = a;}
-    double   getthetai(){return thetai;}
-    double   setthetai(double a) {thetai = a;}
-    int      getorder() {return order;}
-    void     setorder(int a){ order = a;}
-    bool       isFF(){return _m->isFF();}
-    double getLongestPath() const {return _longestPath;}
-    void setLongestPath(double path) {_longestPath = path;}
-    DAG_Node* getPreviousNode() const { return _previousNode; }
-    void setPreviousNode(DAG_Node* prevNode) { _previousNode = prevNode; }
-    double      width;
-    set<int>    record;
+    void setModule(Module *m) { _m = m; }
+    void setName(string n) { _name = n; }
+    void addEdge(DAG_Node *node, double weight) { _edge.push_back({node, weight}); }
+    void setX(double x) { _x = x; }
+    void setY(double y) { _y = y; }
+    void set_deltaY(double y) { _deltaY = y; }
+    bool set_isFF(bool isFF) { _isFF = isFF; }
+    int set_li(int li) { _li = li; }
+    int set_ri(int ri) { _ri = ri; }
+    // clang-format off
+    vector<pair<DAG_Node *, double> > getEdge() { return _edge; }
+    Module *getModule() { return _m; }
+    string getName() { return _name; }
+    double getX() const { return _x; }
+    double getY() const { return _y; }
+    double get_deltaY() { return _deltaY; }
+    void setwstar(double a) { wstar = a; }
+    double getwstar() { return wstar; }
+    void setwidth(double a) { width = a; }
+    double getwidth() { return width; }
+    double getrhoi() { return rhoi; }
+    double setrhoi(double a) { rhoi = a; }
+    double getthetai() { return thetai; }
+    double setthetai(double a) { thetai = a; }
+    int getorder() { return order; }
+    void setorder(int a) { order = a; }
+    bool isFF() { return _m->isFF(); }
+    double getLongestPath() const { return _longestPath; }
+    void setLongestPath(double path) { _longestPath = path; }
+    DAG_Node *getPreviousNode() const { return _previousNode; }
+    void setPreviousNode(DAG_Node *prevNode) { _previousNode = prevNode; }
+    double width;
+    set<int> record;
     double FFnum = 0;
-    int         get_li(){return _li;}
-    int         get_ri(){return _ri;}
-    double      get_mui() {return _mui;}
-    double      _mui;
-private:
-    Module      *_m;
-    string      _name;
-    int order;
-   
-    double      wstar;
-    double      _weight;
-    double      rhoi;
-    double      thetai;
-    double      _x;
-    double      _y;
-    double      _deltaY=0;
-    bool        _isFF;
-    int         _li;
-    int         _ri;
+    int get_li() { return _li; }
+    int get_ri() { return _ri; }
+    double get_mui() { return _mui; }
+    double _mui;
 
-    vector<pair<DAG_Node *,double > > _edge;
+private:
+    Module *_m;
+    string _name;
+    int order;
+
+    double wstar;
+    double _weight;
+    double rhoi;
+    double thetai;
+    double _x;
+    double _y;
+    double _deltaY = 0;
+    bool _isFF;
+    int _li;
+    int _ri;
+
+    vector<pair<DAG_Node *, double> > _edge;
 
     double _longestPath;
-    DAG_Node* _previousNode;
+    DAG_Node *_previousNode;
 };
 
 class contour_Node
@@ -136,7 +137,6 @@ public:
         return max;
     }
 
-    
     contour_Node *search_big(int y)
     {
         contour_Node *curr = _head;
@@ -151,7 +151,7 @@ public:
                 curr = curr->getnext();
             }
         }
-        cout<<"fuck1: "<<y<<endl;
+        cout << "fuck1: " << y << endl;
         return NULL; // 應該不會到這
     }
 
@@ -169,10 +169,10 @@ public:
                 curr = curr->getnext();
             }
         }
-        cout<<"fuck2"<<endl;
+        cout << "fuck2" << endl;
         return NULL; // 應該不會到這
     }
-
+    // insert after target
     void insertNode_big(contour_Node *newNode, contour_Node *target)
     {
         contour_Node *curr = _head;
@@ -204,10 +204,10 @@ public:
         newNode->setnext(curr->getnext());
         newNode->setprev(curr);
         curr->setnext(newNode);
-        if(newNode->getnext()!=NULL)
+        if (newNode->getnext() != NULL)
             newNode->getnext()->setprev(newNode);
     }
-
+    // insert berfore target
     void insertNode_small(contour_Node *newNode, contour_Node *target)
     {
         contour_Node *curr = _head;
@@ -239,7 +239,7 @@ public:
         newNode->setnext(curr->getnext());
         newNode->setprev(curr);
         curr->setnext(newNode);
-        if(newNode->getnext()!=NULL)
+        if (newNode->getnext() != NULL)
             newNode->getnext()->setprev(newNode);
     }
 
@@ -312,4 +312,32 @@ private:
     int _Max_x;
     int _Max_height;
     string _name;
+};
+class Hcontour
+{
+public:
+    // constructor and destructor
+    Hcontour(double smallY, double bigY, double wid) : _smallY(smallY), _bigY(bigY), _width(wid), _prev(NULL), _next(NULL) {}
+    ~Hcontour() {}
+
+    // basic access methods
+    double getsmallY() { return _smallY; }
+    double getbigY() { return _bigY; }
+    double getWid() { return _width; }
+    Hcontour *getPrev() { return _prev; }
+    Hcontour *getNext() { return _next; }
+
+    // set functions
+    void setsmallY(double smallY) { _smallY = smallY; }
+    void setbigY(double bigY) { _bigY = bigY; }
+    void setWid(double h) { _width = h; }
+    void setPrev(Hcontour *Prev) { _prev = Prev; }
+    void setNext(Hcontour *Next) { _next = Next; }
+
+private:
+    double _smallY;
+    double _bigY;
+    double _width;
+    Hcontour *_prev;
+    Hcontour *_next;
 };

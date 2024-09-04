@@ -517,16 +517,16 @@ int Database::updateBinUtil()
         }
     }
 
-    //calculate bin density
+    // calculate bin density
     int num_violated_bin = 0;
     for (size_t i = 0; i < _numBinCol; ++i)
     {
         for (size_t j = 0; j < _numBinRow; ++j)
         {
-            if(_bins[i][j]->getDensity()>getbinutil()*0.01)
+            if (_bins[i][j]->getDensity() > getbinutil() * 0.01)
             {
                 num_violated_bin++;
-            }            
+            }
         }
     }
     return num_violated_bin;
@@ -689,34 +689,34 @@ void Database::updateRadius()
     }
 }
 
-void Database::printResult()
-{
-    string _tmp = _name + ".out";
-    fstream _outFile;
-    _outFile.open(_tmp.c_str(), ios::out);
+// void Database::printResult()
+// {
+//     string _tmp = _name + ".out";
+//     fstream _outFile;
+//     _outFile.open(_tmp.c_str(), ios::out);
 
-    // if (!_outFile.is_open())
-    //     cout << "Cannot open output file !!!" << endl;
+//     // if (!_outFile.is_open())
+//     //     cout << "Cannot open output file !!!" << endl;
 
-    _outFile << "CellInst " << _ffModules.size() << endl;
-    Module *_tModule;
-    for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i)
-    {
-        _tModule = _ffModules[i];
-        _outFile << "Inst " << _tModule->name() << " " << _tModule->cellType()->getName() << " " << _tModule->x() << " " << _tModule->y() << endl;
-    }
+//     _outFile << "CellInst " << _ffModules.size() << endl;
+//     Module *_tModule;
+//     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i)
+//     {
+//         _tModule = _ffModules[i];
+//         _outFile << "Inst " << _tModule->name() << " " << _tModule->cellType()->getName() << " " << _tModule->x() << " " << _tModule->y() << endl;
+//     }
 
-    History *_tHistory;
+//     History *_tHistory;
 
-    for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i)
-    {
-        for (size_t j = 0, endj = _ffModules[i]->totnumPins(); j < endj; j++)
-        {
-            _tHistory = _ffModules[i]->pin(j)->history();
-            _outFile << _tHistory->oldModuleName() << "/" << _tHistory->oldPinName() << " map " << _ffModules[i]->name() << "/" << _ffModules[i]->pin(j)->name() << endl;
-        }
-    }
-}
+//     for (size_t i = 0, endi = _ffModules.size(); i < endi; ++i)
+//     {
+//         for (size_t j = 0, endj = _ffModules[i]->totnumPins(); j < endj; j++)
+//         {
+//             _tHistory = _ffModules[i]->pin(j)->history();
+//             _outFile << _tHistory->oldModuleName() << "/" << _tHistory->oldPinName() << " map " << _ffModules[i]->name() << "/" << _ffModules[i]->pin(j)->name() << endl;
+//         }
+//     }
+// }
 
 Pin *Database::FindPrePin(Pin *inputPin)
 {
@@ -828,14 +828,16 @@ double Database::totalCost(double _denThrs) const
 
     return _alpha * _tnsCost + _beta * _powerCost + _gamma * _areaCost + _lambda * getDen(_denThrs);
 }
-void Database::setPositive_slack() {
+void Database::setPositive_slack()
+{
     std::set<Pin *> processedPins; // 用於存儲已處理過的 Pins
 
-    for (std::set<Pin *>::iterator it = _initial_negSlack.begin(); it != _initial_negSlack.end(); ++it) {
-        Pin* currentPin = *it;
-        
-        if (currentPin->getSlackInfor()->slack() < 0 && currentPin->module() != NULL && currentPin->module()->isFF()
-            && currentPin->net()->OutputPin() != currentPin) {
+    for (std::set<Pin *>::iterator it = _initial_negSlack.begin(); it != _initial_negSlack.end(); ++it)
+    {
+        Pin *currentPin = *it;
+
+        if (currentPin->getSlackInfor()->slack() < 0 && currentPin->module() != NULL && currentPin->module()->isFF() && currentPin->net()->OutputPin() != currentPin)
+        {
             double ff_original_slack = currentPin->getSlackInfor()->slack();
             double dis_delay = getDisplacementDelay();
             double initial_dist = std::abs(currentPin->net()->OutputPin()->x() - currentPin->x()) +
@@ -851,10 +853,10 @@ void Database::setPositive_slack() {
                 new_slack = 0;
             currentPin->getSlackInfor()->setSlack(new_slack);
 
-        
             // 更新其它 Pins 的 slack
-            for (int j = 0; j < currentPin->net()->numPins(); ++j) {
-                Pin* otherPin = currentPin->net()->pin(j);
+            for (int j = 0; j < currentPin->net()->numPins(); ++j)
+            {
+                Pin *otherPin = currentPin->net()->pin(j);
                 if (otherPin == currentPin)
                     continue;
 
@@ -863,7 +865,8 @@ void Database::setPositive_slack() {
                 double buff = otherPin->getSlackInfor()->slack() + dis_delay * (initial_dist - newWL);
                 otherPin->getSlackInfor()->setSlack(buff);
 
-                if (buff < 0 && processedPins.find(otherPin) == processedPins.end()) {
+                if (buff < 0 && processedPins.find(otherPin) == processedPins.end())
+                {
                     _initial_negSlack.insert(otherPin);
                     processedPins.insert(otherPin);
                 }
@@ -871,8 +874,6 @@ void Database::setPositive_slack() {
         }
     }
 }
-
-
 
 void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, double grid_width, double grid_height)
 {
@@ -902,12 +903,12 @@ void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, dou
 
     adjust_pin->setPosition((fix_pin->x() + deltaX * (adjust_pin->x() > fix_pin->x() ? 1 : -1)),
                             (fix_pin->y() + deltaY * (adjust_pin->y() > fix_pin->y() ? 1 : -1)));
-                        
+
     // snap to grid
     adjust_pin->setPosition((((adjust_pin->x() + grid_width) / grid_width) * grid_width), (((adjust_pin->y() + grid_height) / grid_height) * grid_height));
     double newx = adjust_pin->x() - adjust_pin->xOffset();
     double newy = adjust_pin->y() - adjust_pin->yOffset();
-    adjust_pin->module()->setPosition(newx, newy);  
+    adjust_pin->module()->setPosition(newx, newy);
     double new_dist = abs(fix_pin->x() - adjust_pin->x()) + abs(fix_pin->y() - adjust_pin->y());
     if (new_dist <= radius)
         return;
@@ -921,9 +922,9 @@ void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, dou
             adjust_pin->setPosition(adjust_pin->x(), adjust_pin->y() + grid_height);
         else if (adjust_pin->y() > fix_pin->y())
             adjust_pin->setPosition(adjust_pin->x(), adjust_pin->y() - grid_height);
-            double newx = adjust_pin->x() - adjust_pin->xOffset();
+        double newx = adjust_pin->x() - adjust_pin->xOffset();
         double newy = adjust_pin->y() - adjust_pin->yOffset();
-        adjust_pin->module()->setPosition(newx, newy);  
+        adjust_pin->module()->setPosition(newx, newy);
     }
 }
 
@@ -1010,33 +1011,64 @@ void Database::outputTofile(const string &filename)
     for (size_t i = 0; i < _ffModules.size(); ++i)
     {
         num++;
-        nname = letters + itos(num);  
+        nname = letters + itos(num);
         _ffModules[i]->setName(nname);
-        
     }
     // temp=============================
     for (size_t i = 0; i < getNumFF(); i++)
     {
         outFile << "Inst " << _ffModules[i]->name() << " " << _ffModules[i]->cellType()->getName() << " "
-                << setprecision(0) << _ffModules[i]->x() << " " << _ffModules[i]->y() << " " <<endl;
+                << setprecision(0) << _ffModules[i]->x() << " " << _ffModules[i]->y() << " " << endl;
     }
     for (size_t i = 0; i < getNumFF(); ++i)
     {
-        for(size_t j=0;j<_ffModules[i]->totnumPins(); ++j)
+        for (size_t j = 0; j < _ffModules[i]->totnumPins(); ++j)
         {
             outFile << _ffModules[i]->pin(j)->history()->oldModuleName() << "/" << _ffModules[i]->pin(j)->history()->oldPinName()
                     << " map " << _ffModules[i]->name() << "/" << _ffModules[i]->pin(j)->name() << endl;
-        }   
+        }
     }
 
-
-
-    //check overlapping
-    // for(int i=0; i<_buffer.size(); ++i)
-    // {
-    //      outFile << "Inst " << _buffer[i]->name() << " " << _buffer[i]->cellType()->getName() << " "
-    //             << setprecision(0) << _buffer[i]->x() << " " << _buffer[i]->y() << " "
-    //             << _buffer[i]->width()<< " " <<_buffer[i]->height()<<endl;
-    // }
+    // check overlapping
+    //  for(int i=0; i<_buffer.size(); ++i)
+    //  {
+    //       outFile << "Inst " << _buffer[i]->name() << " " << _buffer[i]->cellType()->getName() << " "
+    //              << setprecision(0) << _buffer[i]->x() << " " << _buffer[i]->y() << " "
+    //              << _buffer[i]->width()<< " " <<_buffer[i]->height()<<endl;
+    //  }
     return;
 }
+bool Database::IsonSite(Module *tar)
+{
+    double paraX = (tar->x() - _rows[0]->x()) / _rows[0]->width();
+    double rowYdis = _rows[1]->y() - _rows[0]->y();
+    double paraY = (tar->y() - _rows[0]->y()) / rowYdis;
+    if (fmod(paraX, 1) == 0.0 && fmod(paraY, 1) == 0.0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+void Database::buildEachRowWidth()
+{
+    double rowYdis = _rows[1]->y() - _rows[0]->y();
+    if (rowYdis < 0)
+    {
+        cout << "error: row isn't in increasing order" << endl;
+    }
+    for (size_t i = 0; i < _modules.size(); i++)
+    {
+        if (IsonSite(_modules[i])) // on site
+        {
+            // int idx = floor((_modules[i]->x() - _rows[0]->x()) / _rows[0]->width());
+            int idy = floor((_modules[i]->y() - _rows[0]->y()) / rowYdis);
+            // _modules[i]->setPosition(_rows[idy]->x() + _rows[idy]->width() * idx, _rows[idy]->y());
+            _rows[idy]->incModWid(_modules[i]->cellType()->getWidth());
+        }
+    }
+    return;
+}
+// assign row for unsited FF

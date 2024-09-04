@@ -29,14 +29,14 @@ void layout(const string &filename, const int x, const int y, vector<Module> &mo
     if (module[i].isFF())
     {
       fout << "rect " << module[i].x() << " " << module[i].y() << " "
-           << module[i].x() + module[i].width() << " " << module[i].y() + module[i].height() << " gray" << " name " << module[i].name() << "\n" ;
-          //  << "gray" << endl;
-          //  << "gray" << " name " << module[i].name() << endl;     
+           << module[i].x() + module[i].width() << " " << module[i].y() + module[i].height() << " gray" << " name " << module[i].name() << "\n";
+      //  << "gray" << endl;
+      //  << "gray" << " name " << module[i].name() << endl;
     }
     else
     {
       fout << "rect " << module[i].x() << " " << module[i].y() << " "
-           << module[i].x() + module[i].width() << " " << module[i].y() + module[i].height() << " red" << " name " << module[i].name() << "\n" ;
+           << module[i].x() + module[i].width() << " " << module[i].y() + module[i].height() << " red" << " name " << module[i].name() << "\n";
       // fout << "rect " << module[i]->x() << " " << module[i]->y() << " "
       //      << module[i]->x() + module[i]->width() << " " << module[i]->y() + module[i]->height() << " "
       //      << "red" << " name " << module[i]->name() << endl;
@@ -52,9 +52,6 @@ int main(int argc, char **argv)
   Database testDTB;
   testDTB.parser(argv[1]);
   cout << "Done parser!!!" << endl;
-
-  
-
 
   testDTB.setPositive_slack();
   cout << "Done positive slack!!!" << endl;
@@ -73,9 +70,7 @@ int main(int argc, char **argv)
   for (size_t j = 0; j < Cnets.size(); j++)
   {
     // clang-format off
-    // cout <<"start "<<endl;
     set<set<Module *> > cliques = testGraph.calMaxClique(Cnets[j]);
-    // cout <<"finish"<<endl;
     while (testGraph.getmaxCliqesize() != 0)
     {
       set<Module *> a = testGraph.getLargestCliqSet();
@@ -102,7 +97,9 @@ int main(int argc, char **argv)
     testGraph.clearmaxCliq();
   }
   cout << "Done merging! " << endl;
-
+  testDTB.buildEachRowWidth();
+  testGraph.assignNeedM();
+  cout << "done assign" << endl;
   testGraph.construct_DAG();
   cout << "Done DAG Graph!!!" << endl;
 
@@ -138,7 +135,7 @@ int main(int argc, char **argv)
   //   {
   //     cout<<"node"<<i<<" :  "<<testGraph._DAG_nodes[i]->getthetai()<<endl;
   //   }
-  
+
   // }
 
 
@@ -176,17 +173,21 @@ testGraph.getDatabase()->getmodule()[6]->setPosition(16,100);
 
   testGraph.contour_L();
   cout << "Done Contour_L Graph!!!" << endl;
+  testGraph.contourL_HY();
+  cout << "Done Contour_L Graph!!!" << endl;
 
+  testGraph.contourR_HY();
+  cout << "Done Contour_R Graph!!!" << endl;
   testGraph.contour_R();
   cout << "Done Contour_R Graph!!!" << endl;
 
 
-  // cout << "----------start cal displacement----------" << endl;
-  // testGraph.Displacement();
-  // cout << "Done Displacement!!!" << endl;
-  // testDTB.outputTofile(argv[2]);
+  cout << "----------start cal displacement----------" << endl;
+  testGraph.Displacement();
+  cout << "Done Displacement!!!" << endl;
+  testDTB.outputTofile(argv[2]);
 
-  // ModuleList ttt = testDTB.getmodule(); 
+  // ModuleList ttt = testDTB.getmodule();
 
   // vector<Module> mods;
   // for(int i = 0; i < ttt.size(); ++i)
