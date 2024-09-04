@@ -96,8 +96,11 @@ int main(int argc, char **argv)
   }
   cout << "Done merging! " << endl;
 
-  testGraph.construct_DAG();
-  cout << "Done DAG Graph!!!" << endl;
+  testGraph.construct_DAG_L();
+  cout << "Done DAG_L Graph!!!" << endl;
+
+  testGraph.construct_DAG_R();
+  cout << "Done DAG_R Graph!!!" << endl;
 
   testGraph.calculateLongestPaths(testGraph._DAG_nodes);
   cout << "Done LongestPath" << endl;
@@ -108,15 +111,17 @@ int main(int argc, char **argv)
   testGraph.cal_thetai();
   cout << "Theta_i done!" << endl;
 
-  testGraph.contour_L();
-  cout << "Done Contour_L Graph!!!" << endl;
+  // testGraph.contour_L();
+  // cout << "Done Contour_L Graph!!!" << endl;
 
-  testGraph.contour_R();
-  cout << "Done Contour_R Graph!!!" << endl;
+  // testGraph.contour_R();
+  // cout << "Done Contour_R Graph!!!" << endl;
 
   cout << "----------start cal displacement----------" << endl;
   testGraph.Displacement();
   cout << "Done Displacement!!!" << endl;
+  
+  // cout<< testGraph.cal_total_cost()<<endl;
   // testDTB.outputTofile(argv[2]);
 
   layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), testDTB.getmodule());

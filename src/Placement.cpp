@@ -1950,11 +1950,48 @@ void quickSort(std::vector<Module *> &modules, int low, int high)
     }
 }
 
+
+bool compareModules_r(const Module *a, const Module *b)
+{
+    if (a->x() == b->x())
+    {
+        return a->y() < b->y();
+    }
+    return a->x() > b->x();
+}
+
+int partition_r(std::vector<Module *> &modules, int low, int high)
+{
+    Module *pivot = modules[high];
+    int i = low - 1;
+
+    for (int j = low; j < high; ++j)
+    {
+        if (compareModules_r(modules[j], pivot))
+        {
+            i++;
+            std::swap(modules[i], modules[j]);
+        }
+    }
+    std::swap(modules[i + 1], modules[high]);
+    return i + 1;
+}
+void quickSort_r(std::vector<Module *> &modules, int low, int high)
+{
+    if (low < high)
+    {
+        int pi = partition_r(modules, low, high);
+
+        quickSort_r(modules, low, pi - 1);
+        quickSort_r(modules, pi + 1, high);
+    }
+}
+
 bool compareModules_dag(const DAG_Node *a, const DAG_Node *b)
 {
     if (a->getX() == b->getX())
     {
-        return a->getY() < b->getY();
+        return a->getY() > b->getY();
     }
     return a->getX() < b->getX();
 }
@@ -2018,7 +2055,7 @@ bool isDuplicate(vector<pair<DAG_Node *, double> > edges, const pair<DAG_Node *,
     }
     return false;
 }
-void Placement::construct_DAG()
+void Placement::construct_DAG_L()
 {
     int row_left_boundary = _dataBase->row(0)->x();
     int row_right_boundary = _dataBase->row(0)->x() + (_dataBase->row(0)->numSites()) * _dataBase->row(0)->width();
@@ -2166,7 +2203,7 @@ void Placement::construct_DAG()
         }
         else
         { // gate
-            double weight = _DAG_nodes[i]->getX() - _DAG_nodes[i + 1]->getX();
+            double weight = (-1)*_DAG_nodes[i]->getModule()->width();
             _DAG_nodes[i]->addEdge(_DAG_nodes[i + 1], weight); // L -> R
 
             int curr_level = _DAG_nodes[i]->getY() / RowHeight;
@@ -2213,22 +2250,219 @@ void Placement::construct_DAG()
             ++i; // BL後面一定是BR，跳過BR
         }
     }
+}
 
+void Placement::construct_DAG_R()
+{
+    int row_left_boundary = _dataBase->row(0)->x();
+    int row_right_boundary = _dataBase->row(0)->x() + (_dataBase->row(0)->numSites()) * _dataBase->row(0)->width();
+    int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y()+_dataBase->row(_dataBase->getNumRows() - 1)->height();
+    int row_bottom_boundary = _dataBase->row(0)->y();
+    DAG_Node *L = new DAG_Node();
+    L->setName("Left_boundary");
+    L->setX(row_left_boundary);
+    L->setY(row_top_boundary);
+    DAG_Node *R = new DAG_Node();
+    R->setName("Right_boundary");
+    R->setX(row_right_boundary);
+    R->setY(row_top_boundary);
+    map<int, vector<DAG_Node *>, greater<int> > _x2_DAG_Node_R;
+    vector<Module *> modules = _dataBase->getmodule();
+    quickSort_r(modules, 0, modules.size() - 1);
+    for (size_t i = 0; i < modules.size(); ++i)
+    {
+        if (modules[i]->isFF())
+        {
+            DAG_Node *dag_node = new DAG_Node;
+            dag_node->setModule(modules[i]);
+            dag_node->setX(modules[i]->x());
+            dag_node->setY(modules[i]->y());
+            dag_node->set_isFF(true);
+            _DAG_nodes_reverse.push_back(dag_node);
+        }
+        else
+        { // gate devide left and right
+            DAG_Node *dag_node_L = new DAG_Node;
+            DAG_Node *dag_node_R = new DAG_Node;
+
+            dag_node_L->setModule(modules[i]);
+            dag_node_L->setX(modules[i]->x()+ modules[i]->width());
+            dag_node_L->setY(modules[i]->y());
+            dag_node_L->set_isFF(false);
+
+            dag_node_R->setModule(modules[i]);
+            dag_node_R->setX(modules[i]->x());
+            dag_node_R->setY(modules[i]->y());
+            dag_node_R->set_isFF(false);
+
+            _DAG_nodes_reverse.push_back(dag_node_R);
+            _DAG_nodes_reverse.push_back(dag_node_L);
+        }
+    }
+    double RowWidth = _dataBase->row(0)->width();
+    double RowHeight = _dataBase->row(0)->height();
+    bool is_find = false;
+    for (size_t i = 0, sizetmp = _DAG_nodes_reverse.size(); i < sizetmp; ++i)
+    {
+        int x = static_cast<int>(_DAG_nodes_reverse[i]->getX() / RowWidth);
+        _x2_DAG_Node_R[x].push_back(_DAG_nodes_reverse[i]);
+    }
+
+    // R to immediate right cell
+    int x = static_cast<int>(R->getX() / RowWidth);
+    _x2_DAG_Node_R[x].push_back(R);
+
+    is_find = false;
+    int i_total_level = row_top_boundary / RowHeight;
+    int curr_level = row_bottom_boundary / RowHeight;
+    map<int, vector<DAG_Node *> >::iterator it = _x2_DAG_Node_R.find(R->getX() / RowWidth);
+    for (curr_level; curr_level <= i_total_level; ++curr_level)
+    {
+        if (it != _x2_DAG_Node_R.end())
+        {
+            for (int k = 0, sizetmp = it->second.size(); k < sizetmp; ++k)
+            {
+                if ((it->second[k]->getY() / RowHeight == curr_level) && (it->second[k] != R))
+                {
+                    double weight = R->getX() - it->second[k]->getX();
+                    if (isDuplicate(R->getEdge(), {it->second[k], weight}) == 0)
+                    {
+                        R->addEdge(it->second[k], weight);
+                    }
+                    is_find = true;
+                    break;
+                }
+            }
+        }
+        if (is_find)
+        {
+            it = _x2_DAG_Node_R.find(R->getX() / RowWidth);
+            is_find = false;
+        }
+        else
+        { // 這層y沒找到
+            ++it;
+            if (it == _x2_DAG_Node_R.end() || (it->first) * RowWidth <= row_left_boundary)
+            { // R直接到L
+                is_find = true;
+            }
+            --curr_level;
+        }
+    }
+    // END: R to immediate right cell
+
+    for (size_t i = 0, sizetmp = _DAG_nodes_reverse.size(); i < sizetmp; ++i)
+    {
+        is_find = false;
+        if (_DAG_nodes_reverse[i]->getModule()->isFF())
+        {
+            int i_total_level = (_DAG_nodes_reverse[i]->getY() + _DAG_nodes_reverse[i]->getModule()->height()) / RowHeight;
+            if ((int)_DAG_nodes_reverse[i]->getModule()->height() % (int)RowHeight != 0)
+                i_total_level++;
+            int curr_level = _DAG_nodes_reverse[i]->getY() / RowHeight;
+            map<int, vector<DAG_Node *> >::iterator it = _x2_DAG_Node_R.find(_DAG_nodes_reverse[i]->getX() / RowWidth);
+            for (curr_level; curr_level <= i_total_level; ++curr_level)
+            {
+                if (it != _x2_DAG_Node_R.end())
+                {
+                    for (int k = 0, sizetmp = it->second.size(); k < sizetmp; ++k)
+                    {
+                        if ((it->second[k]->getY() / RowHeight == curr_level) && (it->second[k] != _DAG_nodes_reverse[i]))
+                        {
+                            double weight = moduleOverlap_X(_DAG_nodes_reverse[i]->getModule(), it->second[k]->getModule());
+                            if (isDuplicate(_DAG_nodes_reverse[i]->getEdge(), {it->second[k], weight}) == 0)
+                            {
+                                _DAG_nodes_reverse[i]->addEdge(it->second[k], weight);
+                            }
+                            is_find = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (is_find)
+                {
+                    it = _x2_DAG_Node_R.find(_DAG_nodes_reverse[i]->getX() / RowWidth);
+                    is_find = false;
+                }
+                else
+                { // 這層y沒找到
+                    ++it;
+                    if (it == _x2_DAG_Node_R.end() || (it->first) * RowWidth <= row_left_boundary)
+                    {
+                        double weight = _DAG_nodes_reverse[i]->getX() + _DAG_nodes_reverse[i]->getModule()->width() - R->getX();
+                        _DAG_nodes_reverse[i]->addEdge(R, weight);
+                        is_find = true;
+                    }
+                    --curr_level;
+                }
+            }
+        }
+        else
+        { // gate
+            double weight = (-1)*_DAG_nodes_reverse[i]->getModule()->width();
+            _DAG_nodes_reverse[i]->addEdge(_DAG_nodes_reverse[i + 1], weight); // R -> L
+
+            int curr_level = _DAG_nodes_reverse[i]->getY() / RowHeight;
+            int i_total_level = (_DAG_nodes_reverse[i]->getY() + _DAG_nodes_reverse[i]->getModule()->height()) / RowHeight;
+            if ((int)_DAG_nodes_reverse[i]->getModule()->height() % (int)RowHeight != 0)
+                i_total_level++;
+
+            map<int, vector<DAG_Node *> >::iterator it = _x2_DAG_Node_R.find(_DAG_nodes_reverse[i]->getX() / RowWidth);
+            for (curr_level; curr_level <= i_total_level; ++curr_level)
+            { // clang-format on
+                if (it != _x2_DAG_Node_R.end())
+                {
+                    for (int k = 0, sizetmp = it->second.size(); k < sizetmp; ++k)
+                    {
+                        if ((it->second[k]->getY() / RowHeight == curr_level) && (it->second[k] != _DAG_nodes_reverse[i]))
+                        {
+                            double weight = moduleOverlap_X(_DAG_nodes_reverse[i]->getModule(), it->second[k]->getModule());
+                            if (isDuplicate(_DAG_nodes_reverse[i]->getEdge(), {it->second[k], weight}) == 0)
+                            {
+                                _DAG_nodes_reverse[i + 1]->addEdge(it->second[k], weight); // R連接
+                            }
+                            is_find = true;
+                            break;
+                        }
+                    }
+                }
+                if (is_find)
+                {
+                    it = _x2_DAG_Node_R.find(_DAG_nodes_reverse[i]->getX() / RowWidth);
+                    is_find = false;
+                }
+                else
+                { // 這層y沒找到
+                    ++it;
+                    if (it == _x2_DAG_Node_R.end() || (it->first) * RowWidth <= row_left_boundary)
+                    {
+                        double weight = _DAG_nodes_reverse[i]->getX() + _DAG_nodes_reverse[i]->getModule()->width() - R->getX();
+                        _DAG_nodes_reverse[i + 1]->addEdge(R, weight); // R連接
+                        is_find = true;
+                    }
+                    --curr_level;
+                }
+            }
+            ++i; // BR後面一定是BL，跳過BL
+        }
+    }
     // test
-    //  for(int i=0;i<_DAG_nodes.size();++i)
-    //  {
-    //      cout<<_DAG_nodes[i]->getModule()->name()<<": ";
-    //      for(int j=0;j<_DAG_nodes[i]->getEdge().size();++j)
-    //      {
-    //          vector<pair<DAG_Node *,double > > buff = _DAG_nodes[i]->getEdge();
-    //          if(buff[j].first==NULL)
-    //          {
-    //           cout<<"fuck U~~"<<endl;
-    //          //     return;
-    //           }
+    cout<<R->getEdge().size()<<endl;
+    // for(int i=0;i<_DAG_nodes_reverse.size();++i)
+    // {
+    //     cout<<_DAG_nodes_reverse[i]->getModule()->name()<<": ";
+    //     for(int j=0;j<_DAG_nodes_reverse[i]->getEdge().size();++j)
+    //     {
+    //         vector<pair<DAG_Node *,double > > buff = _DAG_nodes_reverse[i]->getEdge();
+    //         if(buff[j].first==NULL)
+    //         {
+    //             cout<<"fuck U~~"<<endl;
+    //             return;
+    //         }
     //      }
-    //      // cout<<endl;
-    //  }
+    // }
+
 }
 // clang-format off
 void Placement::topologicalSortUtil(DAG_Node *node, stack<DAG_Node *> &Stack, vector<DAG_Node *> &visited)
@@ -2441,7 +2675,7 @@ int Placement::contour_L()
     quickSort_dag( _DAG_nodes,0, _DAG_nodes.size()-1);
     contour_Node *start = new contour_Node("outline_L");
     start->setMax_X(row_left_boundary);
-    start->setMax_height(row_top_boundary);
+    start->setMax_height(row_bottom_boundary);
     start->insertNode_small(start, NULL);
 
     int RowHeight = _dataBase->row(0)->height();
@@ -2462,9 +2696,9 @@ int Placement::contour_L()
             }
 
             if (target->getMax_height() == _DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height())
-                start->insertNode_big(buff_con, target);
-            else
                 start->insertNode_small(buff_con, target);
+            else
+                start->insertNode_big(buff_con, target);
             if (_DAG_nodes[i]->isFF() == true)
             {
                 buff_con->setMax_X(max_X + _DAG_nodes[i]->getModule()->width());
@@ -2490,18 +2724,13 @@ int Placement::contour_L()
                 {
                     if (target_equal->getprev()->getMax_height() == target_equal->getMax_height())
                         start->deleteNode(target_equal);
+                    
                 }
                 else if (target_equal->getMax_height() == 0)
                     start->deleteNode(target_equal);
             }
         }
     }
-
-    // for(int i=0;i<_DAG_nodes.size();++i)
-    // {
-    //     if(_DAG_nodes[i]->isFF()==1)
-    //         cout<<_DAG_nodes[i]->getX()<<" "<<_DAG_nodes[i]->get_li()<<endl;
-    // }
 }
 
 int Placement::contour_R()
@@ -2540,9 +2769,9 @@ int Placement::contour_R()
                 _DAG_nodes[i]->set_ri(ri);
             }
             if (target->getMax_height() == _DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height())
-                start->insertNode_big(buff_con, target);
-            else
                 start->insertNode_small(buff_con, target);
+            else
+                start->insertNode_big(buff_con, target);
 
             if (_DAG_nodes[i]->isFF() == true)
             {
@@ -2579,11 +2808,12 @@ int Placement::contour_R()
     {
         buff = (-1) * _DAG_nodes[i]->getX();
         _DAG_nodes[i]->setX(buff);
-        if(_DAG_nodes[i]->isFF())
-            cout<<_DAG_nodes[i]->get_li()+_DAG_nodes[i]->get_ri()<<endl;
+        // if(_DAG_nodes[i]->isFF())
+        //     cout<<_DAG_nodes[i]->get_li()+_DAG_nodes[i]->get_ri()<<endl;
     }
     return 0;
 }
+
 
 int customCeil(double num)
 {

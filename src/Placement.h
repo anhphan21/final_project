@@ -78,7 +78,8 @@ public:
    DAG_Node *DAGnode(unsigned nodeId){ return _DAG_nodes[nodeId];}
    void add_DAG_nodes(DAG_Node *node) { _DAG_nodes.push_back(node); }
    unsigned getNum_DAG_Node() { return _DAG_nodes.size(); }
-   void construct_DAG();
+   void construct_DAG_L();
+   void construct_DAG_R();
    int contour_L();
    int contour_R();
    
@@ -113,8 +114,8 @@ public:
    void clearmaxCliq() { _maxClique.clear(); }
    
    DAG_NodeList _DAG_nodes;
+   DAG_NodeList _DAG_nodes_reverse;
    void Displacement();
-   bool checkwidth();
 private:
    Database *_dataBase;
    // construct graph
@@ -130,6 +131,8 @@ private:
    set<set<Module *> > _maxClique;
 
    map<string, Module* > _name2Module;
+
+   map<int ,int > _y2xmax;
    // clang-format on
 };
 
