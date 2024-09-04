@@ -78,12 +78,9 @@ public:
    DAG_Node *DAGnode(unsigned nodeId){ return _DAG_nodes[nodeId];}
    void add_DAG_nodes(DAG_Node *node) { _DAG_nodes.push_back(node); }
    unsigned getNum_DAG_Node() { return _DAG_nodes.size(); }
-   void construct_DAG();
-   int contour_L();
-   int contour_R();
-   void contourL_HY();
-   void contourR_HY();
-
+   void construct_DAG_L();
+   void construct_DAG_R();
+   
    unsigned getmaxCliqesize(){ return _maxClique.size(); }
    // clang-format off
    set<Module*> getLargestCliqSet()
@@ -115,19 +112,8 @@ public:
    void clearmaxCliq() { _maxClique.clear(); }
    
    DAG_NodeList _DAG_nodes;
+   DAG_NodeList _DAG_nodes_reverse;
    void Displacement();
-   // row assignment ////////
-   void DelmoduleAss(Module* mod)
-   {
-      vector<Module*>::iterator it = find(_moduleNeedAss.begin(), _moduleNeedAss.end(), mod);
-      if (it != _moduleNeedAss.end()) 
-      {
-         _moduleNeedAss.erase(it);
-      }
-      return;
-   }
-   void assignNeedM();
-   bool checkwidth();
 private:
    Database *_dataBase;
    // construct graph
@@ -143,8 +129,8 @@ private:
    set<set<Module *> > _maxClique;
 
    map<string, Module* > _name2Module;
-   // modules needed to be assigned 
-   vector<Module*> _moduleNeedAss;
+
+   map<int ,int > _y2xmax;
    // clang-format on
 };
 
