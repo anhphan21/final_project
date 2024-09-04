@@ -102,7 +102,7 @@ int main(int argc, char **argv)
   cout << "done assign" << endl;
   testGraph.construct_DAG();
   cout << "Done DAG Graph!!!" << endl;
-
+  cout << testGraph._DAG_nodes.size() << endl;
   testGraph.calculateLongestPaths(testGraph._DAG_nodes);
   cout << "Done LongestPath" << endl;
 

@@ -2008,6 +2008,8 @@ bool isDuplicate(vector<pair<DAG_Node *, double> > edges, const pair<DAG_Node *,
 }
 void Placement::construct_DAG()
 {
+    _fixed_cells.clear();
+    _DAG_nodes.clear();
     int row_left_boundary = _dataBase->row(0)->x();
     int row_right_boundary = _dataBase->row(0)->x() + (_dataBase->row(0)->numSites()) * _dataBase->row(0)->width();
     int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y()+_dataBase->row(_dataBase->getNumRows() - 1)->height();
@@ -2020,7 +2022,8 @@ void Placement::construct_DAG()
     R->setName("Right_boundary");
     R->setX(row_right_boundary);
     R->setY(row_top_boundary);
-
+    _fixed_cells.push_back(L);
+    _fixed_cells.push_back(R);
     vector<Module *> modules = _dataBase->getmodule();
     quickSort(modules, 0, modules.size() - 1);
     for (size_t i = 0; i < modules.size(); ++i)
@@ -2051,6 +2054,8 @@ void Placement::construct_DAG()
 
             _DAG_nodes.push_back(dag_node_L);
             _DAG_nodes.push_back(dag_node_R);
+            _fixed_cells.push_back(dag_node_L);
+            _fixed_cells.push_back(dag_node_R);
         }
     }
     double RowWidth = _dataBase->row(0)->width();
@@ -2268,7 +2273,8 @@ void Placement::calculateLongestPaths(vector<DAG_Node *> &nodes)
             topologicalSortUtil(node, Stack, visited);
         }
     }
-
+    cout <<Stack.size()<<endl;
+    cout << nodes.size()<<endl;
     // 動態規劃計算最長路徑
     while (!Stack.empty())
     {
@@ -2924,35 +2930,70 @@ double updateHcontour(double small_y, double big_y, double ffWidth, Hcontour *_H
 }
 void Placement::contourL_HY()
 {
-    double row_left_boundary = _dataBase->row(0)->x();
-    double row_right_boundary = _dataBase->row(0)->x() + _dataBase->row(0)->numSites() * _dataBase->row(0)->width();
-    double row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y() + _dataBase->row(_dataBase->getNumRows() - 1)->height();
-    double row_bottom_boundary = _dataBase->row(0)->y();
-    Hcontour *root = new Hcontour(0, row_top_boundary, 0);
-    quickSort_dag(_DAG_nodes, 0, _DAG_nodes.size() - 1);
-
     for (int i = 0, sizetmp = _DAG_nodes.size(); i < sizetmp; ++i)
     {
         if (_DAG_nodes[i]->getModule() != NULL)
         {
             if (_DAG_nodes[i]->isFF() == true)
             {
-                double smally = _DAG_nodes[i]->getY();
-                double bigy = smally + _DAG_nodes[i]->getModule()->height();
-                double xx = _DAG_nodes[i]->getModule()->width();
-                double leftX = updateHcontour(smally, bigy, xx, root, true);
-                double li = leftX - _DAG_nodes[i]->getX() + _DAG_nodes[i]->get_deltaY(); // deltaY should be 0
-                _DAG_nodes[i]->set_li(li);
-            }
-            else
-            {
-                double smally = _DAG_nodes[i]->getY();
-                double bigy = smally + _DAG_nodes[i]->getModule()->height();
-                double xx = _DAG_nodes[i]->getModule()->width() + _DAG_nodes[i]->getX();
-                double leftX = updateHcontour(smally, bigy, xx, root, false);
+                double max_s = 0 - DBL_MAX;
+                double temp_s = 0;
+                for (int j = 0; j < _fixed_cells.size(); j++)
+                {
+                    if (_fixed_cells[j]->getName() == "Left_boundary")
+                    {
+                        temp_s = _DAG_nodes[i]->getwstar() - (_DAG_nodes[i]->getModule()->x() - _DAG_nodes[i]->getX());
+                        if (temp_s > max_s)
+                        {
+                            max_s = temp_s;
+                        }
+                    }
+                    else
+                    {
+                        if (_fixed_cells[j]->getName() != "Right_boundary")
+                        { // gate cells
+                        }
+                    }
+                }
+                // finishing cal Li
+                if (max_s == -DBL_MAX)
+                {
+                    cout << "error : li wrong" << endl;
+                }
+                _DAG_nodes[i]->set_li(max_s);
             }
         }
     }
+
+    // double row_left_boundary = _dataBase->row(0)->x();
+    // double row_right_boundary = _dataBase->row(0)->x() + _dataBase->row(0)->numSites() * _dataBase->row(0)->width();
+    // double row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y() + _dataBase->row(_dataBase->getNumRows() - 1)->height();
+    // double row_bottom_boundary = _dataBase->row(0)->y();
+    // Hcontour *root = new Hcontour(0, row_top_boundary, 0);
+    // quickSort_dag(_DAG_nodes, 0, _DAG_nodes.size() - 1);
+
+    // for (int i = 0, sizetmp = _DAG_nodes.size(); i < sizetmp; ++i)
+    // {
+    //     if (_DAG_nodes[i]->getModule() != NULL)
+    //     {
+    //         if (_DAG_nodes[i]->isFF() == true)
+    //         {
+    //             double smally = _DAG_nodes[i]->getY();
+    //             double bigy = smally + _DAG_nodes[i]->getModule()->height();
+    //             double xx = _DAG_nodes[i]->getModule()->width();
+    //             double leftX = updateHcontour(smally, bigy, xx, root, true);
+    //             double li = leftX - _DAG_nodes[i]->getX() + _DAG_nodes[i]->get_deltaY(); // deltaY should be 0
+    //             _DAG_nodes[i]->set_li(li);
+    //         }
+    //         else
+    //         {
+    //             double smally = _DAG_nodes[i]->getY();
+    //             double bigy = smally + _DAG_nodes[i]->getModule()->height();
+    //             double xx = _DAG_nodes[i]->getModule()->width() + _DAG_nodes[i]->getX();
+    //             double leftX = updateHcontour(smally, bigy, xx, root, false);
+    //         }
+    //     }
+    // }
 }
 void Placement::contourR_HY()
 {

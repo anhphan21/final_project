@@ -136,9 +136,11 @@ private:
 
    map<double, map<double, double> > _binMap;
    
+   DAG_NodeList _fixed_cells;
    map<pair<int ,int >,vector<DAG_Node *> > _Position2_DAG_Node;
    map<int , vector<DAG_Node *> > _x2_DAG_Node;
    set<set<Module *> > _maxClique;
+
 
    map<string, Module* > _name2Module;
    // modules needed to be assigned 
