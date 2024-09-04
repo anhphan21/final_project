@@ -54,6 +54,10 @@ public:
     double get_mui() { return _mui; }
     double _mui;
 
+    vector<pair<DAG_Node *,double > > _edge_r;
+    vector<pair<DAG_Node *,double > > getEdge_r(){return _edge_r;}
+    void    addEdge_r(DAG_Node *node, double weight){_edge_r.push_back({node, weight});}
+
 private:
     Module *_m;
     string _name;

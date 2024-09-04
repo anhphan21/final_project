@@ -33,8 +33,6 @@ public:
    void windows();
    void constructGraph();
    void printLongestPath(DAG_Node *node);
-   void calculateLongestPaths(std::vector<DAG_Node *> &nodes);
-   void topologicalSortUtil(DAG_Node *node, std::stack<DAG_Node *> &Stack, std::vector<DAG_Node *> &visited);
    // clang-format off
    set<set<Module *> > calMaxClique(Net *targetNet);
    set<Module*> adjustClique(Net *targetNet , set<Module*> targetClique);
@@ -110,7 +108,23 @@ public:
    }
    set<set<Module*> > getwholeCliq(){ return _maxClique; }
    void clearmaxCliq() { _maxClique.clear(); }
+   void assignNeedM();
+
+   void calculateLongestPaths_L(std::vector<DAG_Node*>& nodes);
+   void topologicalSortUtil_L(DAG_Node* node, std::stack<DAG_Node*>& Stack, std::vector<DAG_Node*>& visited);
+   void calculateLongestPaths_R(std::vector<DAG_Node*>& nodes);
+   void topologicalSortUtil_R(DAG_Node* node, std::stack<DAG_Node*>& Stack, std::vector<DAG_Node*>& visited);
    
+   void DelmoduleAss(Module* mod)
+   {
+      vector<Module*>::iterator it = find(_moduleNeedAss.begin(), _moduleNeedAss.end(), mod);
+      if (it != _moduleNeedAss.end()) 
+      {
+         _moduleNeedAss.erase(it);
+      }
+      return;
+   }
+
    DAG_NodeList _DAG_nodes;
    DAG_NodeList _DAG_nodes_reverse;
    void Displacement();
@@ -129,7 +143,7 @@ private:
    set<set<Module *> > _maxClique;
 
    map<string, Module* > _name2Module;
-
+   vector<Module*> _moduleNeedAss;
    map<int ,int > _y2xmax;
    // clang-format on
 };
