@@ -165,14 +165,14 @@ int main(int argc, char **argv)
 //   testGraph._DAG_nodes.push_back(node9);
 //   testGraph._DAG_nodes.push_back(node10);
 
-// testGraph.calculateLongestPaths(testGraph._DAG_nodes);
-// cout<<"-----calculateLongestPaths done--------"<<endl;
-//  cout<<endl<<endl<<"--------LI start--------"<<endl;
-//    for(int i=0; i < testGraph._DAG_nodes.size();i++)
-//   {
 
-//     cout<<"Name: "<<testGraph._DAG_nodes[i]->getName()<<" Li: "<<testGraph._DAG_nodes[i]->get_li()<<endl;
-//   }
+testGraph.calculateLongestPaths_L(testGraph._DAG_nodes);
+// for(int i=0; i < testGraph._DAG_nodes.size();i++)
+// {
+//   cout<<"Name: "<<testGraph._DAG_nodes[i]->getModule()->name()<<" Li: "<<testGraph._DAG_nodes[i]->get_li()<<endl;
+// }
+cout<<"-----calculateLongestPaths done--------"<<endl;
+ cout<<endl<<endl<<"--------LI start--------"<<endl;
 
 //   testGraph._DAG_nodes_reverse.clear();
 //   DAG_Node* rnode1 = new DAG_Node();
@@ -234,21 +234,34 @@ int main(int argc, char **argv)
 //   testGraph._DAG_nodes_reverse.push_back(rnode8);
 //   testGraph._DAG_nodes_reverse.push_back(rnode9);
 //   testGraph._DAG_nodes_reverse.push_back(rnode10);
-  
-testGraph.calculateLongestPaths_R(testGraph._DAG_nodes);
+
 testGraph.calculateLongestPaths_L(testGraph._DAG_nodes);
-cout<<"-----calculateLongestPaths done--------"<<endl;
+cout<<"-----calculateLongestPaths_L done--------"<<endl;
+
+
+testGraph.cal_rhoi();
+
+testGraph.cal_thetai();
+
+cout << "Li Ri done!" <<endl;
+cout << "Rho_i done!" << endl;
+testGraph.calculateLongestPaths_R(testGraph._DAG_nodes);
+for(int i=0; i < testGraph._DAG_nodes.size();i++)
+{
+  cout<<"Name: "<<testGraph._DAG_nodes[i]->getModule()->name()<<" Ri: "<<testGraph._DAG_nodes[i]->get_ri()<<" ";
+}
+
+cout<<"-----calculateLongestPaths_R done--------"<<endl;
+
+
+
 //   cout<<endl<<endl<<"--------RI start--------"<<endl;
 //      for(int i=0; i < testGraph._DAG_nodes_reverse.size();i++)
 //   {
 
 //     cout<<"Name: "<<testGraph._DAG_nodes_reverse[i]->getName()<<" Ri: "<<testGraph._DAG_nodes_reverse[i]->get_ri()<<endl;
 //   }
-cout << "Li Ri done!" <<endl;
-cout << "Done LongestPath" << endl;
 
-  testGraph.cal_rhoi();
-  cout << "Rho_i done!" << endl;
 //   // for(int i=0; i < testGraph._DAG_nodes.size();i++)
 //   // {
 //   //   if(testGraph._DAG_nodes[i]->isFF() && testGraph._DAG_nodes[i]->getrhoi()>500)
@@ -263,8 +276,17 @@ cout << "Done LongestPath" << endl;
 //   //     cout<<"node"<<i<<" :  "<<testGraph._DAG_nodes[i]->getrhoi()<<endl;
 //   //   }
 //   // }
-  testGraph.cal_thetai();
+
   cout << "Theta_i done!" << endl;
+
+  //  for(int i=0; i < testGraph._DAG_nodes.size();i++)
+  // {
+
+  //   if(testGraph._DAG_nodes[i]->isFF())
+  //   cout<<testGraph._DAG_nodes[i]->getModule()->name() << "Ro "<<testGraph._DAG_nodes[i]->getrhoi()<<" Theta: "<<testGraph._DAG_nodes[i]->getthetai()<<" ";
+  // }
+
+
 //   // for(int i=0; i < testGraph._DAG_nodes.size();i++)
 //   // {
 //   //   if(testGraph._DAG_nodes[i]->isFF()&& testGraph._DAG_nodes[i]->getthetai()>0 )
@@ -312,19 +334,19 @@ cout << "Done LongestPath" << endl;
 //   cout << "Done Contour_R Graph!!!" << endl;
 
 
-  cout << "----------start cal displacement----------" << endl;
-  testGraph.Displacement();
-  cout << "Done Displacement!!!" << endl;
-  //testDTB.outputTofile(argv[2]);
+  // cout << "----------start cal displacement----------" << endl;
+  // testGraph.Displacement();
+  // cout << "Done Displacement!!!" << endl;
+  // //testDTB.outputTofile(argv[2]);
 
-  ModuleList ttt = testDTB.getmodule();
+  // ModuleList ttt = testDTB.getmodule();
 
-  vector<Module> mods;
-  for(int i = 0; i < ttt.size(); ++i)
-  {
-    mods.push_back(*ttt[i]);
-  }
+  // vector<Module> mods;
+  // for(int i = 0; i < ttt.size(); ++i)
+  // {
+  //   mods.push_back(*ttt[i]);
+  // }
 
-  layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), mods);
+  // layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), mods);
   return 0;
 }

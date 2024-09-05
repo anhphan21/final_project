@@ -2610,7 +2610,10 @@ void Placement::calculateLongestPaths_R(vector<DAG_Node *> &nodes)
         // {
         //      nodes[i]->setwidth(9000000000);
         // }
-        nodes[i]->setwidth(nodes[i]->getModule()->width());
+        if(nodes[i]->getModule() == NULL)
+            nodes[i]->setwidth(0);
+        else
+            nodes[i]->setwidth(nodes[i]->getModule()->width());
         nodes[i]->setwstar(0);
         nodes[i]->setorder(i);
         nodes[i]->setPreviousGate(NULL);
