@@ -1,11 +1,10 @@
 #ifndef ROHMBUS_H
 #define ROHMBUS_H
-
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <iostream>
-// #include <numbers>
 #include <utility>
-
+#include <math.h>
 #include "Point.h"
 using namespace std;
 
@@ -53,8 +52,7 @@ public:
         double _topBound = min(min(_rohm0.peak(0).y, _rohm1.peak(0).y), min(_rohm0.peak(1).y, _rohm1.peak(1).y));
 
         // Check if 2 rhombus are overlap or not ?
-        if ((_leftBound > _rightBound) || (_botBound > _topBound))
-        {
+        if ((_leftBound > _rightBound) || (_botBound > _topBound)) {
             // cout << "Not overlap !!!" << endl;
         }
 

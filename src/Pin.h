@@ -8,19 +8,21 @@
 #include "CellLibrary.h"
 #include "DatabaseDef.h"
 #include "History.h"
-#include "Module.h"
+//#include "Module.h"
 #include "Timing.h"
 using namespace std;
+
+class Module;
 
 class Pin {
    public:
     // Default
-    Pin() : _x(-1), _y(-1), _xOffset(-1), _yOffset(-1), _module(nullptr), _net(nullptr) {
+    Pin() : _x(-1), _y(-1), _xOffset(-1), _yOffset(-1), _module(NULL), _net(NULL) {
     }
     // For input, output Pin
-    Pin(string &name, double x, double y) : _name(name), _x(x), _y(y), _xOffset(0), _yOffset(0), _module(nullptr), _net(nullptr), _marked(0) {}
+    Pin(string &name, double x, double y) : _name(name), _x(x), _y(y), _xOffset(0), _yOffset(0), _module(NULL), _net(NULL), _marked(0) {}
     // For module pin
-    Pin(string name, Module *module, double x, double y, double xOffset, double yOffset) : _name(name), _x(x), _y(y), _xOffset(xOffset), _yOffset(yOffset), _module(module), _net(nullptr), _marked(false) {}
+    Pin(string name, Module *module, double x, double y, double xOffset, double yOffset) : _name(name), _x(x), _y(y), _xOffset(xOffset), _yOffset(yOffset), _module(module), _net(NULL), _marked(false) {}
 
     Pin(Net *net, Module *module, string &pinName, double xOffset, double yOffset) : _net(net), _module(module), _name(pinName), _xOffset(xOffset), _yOffset(yOffset), _x(0), _y(0) {
     }
@@ -34,7 +36,7 @@ class Pin {
     Net *net() const { return _net; }
     History *history() const { return _history; }
     // unsigned pinId() const { return _pinId; }
-    bool isIOdie() const { return (_module == nullptr); }
+    bool isIOdie() const { return (_module == NULL); }
     Timing *getSlackInfor() { return &_slackInfo; }
     bool isVisited() const { return _marked; }
 
@@ -43,6 +45,7 @@ class Pin {
     void setPosition(double x, double y) {
         _x = x;
         _y = y;
+
     }
     void setOffset(double xOffset, double yOffset) {
         _xOffset = xOffset;
@@ -87,7 +90,7 @@ class Pin {
     static double calHPWL(const Pin &pin0, const Pin &pin1) {
         return abs(pin0.x() - pin1.x()) + abs(pin0.y() - pin1.y());
     }
-
+    Timing _slackInfo;
    private:
     // variables from benchmark input
     string _name;
@@ -97,9 +100,9 @@ class Pin {
     Net *_net;                  // ptr to the associated net
 
     bool _marked;  // use for checking the flipflop timing
-    Timing _slackInfo;
+    //Timing _slackInfo;
 
     History *_history;
 };
 
-#endif  // PIN_H`
+#endif  // PIN_H

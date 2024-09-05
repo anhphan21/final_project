@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cassert>
 
 #include "DatabaseDef.h"
 
@@ -98,7 +99,7 @@ class BaseCell {
     vector<unsigned> _outList;
     vector<unsigned> _inList;
     vector<string> _pinNameList;
-    vector<pair<double, double>> _pinOffset;
+    vector<pair<double, double> > _pinOffset;
 };
 
 class FFCell : public BaseCell {

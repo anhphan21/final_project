@@ -5,7 +5,8 @@
 #include <map>
 #include <string>
 #include <vector>
-
+#include <queue>
+#include <set>
 #include "Bin.h"
 #include "DatabaseDef.h"
 #include "History.h"
@@ -15,16 +16,17 @@
 #include "Pin.h"
 #include "Placement.h"
 #include "rhombus.h"
+#include "Row.h"
 using namespace std;
 
 class Database
 {
 public:
     Database();
-    ~Database() = default;
+    ~Database();
 
     void parser(const string &filename);
-
+    void outputTofile(const string &filename);
     // Design parameters
     void setName(string &name) { _name = name; }
 
@@ -49,11 +51,23 @@ public:
     void setBinWidth(double w) { _binWidth = w; }
     void setBinHeight(double h) { _binHeight = h; }
     void setBinUtil(double u) { _binMaxUtil = u; }
-
+    void setModule(unsigned idx, Module *mod)
+    {
+        _modules[idx] = mod;
+        ModuleName2Ptr[mod->name()] = mod;
+    }
+    void setFF(unsigned idx, Module *mod) { _ffModules[idx] = mod; }
     void setDisplacementDelay(double delay) { _dDelay = delay; }
 
     // methods for design (hyper-graph) construction
-    void addModule(Module *module) { _modules.push_back(module); }
+    void addModule(Module *module)
+    {
+        _modules.push_back(module);
+        // auto iter = ModuleName2Ptr.find(module->name());
+        std::map<std::string, Module *>::iterator iter = ModuleName2Ptr.find(module->name());
+        assert(iter == ModuleName2Ptr.end());
+        ModuleName2Ptr[module->name()] = module;
+    }
     void addFF(Module *ff) { _ffModules.push_back(ff); }
     void addNet(Net *net) { _nets.push_back(net); }
     void addClkNet(Net *clk) { _clkNets.push_back(clk); }
@@ -62,17 +76,27 @@ public:
     void addCellLib(CellType *cellLib) { _cellLib.push_back(cellLib); }
     void addFFLib(FFCell *ffLib, unsigned bitNum) { _ffLib[bitNum].push_back(ffLib); }
     void erasePin(unsigned pinId) { _pins.erase(_pins.begin() + pinId); }
-    void eraseModule(unsigned moduleId) { _modules.erase(_modules.begin() + moduleId); }
-    void eraseFF(unsigned ffId) { _ffModules.erase(_ffModules.begin() + ffId); }
+    void eraseModule(unsigned moduleId)
+    {
+        ModuleName2Ptr.erase(_modules[moduleId]->name());
+        _modules.erase(_modules.begin() + moduleId);
+    }
+    void eraseFF(unsigned ffId)
+    {
+        ModuleName2Ptr.erase(_ffModules[ffId]->name());
+        _ffModules.erase(_ffModules.begin() + ffId);
+    }
 
     // Bin operation
     void initialBinArray();
     void resetBin();
-    void updateBinUtil();
+    int updateBinUtil();
 
     // get design property
+    ModuleList getmodule() { return _modules; }
     Module *module(unsigned moduleId) { return _modules[moduleId]; }
     Module *ff(unsigned ffId) { return _ffModules[ffId]; }
+    ModuleList getWholeffList() { return _ffModules; }
     Net *net(unsigned netId) { return _nets[netId]; }
     Pin *pin(unsigned pinId) { return _pins[pinId]; }
     Row *row(unsigned rowId) { return _rows[rowId]; }
@@ -89,7 +113,13 @@ public:
         assert(outId < _numOutput);
         return _pins[_numInput + outId];
     }
-
+    // get design property through name
+    Module *getModuleByName(string &name)
+    {
+        map<string, Module *>::iterator it = ModuleName2Ptr.find(name);
+        assert(it != ModuleName2Ptr.end());
+        return ModuleName2Ptr[name];
+    }
     unsigned getNumModules() const { return _modules.size(); }
     unsigned getNumFF() const { return _ffModules.size(); }
     unsigned getNumNets() const { return _nets.size(); }
@@ -104,16 +134,22 @@ public:
     double getGamma() const { return _gamma; }
     double getLambda() const { return _lambda; }
     double getDisplacementDelay() const { return _dDelay; }
-    unsigned getMaxBitFFLib() const { return _ffLib.end()->first; }
+    // unsigned getMaxBitFFLib() const { return _ffLib.end()->first; }
     NetList getClkNets() const { return _clkNets; }
 
     double getBoundaryTop() const { return _boundaryTop; }
+    Module *getStringModule(string moduleName) { return ModuleName2Ptr[moduleName]; }
+    Module *getIntModule(int No) { return ModuleNo2Ptr[No]; }
+    void addIntModule(int num, Module *mod) { ModuleNo2Ptr[num] = mod; }
+    void delIntModule(int key) { ModuleNo2Ptr.erase(key); }
     double getBoundaryLeft() const { return _boundaryLeft; }
     double getBoundaryBottom() const { return _boundaryBottom; }
     double getBoundaryRight() const { return _boundaryRight; }
     FFCell *ffLib(unsigned bitNum, unsigned idx)
     {
-        auto it = _ffLib.find(bitNum);
+        // clang-format off
+        std::map<unsigned, std::vector<FFCell *> >::iterator it = _ffLib.find(bitNum);
+        // clang-format on
         if (it != _ffLib.end())
         {
             return _ffLib[bitNum][idx];
@@ -124,9 +160,14 @@ public:
             exit(1);
         }
     }
+    FFCell *getBestCelltype(unsigned bitnum) { return _bestCells[bitnum]; }
+    // unsigned getFFlibBitsize() { return _bestCells.size(); }
+    unsigned getmaxLibBit() { return _ffLibMaxBit; }
     unsigned getNumfflibBit(unsigned bit)
     {
-        auto it = _ffLib.find(bit);
+        // clang-format off
+        std::map<unsigned, std::vector<FFCell *> >::iterator it = _ffLib.find(bit);
+        // clang-format on
         if (it != _ffLib.end())
         {
             return _ffLib[bit].size();
@@ -142,20 +183,36 @@ public:
     void updateSlackAll();
     void updateSlack(Pin *);
     void resetVisit();
-
+    void buildBestCelltype();
     void unMarkedDPin(); // unmarked all clk pin of FF
     // void updateRadius(FFCell *);
     void updateRadius();
     void debankFF();
     Pin *FindPrePin(Pin *inputPin);
     void updateInitialSlackInfo();
-    void printResult();
-
+    void buildEachRowWidth();
     double getTNS() const;
     unsigned getDen(double) const;
     double totalCost(double) const;
 
-    FFCell *getFFlib(int bit){return _ffLib[bit][0];}
+    int getbincol() { return _numBinCol; }
+    int getbinrow() { return _numBinRow; }
+    double getbinutil() const { return _binMaxUtil; }
+    // let all slack be positive
+    void setPositive_slack();
+    void adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, double grid_width, double grid_height);
+    set<Pin *> getNegative_slack() { return _initial_negSlack; };
+    FFCell *getFFlib(int bit) { return _ffLib[bit][0]; }
+
+    map<string, Pin *> IODesign;
+
+    map<string, int> OriginModuleN;
+    int record = 0;
+
+    vector<Module *> getbuffer() { return _buffer; }
+    double getBinHeight() { return _binHeight; }
+    double getBinWidth() { return _binWidth; }
+    bool IsonSite(Module *tar);
 
 private:
     string _name; // Design Name
@@ -175,6 +232,8 @@ private:
     // Library
     FFLLibrary _ffLib;
     CellLibrary _cellLib;
+    map<unsigned, FFCell *> _bestCells;
+    unsigned _ffLibMaxBit;
 
     // Design statics
     Rectangle _dieRectangle;
@@ -200,7 +259,7 @@ private:
     // Caching
     map<string, BaseCell *> CellType2Ptr;
     map<string, Module *> ModuleName2Ptr;
-    map<string, Pin *> IODesign;
+    map<int, Module *> ModuleNo2Ptr;
 
     // Caching the list for processing
     ModuleList _ffModules;
@@ -212,8 +271,11 @@ private:
     // void createPinforModule(Module *);
     // void updateRadiusRecur(FFCell*, Module*);
     Module *FindPrePin(Module *currentM);
-    
+
     // void updateInitialSlackInfo();
+    set<Pin *> _initial_negSlack;
+
+    vector<Module *> _buffer;
 };
 
 #endif // DATABASE_H

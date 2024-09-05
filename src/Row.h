@@ -6,9 +6,11 @@
 #include "DatabaseDef.h"
 using namespace std;
 
-class Row {
-   public:
-    enum Orient {
+class Row
+{
+public:
+    enum Orient
+    {
         OR_N,
         OR_W,
         OR_S,
@@ -19,16 +21,18 @@ class Row {
         OR_FE
     };
 
-    Row() : _x(-1), _y(-1), _siteWidth(-1), _siteHeight(-1), _siteSpacing(-1), _numSites(0), _orient(OR_N), _isSymmetric(1) {}
+    Row() : _x(-1), _y(-1), _siteWidth(-1), _siteHeight(-1), _siteSpacing(-1), _numSites(0), _orient(OR_N), _isSymmetric(1), _totModuleWidth(0) {}
 
-    Row(double &x, double &y, double siteWidth, double siteHeight, double &set_step) : _x(x), _y(y), _siteWidth(siteWidth), _siteHeight(siteHeight), _siteSpacing(0), _orient(OR_N), _numSites(set_step), _isSymmetric(1) {}
+    Row(double &x, double &y, double siteWidth, double siteHeight, double &set_step) : _x(x), _y(y), _siteWidth(siteWidth), _siteHeight(siteHeight), _siteSpacing(0), _orient(OR_N), _numSites(set_step), _isSymmetric(1), _totModuleWidth(0) {}
 
     ////////////////////////////////////////////
-    static bool Lesser(const Row &r1, const Row &r2) {
+    static bool Lesser(const Row &r1, const Row &r2)
+    {
         return (r1._y < r2._y);
     }
 
-    static bool Greater(const Row &r1, const Row &r2) {
+    static bool Greater(const Row &r1, const Row &r2)
+    {
         return (r1._y > r2._y);
     }
     /////////////////////////////////////////////
@@ -37,14 +41,15 @@ class Row {
     double x() const { return _x; }
     double y() const { return _y; }
     double height() const { return _siteHeight; }
-    double width() const { return _numSites * _siteWidth; }
+    double width() const { return _siteWidth; }
     double siteSpacing() const { return _siteSpacing; }
     double numSites() const { return _numSites; }
 
     /////////////////////////////////////////////
     // set
     /////////////////////////////////////////////
-    void setPosition(double x, double y) {
+    void setPosition(double x, double y)
+    {
         _x = x;
         _y = y;
     }
@@ -55,15 +60,22 @@ class Row {
     void setOrient(Orient orient) { _orient = orient; }
     void setIsSymmetric(bool isSymmetric) { _isSymmetric = isSymmetric; }
 
-   private:
+    double getModWid() { return _totModuleWidth; }
+    void setModWid(double wid) { _totModuleWidth = wid; }
+    void incModWid(double wid) { _totModuleWidth += wid; }
+    void decModWid(double wid) { _totModuleWidth -= wid; }
+
+private:
     // variables from benchmark input
-    double _x, _y;  // low x and low y
+    double _x, _y; // low x and low y
     double _siteWidth;
-    double _siteHeight;   // height of row
-    double _siteSpacing;  // distance between the beginnings of neighboring sites
-    unsigned _numSites;   // number of sites
-    Orient _orient;       // orient
-    bool _isSymmetric;    // symmetry
+    double _siteHeight;  // height of row
+    double _siteSpacing; // distance between the beginnings of neighboring sites
+    unsigned _numSites;  // number of sites
+    Orient _orient;      // orient
+    bool _isSymmetric;   // symmetry
+    // row assignment
+    double _totModuleWidth;
 };
 
-#endif  // ROW_H
+#endif // ROW_H

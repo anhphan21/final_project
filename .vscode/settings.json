@@ -64,6 +64,12 @@
         "streambuf": "cpp",
         "thread": "cpp",
         "typeinfo": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "typeindex": "cpp",
+        "strstream": "cpp",
+        "complex": "cpp",
+        "cfenv": "cpp",
+        "slist": "cpp",
+        "valarray": "cpp"
     }
 }

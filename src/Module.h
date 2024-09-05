@@ -1,43 +1,51 @@
 #ifndef MODULE_H
 #define MODULE_H
-
+#include "Pin.h"
 #include <cassert>
 #include <iostream>
 #include <string>
 #include <vector>
-
+#include <set>
 #include "CellLibrary.h"
 #include "DatabaseDef.h"
-#include "Pin.h"
 #include "Rectangle.h"
 using namespace std;
 
-class Module {
-   public:
-    Module() : _x(-1), _y(-1), _isFixed(false), _type(nullptr), _radius(0) {
+class Module
+{
+public:
+    Module() : _x(-1), _y(-1), _isFixed(false), _type(NULL), _radius(0), _feasibleRegion(NULL)
+    {
     }
 
-    Module(string &name, CellType *type, double x, double y)
-        : _name(name), _type(type), _x(x), _y(y), _isFixed(false), _radius(0) {
+    Module(string name, CellType *type, double x, double y)
+        : _name(name), _type(type), _x(x), _y(y), _isFixed(false), _radius(0), _feasibleRegion(NULL)
+    {
     }
-
+    ~Module()
+    {
+        if (_feasibleRegion != NULL)
+        {
+            delete _feasibleRegion;
+        }
+    }
     /////////////////////////////////////////////
     // get
     /////////////////////////////////////////////
     string name() const { return _name; }
-    double x() const { return _x; }  // x coordinates
-    double y() const { return _y; }  // y coordinates //(x,y): lower-left point of the block
+    double x() const { return _x; } // x coordinates
+    double y() const { return _y; } // y coordinates //(x,y): lower-left point of the block
     double width() const { return _type->getWidth(); }
     double height() const { return _type->getHeight(); }
-    bool isFixed() const { return _isFixed; }  // if fixed module, return true
+    bool isFixed() const { return _isFixed; } // if fixed module, return true
     bool isFF() const { return _type->isFF(); }
     CellType *cellType() const { return _type; }
-
+    Rectangle *getFeasibleRegion() const { return _feasibleRegion; }
     double centerX() const { return _x + width() / 2; }
     double centerY() const { return _y + height() / 2; }
     double area() const { return _type->getArea(); }
 
-    Rectangle rectangle() const { return {_x, _y, _x + width(), _y + height()}; }
+    Rectangle rectangle() const { return Rectangle(_x, _y, _x + width(), _y + height()); }
 
     double getPower() const { return _type->getPower(); }
     double getQdelay() const { return _type->getQdelay(); }
@@ -48,12 +56,15 @@ class Module {
     // set
     /////////////////////////////////////////////
     void setName(const string &name) { _name = name; }
-    void setPosition(double x, double y) {  // would update the pin positions when you set new position
+    void setFeasibleRegion(Rectangle *region) { _feasibleRegion = region; }
+    void setPosition(double x, double y)
+    { // would update the pin positions when you set new position
         _x = x;
         _y = y;
-        updatePinPositions();  // update pin positions
+        updatePinPositions(); // update pin positions
     }
-    void setCenterPosition(double x, double y) {
+    void setCenterPosition(double x, double y)
+    {
         _x = x - width() / 2;
         _y = y - height() / 2;
         updatePinPositions();
@@ -71,16 +82,19 @@ class Module {
     unsigned numInPins() const { return _type->getInNum(); }
     void addPin(Pin *pPin) { _pins.push_back(pPin); }
     unsigned currentNumPins() const { return _pins.size(); }
-    Pin *pin(unsigned idx) {
+    Pin *pin(unsigned idx)
+    {
         assert(idx < _pins.size());
         return _pins[idx];
     }
 
-    Pin *InPin(unsigned idx) {
+    Pin *InPin(unsigned idx)
+    {
         return _pins[_type->inIdx(idx)];
     }
 
-    Pin *OutPin(unsigned idx) {
+    Pin *OutPin(unsigned idx)
+    {
         return _pins[_type->outIdx(idx)];
     }
     // CLK should be the last of input pins
@@ -90,25 +104,46 @@ class Module {
     void setInPin(unsigned idx, Pin *pPin) { _pins[_type->inIdx(idx)] = pPin; }
     void setOutPin(unsigned idx, Pin *pPin) { _pins[_type->outIdx(idx)] = pPin; }
     void setCellType(CellType *type) { _type = type; }
+    // clang-format off
+    set<pair<Module *, Module *> > _outputFF; // first: Gate; second: ouput FF
+    int No;
+    // clang-format on
+    double getTNS()
+    {
+        double tns = 0;
+        for (int i = 0; i < numInPins(); ++i) // input pin
+        {
+            if (InPin(i)->getSlackInfor()->slack() < 0)
+                tns += InPin(i)->getSlackInfor()->slack();
+        }
+        return tns;
+    }
 
-   private:
+private:
     // variables from benchmark input
     string _name;
-    double _x, _y;  // bottom-left coordinate
+    double _x, _y; // bottom-left coordinate
     bool _isFixed;
     double _radius;
     CellType *_type;
-
+    Rectangle *_feasibleRegion;
     // pins of the module
     vector<Pin *> _pins;
 
     // update pin positions
-    void updatePinPositions() {
+    void updatePinPositions()
+    {
         Pin *_tPin;
-        for (unsigned i = 0, endi = totnumPins(); i < endi; ++i) {
+        for (unsigned i = 0, endi = totnumPins(); i < endi; ++i)
+        {
             _tPin = _pins[i];
             _tPin->setPosition(x() + _tPin->xOffset(), y() + _tPin->yOffset());
         }
     }
+
+    // feasible region
+    // Rectangle _feasibleRegion;
+    // vector<Module *> _outputFF;
+    // vector<pair<Module *,Module *> > _outputFF;  //first: Gate; second: ouput FF
 };
 #endif

@@ -1,6 +1,7 @@
 #!bash 
+make clean
 make
 clear
 cd bin
-./fp ./case.txt
+./tt ../benchmark/testcase1_0812 output1_tt.txt
 cd ..

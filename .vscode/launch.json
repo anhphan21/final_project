@@ -5,9 +5,10 @@
         "name": "C/C++: g++ build and debug active file",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/bin/fp",
+        "program": "${workspaceFolder}/bin/tt",
         "args": [
-            "${workspaceFolder}/benchmark/sampleCase",
+            "${workspaceFolder}/benchmark/testcase1_0812",
+            "${workspaceFolder}/output1_tt.txt"
         ],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",

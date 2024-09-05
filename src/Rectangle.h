@@ -2,7 +2,7 @@
 #define RECTANGLE_H
 
 #include <algorithm>
-
+#include <cmath>
 #include "DatabaseDef.h"
 using namespace std;
 
@@ -11,7 +11,7 @@ class Rectangle {
     Rectangle() : _left(0), _bottom(0), _right(0), _top(0) {
     }
 
-    Rectangle(double left, double bottom, double right, double top)
+    Rectangle(double left, double bottom, double right, double top) //x1 y1 x2 y2
         : _left(left), _bottom(bottom), _right(right), _top(top) {
     }
 
@@ -27,6 +27,12 @@ class Rectangle {
     double centerX() const { return (_left + _right) / 2; }
     double centerY() const { return (_bottom + _top) / 2; }
 
+    double getX1() const { return _x1; }
+    double getX2() const { return _x2; }
+    double getY1() const { return _y1; }
+    double getY2() const { return _y2; }
+    double getWidth() const { return _width; }
+    double getHeight() const { return _height; }
     /////////////////////////////////////////////
     // set
     /////////////////////////////////////////////
@@ -37,6 +43,16 @@ class Rectangle {
         _top = top;
     }
 
+    void setInf(double x1, double y1,double x2, double y2)
+    {
+        _x1 = x1;
+        _y1 = y1;
+        _x2 = x2;
+        _y2 = y2;
+        _width = fabs(x2 - x1);
+        _height = fabs(y2 - y1);
+    }
+   
     /////////////////////////////////////////////
     // overlap area of two rectangles
     /////////////////////////////////////////////
@@ -53,6 +69,11 @@ class Rectangle {
     double _bottom;
     double _right;
     double _top;
+    
+    //feasible region of intersection
+    double _x1, _y1;//left bottom
+    double _x2, _y2;//right top
+    double _width, _height;  // width and height of rectangle
 };
 
 #endif  // RECTANGLE_H
