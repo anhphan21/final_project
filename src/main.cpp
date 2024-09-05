@@ -52,7 +52,6 @@ int main(int argc, char **argv)
   Database testDTB;
   testDTB.parser(argv[1]);
   cout << "Done parser!!!" << endl;
-
   testDTB.setPositive_slack();
   cout << "Done positive slack!!!" << endl;
 

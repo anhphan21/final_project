@@ -33,6 +33,7 @@ public:
    void windows();
    void constructGraph();
    void printLongestPath(DAG_Node *node);
+
    // clang-format off
    set<set<Module *> > calMaxClique(Net *targetNet);
    set<Module*> adjustClique(Net *targetNet , set<Module*> targetClique);
