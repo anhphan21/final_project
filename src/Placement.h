@@ -139,6 +139,8 @@ private:
 
    map<double, map<double, double> > _binMap;
    
+
+   map<string , DAG_Node *> _name2DAG;
    map<pair<int ,int >,vector<DAG_Node *> > _Position2_DAG_Node;
    map<int , vector<DAG_Node *> > _x2_DAG_Node;
    set<set<Module *> > _maxClique;
