@@ -18,6 +18,7 @@ void layout(const string &filename, const int x, const int y, vector<Module> &mo
   }
 
   // Output something to the output file
+  fout << "property rect name string haha" << endl; 
   fout << "endheader" << endl;
   fout << "line 0 0 " << x << " " << 0 << " gray" << endl;
   fout << "line 0 0 " << 0 << " " << y << " gray" << endl;
@@ -29,14 +30,16 @@ void layout(const string &filename, const int x, const int y, vector<Module> &mo
     if (module[i].isFF())
     {
       fout << "rect " << module[i].x() << " " << module[i].y() << " "
-           << module[i].x() + module[i].width() << " " << module[i].y() + module[i].height() << " gray" << " name " << module[i].name() << "\n";
+           << module[i].x() + module[i].width() << " " << module[i].y() + module[i].height() << " gray" << " name " << module[i].name()
+           << " name " << module[i].name() << "\n";
       //  << "gray" << endl;
       //  << "gray" << " name " << module[i].name() << endl;
     }
     else
     {
       fout << "rect " << module[i].x() << " " << module[i].y() << " "
-           << module[i].x() + module[i].width() << " " << module[i].y() + module[i].height() << " red" << " name " << module[i].name() << "\n";
+           << module[i].x() + module[i].width() << " " << module[i].y() + module[i].height() << " blue" << " name " << module[i].name()
+           << " name " << module[i].name() << "\n";
       // fout << "rect " << module[i]->x() << " " << module[i]->y() << " "
       //      << module[i]->x() + module[i]->width() << " " << module[i]->y() + module[i]->height() << " "
       //      << "red" << " name " << module[i]->name() << endl;
@@ -52,56 +55,58 @@ int main(int argc, char **argv)
   Database testDTB;
   testDTB.parser(argv[1]);
   cout << "Done parser!!!" << endl;
-  testDTB.setPositive_slack();
-  cout << "Done positive slack!!!" << endl;
+  // testDTB.setPositive_slack();
+  // cout << "Done positive slack!!!" << endl;
 
-  testDTB.buildBestCelltype();
+  // testDTB.buildBestCelltype();
   Placement testGraph;
   testGraph.setDatabase(&testDTB);
-  testGraph.debankAllFF();
-  cout << "Done debank!!!" << endl;
-  testGraph.netListGraph();
-  cout << "Done Lily Graph!!!" << endl;
-  testGraph.windows();
-  cout << "Done Weilun Graph!!!" << endl;
-  // get clk net list
-  NetList Cnets = testDTB.getClkNets();
-  for (size_t j = 0; j < Cnets.size(); j++)
-  {
-    // clang-format off
-    set<set<Module *> > cliques = testGraph.calMaxClique(Cnets[j]);
-    while (testGraph.getmaxCliqesize() != 0)
-    {
-      set<Module *> a = testGraph.getLargestCliqSet();
-      set<Module *> b = testGraph.adjustClique(Cnets[j], a);
-      testGraph.mergeMulti1bitFF(b);
-      set<set<Module*> >c = testGraph.getwholeCliq();
-      for (set<set<Module*> >::iterator it = c.begin(); it != c.end(); ++it)
-      { // clang-format on
-        const set<Module *> &mySet = *it;
-        set<Module *> innerSet = mySet;
-        // cout << "-------------------------------" << endl;
-        // for (set<Module *>::iterator it2 = innerSet.begin(); it2 != innerSet.end(); ++it2)
-        // {
-        //   cout << (*it2)->name() << "  ";
-        // }
-        // cout << endl;
-        innerSet.clear();
-      }
-      a.clear();
-      b.clear();
-      c.clear();
-    }
-    cliques.clear();
-    testGraph.clearmaxCliq();
-  }
-  cout << "Done merging! " << endl;
-  testDTB.buildEachRowWidth();
-  testGraph.assignNeedM();
-  cout << "done assign" << endl;
+  // testGraph.debankAllFF();
+  // cout << "Done debank!!!" << endl;
+  // testGraph.netListGraph();
+  // cout << "Done Lily Graph!!!" << endl;
+  // testGraph.windows();
+  // cout << "Done Weilun Graph!!!" << endl;
+  // // get clk net list
+  // NetList Cnets = testDTB.getClkNets();
+  // for (size_t j = 0; j < Cnets.size(); j++)
+  // {
+  //   // clang-format off
+  //   set<set<Module *> > cliques = testGraph.calMaxClique(Cnets[j]);
+  //   while (testGraph.getmaxCliqesize() != 0)
+  //   {
+  //     set<Module *> a = testGraph.getLargestCliqSet();
+  //     set<Module *> b = testGraph.adjustClique(Cnets[j], a);
+  //     testGraph.mergeMulti1bitFF(b);
+  //     set<set<Module*> >c = testGraph.getwholeCliq();
+  //     for (set<set<Module*> >::iterator it = c.begin(); it != c.end(); ++it)
+  //     { // clang-format on
+  //       const set<Module *> &mySet = *it;
+  //       set<Module *> innerSet = mySet;
+  //       // cout << "-------------------------------" << endl;
+  //       // for (set<Module *>::iterator it2 = innerSet.begin(); it2 != innerSet.end(); ++it2)
+  //       // {
+  //       //   cout << (*it2)->name() << "  ";
+  //       // }
+  //       // cout << endl;
+  //       innerSet.clear();
+  //     }
+  //     a.clear();
+  //     b.clear();
+  //     c.clear();
+  //   }
+  //   cliques.clear();
+  //   testGraph.clearmaxCliq();
+  // }
+  // cout << "Done merging! " << endl;
+  // testDTB.buildEachRowWidth();
+  // testGraph.assignNeedM();
+  // cout << "done assign" << endl;
+
   testGraph.construct_DAG_L();
   cout << "Done DAG Graph!!!" << endl;
   cout << testGraph._DAG_nodes.size() << endl;
+
 
 
 //   testGraph._DAG_nodes.clear();
@@ -171,7 +176,7 @@ testGraph.calculateLongestPaths_L(testGraph._DAG_nodes);
 //   cout<<"Name: "<<testGraph._DAG_nodes[i]->getModule()->name()<<" Li: "<<testGraph._DAG_nodes[i]->get_li()<<endl;
 // }
 cout<<"-----calculateLongestPaths done--------"<<endl;
- cout<<endl<<endl<<"--------LI start--------"<<endl;
+cout<<endl<<endl<<"--------LI start--------"<<endl;
 
 //   testGraph._DAG_nodes_reverse.clear();
 //   DAG_Node* rnode1 = new DAG_Node();
@@ -234,23 +239,25 @@ cout<<"-----calculateLongestPaths done--------"<<endl;
 //   testGraph._DAG_nodes_reverse.push_back(rnode9);
 //   testGraph._DAG_nodes_reverse.push_back(rnode10);
 
-testGraph.calculateLongestPaths_L(testGraph._DAG_nodes);
-cout<<"-----calculateLongestPaths_L done--------"<<endl;
+// testGraph.calculateLongestPaths_L(testGraph._DAG_nodes);
+// cout<<"-----calculateLongestPaths_L done--------"<<endl;
 
 
-testGraph.cal_rhoi();
+// testGraph.cal_rhoi();
 
-testGraph.cal_thetai();
+// testGraph.cal_thetai();
 
-cout << "Li Ri done!" <<endl;
-cout << "Rho_i done!" << endl;
-testGraph.calculateLongestPaths_R(testGraph._DAG_nodes);
-for(int i=0; i < testGraph._DAG_nodes.size();i++)
-{
-  cout<<"Name: "<<testGraph._DAG_nodes[i]->getModule()->name()<<" Ri: "<<testGraph._DAG_nodes[i]->get_ri()<<" ";
-}
+// cout << "Li Ri done!" <<endl;
+// cout << "Rho_i done!" << endl;
+// testGraph.calculateLongestPaths_R(testGraph._DAG_nodes);
+// for(int i=0; i < testGraph._DAG_nodes.size();i++)
+// {
+//   cout <<"Name: "<<testGraph._DAG_nodes[i]->getModule()->name()<<endl;
+//   cout << " Ri: "<<testGraph._DAG_nodes[i]->get_ri()<<" ";
+//   cout << " Li: "<<testGraph._DAG_nodes[i]->get_li()<<" ";
+// }
 
-cout<<"-----calculateLongestPaths_R done--------"<<endl;
+// cout<<"-----calculateLongestPaths_R done--------"<<endl;
 
 
 
@@ -276,7 +283,7 @@ cout<<"-----calculateLongestPaths_R done--------"<<endl;
 //   //   }
 //   // }
 
-  cout << "Theta_i done!" << endl;
+  // cout << "Theta_i done!" << endl;
 
   //  for(int i=0; i < testGraph._DAG_nodes.size();i++)
   // {
@@ -336,16 +343,16 @@ cout<<"-----calculateLongestPaths_R done--------"<<endl;
   // cout << "----------start cal displacement----------" << endl;
   // testGraph.Displacement();
   // cout << "Done Displacement!!!" << endl;
-  // //testDTB.outputTofile(argv[2]);
+  //testDTB.outputTofile(argv[2]);
 
-  // ModuleList ttt = testDTB.getmodule();
+  ModuleList ttt = testDTB.getmodule();
 
-  // vector<Module> mods;
-  // for(int i = 0; i < ttt.size(); ++i)
-  // {
-  //   mods.push_back(*ttt[i]);
-  // }
+  vector<Module> mods;
+  for(int i = 0; i < ttt.size(); ++i)
+  {
+    mods.push_back(*ttt[i]);
+  }
 
-  // layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), mods);
+  layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), mods);
   return 0;
 }
