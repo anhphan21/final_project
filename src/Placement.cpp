@@ -1982,7 +1982,7 @@ bool compareModules_dag(const DAG_Node *a, const DAG_Node *b)
     {
         return a->getY() > b->getY();
     }
-    return a->getX() < b->getX();
+    return a->getX() > b->getX();
 }
 
 int partition_dag(std::vector<DAG_Node *> &modules, int low, int high)
@@ -2054,12 +2054,27 @@ bool isDuplicate(vector<pair<DAG_Node *, double> > edges, const pair<DAG_Node *,
             }
         }
         
+        if(edges[i].first->getModule()==NULL)
+        {
+            if (edges[i].first->getName()==newPair.first->getName())
+            {
+                return true;
+            }
+        }
+        else
+        {
+            if (edges[i].first->getModule()->name()==newPair.first->getModule()->name())
+            {
+                return true;
+            }
+        }
+        
     }
     return false;
 }
 void Placement::construct_DAG_L()
 {
-    int row_left_boundary = _dataBase->row(0)->x();
+int row_left_boundary = _dataBase->row(0)->x();
     int row_right_boundary = _dataBase->row(0)->x() + (_dataBase->row(0)->numSites()) * _dataBase->row(0)->width();
     int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y()+_dataBase->row(_dataBase->getNumRows() - 1)->height();
     int row_bottom_boundary = _dataBase->row(0)->y();
@@ -2269,11 +2284,111 @@ void Placement::construct_DAG_L()
 
     _DAG_nodes.push_back(L);
     _DAG_nodes.push_back(R);
-
-
     // test
-    int count=0;
-    for(int i=0;i<_DAG_nodes.size();++i)
+    // for(int i=0;i<_DAG_nodes.size();++i)
+    // {
+    //     if(_DAG_nodes[i]->getModule()==NULL)
+    //         cout<<_DAG_nodes[i]->getName()<<": ";
+    //     else
+    //         cout<<_DAG_nodes[i]->getModule()->name()<<": ";
+    //     for(int j=0;j<_DAG_nodes[i]->getEdge().size();++j)
+    //     {
+    //         vector<pair<DAG_Node *,double > > buff = _DAG_nodes[i]->getEdge();
+    //         if(buff[j].first==NULL)
+    //         {
+    //             cout<<"fuck U~~"<<endl;
+    //             return;
+    //         }
+    //      }
+    // }
+
+    // for(int i=0;i<_DAG_nodes.size();++i)
+    // {
+    //     if(_DAG_nodes[i]->getModule()->name()=="C102729")
+    //     {
+    //         vector<pair<DAG_Node *, double> > edges = _DAG_nodes[i]->getEdge();
+    //         for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) 
+    //         {
+    //             DAG_Node *node = it->first;
+    //             double weight = it->second;
+    //             cout << "Node: " << node->getModule()->name() << ", Weight: " << weight << std::endl;
+    //         }
+    //     }
+    // }
+    //     for(int i=0;i<_DAG_nodes.size();++i)
+    // {
+    //     if(_DAG_nodes[i]->getModule()->name()=="C43116")
+    //     {
+    //         vector<pair<DAG_Node *, double> > edges = _DAG_nodes[i]->getEdge();
+    //         for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) 
+    //         {
+    //             DAG_Node *node = it->first;
+    //             double weight = it->second;
+    //             cout << "Node: " << node->getModule()->name() << ", Weight: " << weight << std::endl;
+    //         }
+    //     }
+    // }
+
+    for (int i = 0; i < _DAG_nodes.size(); ++i) 
+    {
+    // if (_DAG_nodes[i]->getEdge().empty() && _DAG_nodes[i]->getEdge_r().empty()) 
+    // {
+    //     cout << "Node " << _DAG_nodes[i]->getName() << " is isolated" << std::endl;
+    // }
+        if(_DAG_nodes[i]->getModule()==NULL)
+        {
+            // cout << "I'm " << _DAG_nodes[i]->getName() << endl;
+            // vector<pair<DAG_Node *, double> > edges = _DAG_nodes[i]->getEdge();
+            // for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) 
+            // {
+            //     DAG_Node *node = it->first;
+            //     double weight = it->second;
+            //     if(it->first->getModule()==NULL)
+            //     {
+            //         cout << "Node: " << node->getName() << ", Weight: " << weight << endl;
+            //     }
+            //     else
+            //         cout << "Node: " << node->getModule()->name() << ", Weight: " << weight << endl;
+            // }
+        }
+        else if(_DAG_nodes[i]->getModule()->name() == "C102728")
+        {
+            cout << "I'm " << _DAG_nodes[i]->getModule()->name() << endl;
+            vector<pair<DAG_Node *, double> > edges = _DAG_nodes[i]->getEdge();
+            for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) 
+            {
+                DAG_Node *node = it->first;
+                double weight = it->second;
+                if(it->first->getModule()==NULL)
+                {
+                    cout << "adjNode: " << node->getName() << ", Weight: " << weight << endl;
+                }
+                else
+                    cout << "adjNode: " << node->getModule()->name() << ", Weight: " << weight << endl;
+            }
+            cout << "------"<< endl;
+        }
+    } 
+}
+
+void Placement::construct_DAG_R()
+{
+    int row_left_boundary = _dataBase->row(0)->x();
+    int row_right_boundary = _dataBase->row(0)->x() + (_dataBase->row(0)->numSites()) * _dataBase->row(0)->width();
+    int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y()+_dataBase->row(_dataBase->getNumRows() - 1)->height();
+    int row_bottom_boundary = _dataBase->row(0)->y();
+    DAG_Node *L = new DAG_Node();
+    L->setName("Left_boundary");
+    L->setX(row_left_boundary);
+    L->setY(row_top_boundary);
+    DAG_Node *R = new DAG_Node();
+    R->setName("Right_boundary");
+    R->setX(row_right_boundary);
+    R->setY(row_top_boundary);
+    map<int, vector<DAG_Node *>, greater<int> > _x2_DAG_Node_R;
+    vector<Module *> modules = _dataBase->getmodule();
+    quickSort_r(modules, 0, modules.size() - 1);
+    for (size_t i = 0; i < modules.size(); ++i)
     {
         if(_DAG_nodes[i]->getModule()!=NULL)
         {
@@ -2333,15 +2448,28 @@ void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
         nodes[i]->setorder(i);
         nodes[i]->setPreviousGate(NULL);
     }
-    // 進行拓撲排序
-    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+
+    quickSort_dag(nodes,0,nodes.size()-1);
+    cout <<nodes[0]->getName()<<endl;
+    cout <<nodes[nodes.size()-1]->getName()<<endl;
+    int size = nodes.size();
+    for(int i = 0; i<size;i++)
     {
-        DAG_Node *node = *it;
-        if (find(visited.begin(), visited.end(), node) == visited.end())
-        {
-            topologicalSortUtil_L(node, Stack, visited);
-        }
+        Stack.push(nodes[i]);
     }
+
+    // 進行拓撲排序
+    // for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+    // {
+    //     DAG_Node *node = *it;
+    //     if (find(visited.begin(), visited.end(), node) == visited.end())
+    //     {
+    //         topologicalSortUtil_L(node, Stack, visited);
+    //     }
+    // }
+    // cout << Stack.top()->getName()<<endl;
+
+ 
 
     // 動態規劃計算最長路徑
     while (!Stack.empty())
@@ -2354,13 +2482,31 @@ void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
             node->setLongestPath(0);
         }
 
-       vector<pair<DAG_Node *, double> > edges = node->getEdge();
+        vector<pair<DAG_Node *, double> > edges = node->getEdge();
+        //-------
+        if(node->getModule()==NULL)
+            cout<<"node " <<node->getName()<<endl;
+        else
+            cout<<"node " <<node->getModule()->name()<<endl;
+        //-------
         for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) {
         DAG_Node *adjNode = it->first;
+        //-------
+        if(adjNode->getModule()==NULL)
+            cout<<"adjnode " <<adjNode->getName()<<endl;
+        else
+            cout<<"adjnode " <<adjNode->getModule()->name()<<endl;
+        //-------
         double weight = it->second;
 
             if(node->isFF()==1)
             {
+                // if(node->getPreviousNode() == NULL)
+                // {
+                //     cout << "NULL" << endl;
+                //     cout << node->getModule()->name()<<endl;
+                // }
+                // cout << node->getPreviousGate()->getName() <<endl;
                 adjNode->setPreviousGate(node->getPreviousGate());
                 adjNode->FFnum= (node->FFnum+1);
                 adjNode->setwstar(node->getwidth()+node->getwstar());
@@ -2371,14 +2517,77 @@ void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
                 adjNode->FFnum= (node->FFnum);
                 adjNode->setwstar(node->getwstar());
             }
+
             adjNode->setLongestPath(node->getLongestPath() + weight);
-            adjNode->setPreviousNode(node);  
+            adjNode->setPreviousNode(node);
             adjNode->record = node->record;
             adjNode->record.insert(node->getorder());
+            if (node->getPreviousNode() == NULL) 
+            {
+                if(node->getModule()==NULL)
+                {
+                    cout << node->getName() <<endl;
+                    continue;
+                }
+                else
+                {
+                    cout << "HERE!!"<<endl;
+                    cout << node->getModule()->name() <<endl;
+                    return;
+                }
+            }
+            if (adjNode->getPreviousNode() == NULL) {
+                cout << "Error: adjNode's PreviousNode is NULL after being set." << endl;
+                return;
+            }
+            // if(node->getName() == "Left_boundary" | node->getName() == "Right_boundary")
+            // {
+            //     continue;
+            // }
+            // else{
+            //     if(node->getPreviousNode() == NULL)
+            //     {
+            //          cout << node->getModule()->name()<<endl;
+            //     }
+
+            //     else if(node->getPreviousNode()->getName() == "Left_boundary" | node->getPreviousNode()->getName() == "Right_boundary")
+            //     {
+            //         cout << "node " << node->getModule()->name() <<endl;
+            //         cout << "previous node " << node->getPreviousNode()->getName()<<endl;
+            //         cout << "adjnode "<< adjNode->getModule()->name() << endl;
+            //     }
+
+            //     else 
+            //     {
+            //         cout << "node " << node->getModule()->name() << endl;
+            //         cout << "previous node " << node->getPreviousNode()->getModule()->name()<<endl;
+            //         cout << "adjnode "<< adjNode->getModule()->name() << endl;
+            //     }
+
+            // }
+            cout << endl;
         }
 
     }
+    int bug=0;
+    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+    {
+        DAG_Node *node = *it;
+        if (node->getPreviousNode() == NULL) 
+        {
+            bug++;
+            cout << "BUG" << endl;
+            if(node->getModule()==NULL)
+            {
+                cout << node->getName() <<endl;
+            }
+            else
+                cout << node->getModule()->name() <<endl;
+            // return;
 
+        }
+    }
+    cout << bug << endl;
     for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
     {
         DAG_Node *node = *it;
@@ -2387,12 +2596,13 @@ void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
             // cout<<"node name: "<<node->getName()<<endl;
             if(node->getPreviousGate()!= NULL)
             {
-            // cout<<"CASE1"<<endl;
+            //cout<<"CASE1"<<endl;
             // cout<<"Previous Gate: "<<node->getPreviousGate()->getName()<<endl;
              node->set_li( node->getLongestPath() - node->getPreviousGate()->getLongestPath());
             }
             else
             {
+                // cout << "========================" <<endl;
                 // cout<<"CASE2"<<endl;
                 node->set_li(node->getLongestPath());
             }
@@ -2512,7 +2722,8 @@ void Placement::calculateLongestPaths_R(vector<DAG_Node *> &nodes)
             }
             else
             {
-                // cout<<"CASE2"<<endl;
+                cout << "========================" <<endl;
+                cout<<"CASE2"<<endl;
                 node->set_ri(node->getLongestPath());
             }
         }
@@ -2674,8 +2885,8 @@ void Placement::Displacement()
     for (int i = 0; i < _DAG_nodes.size(); i++)
     {
         double mui = _DAG_nodes[i]->get_mui();
-        int li_yi = _DAG_nodes[i]->get_li() - _DAG_nodes[i]->get_deltaY();
-        int ri_yi = _DAG_nodes[i]->get_deltaY() - _DAG_nodes[i]->get_ri();
+        int li_yi = _DAG_nodes[i]->get_li() - 0;
+        int ri_yi = 0 - _DAG_nodes[i]->get_ri();
         int displacement = 0;
         int x = 0;
         if (_DAG_nodes[i]->isFF() == 1)
