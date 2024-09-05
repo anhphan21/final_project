@@ -243,19 +243,19 @@ cout<<endl<<endl<<"--------LI start--------"<<endl;
 // cout<<"-----calculateLongestPaths_L done--------"<<endl;
 
 
-// testGraph.cal_rhoi();
+testGraph.cal_rhoi();
 
-// testGraph.cal_thetai();
+testGraph.cal_thetai();
 
 // cout << "Li Ri done!" <<endl;
 // cout << "Rho_i done!" << endl;
-// testGraph.calculateLongestPaths_R(testGraph._DAG_nodes);
-// for(int i=0; i < testGraph._DAG_nodes.size();i++)
-// {
-//   cout <<"Name: "<<testGraph._DAG_nodes[i]->getModule()->name()<<endl;
-//   cout << " Ri: "<<testGraph._DAG_nodes[i]->get_ri()<<" ";
-//   cout << " Li: "<<testGraph._DAG_nodes[i]->get_li()<<" ";
-// }
+testGraph.calculateLongestPaths_R(testGraph._DAG_nodes);
+for(int i=0; i < testGraph._DAG_nodes.size();i++)
+{
+  cout <<"Name: "<<testGraph._DAG_nodes[i]->getModule()->name()<<endl;
+  cout << " Ri: "<<testGraph._DAG_nodes[i]->get_ri()<<" ";
+  cout << " Li: "<<testGraph._DAG_nodes[i]->get_li()<<" ";
+}
 
 // cout<<"-----calculateLongestPaths_R done--------"<<endl;
 
@@ -340,9 +340,9 @@ cout<<endl<<endl<<"--------LI start--------"<<endl;
 //   cout << "Done Contour_R Graph!!!" << endl;
 
 
-  // cout << "----------start cal displacement----------" << endl;
-  // testGraph.Displacement();
-  // cout << "Done Displacement!!!" << endl;
+  cout << "----------start cal displacement----------" << endl;
+  testGraph.Displacement();
+  cout << "Done Displacement!!!" << endl;
   //testDTB.outputTofile(argv[2]);
 
   ModuleList ttt = testDTB.getmodule();

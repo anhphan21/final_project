@@ -2449,25 +2449,25 @@ void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
         nodes[i]->setPreviousGate(NULL);
     }
 
-    quickSort_dag(nodes,0,nodes.size()-1);
-    cout <<nodes[0]->getName()<<endl;
-    cout <<nodes[nodes.size()-1]->getName()<<endl;
-    int size = nodes.size();
-    for(int i = 0; i<size;i++)
-    {
-        Stack.push(nodes[i]);
-    }
+    // quickSort_dag(nodes,0,nodes.size()-1);
+    // cout <<nodes[0]->getName()<<endl;
+    // cout <<nodes[nodes.size()-1]->getName()<<endl;
+    // int size = nodes.size();
+    // for(int i = 0; i<size;i++)
+    // {
+    //     Stack.push(nodes[i]);
+    // }
 
     // 進行拓撲排序
-    // for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
-    // {
-    //     DAG_Node *node = *it;
-    //     if (find(visited.begin(), visited.end(), node) == visited.end())
-    //     {
-    //         topologicalSortUtil_L(node, Stack, visited);
-    //     }
-    // }
-    // cout << Stack.top()->getName()<<endl;
+    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+    {
+        DAG_Node *node = *it;
+        if (find(visited.begin(), visited.end(), node) == visited.end())
+        {
+            topologicalSortUtil_L(node, Stack, visited);
+        }
+    }
+    cout << Stack.top()->getName()<<endl;
 
  
 
