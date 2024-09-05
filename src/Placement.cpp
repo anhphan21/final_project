@@ -2022,10 +2022,6 @@ double moduleOverlap_X_r(Module *i, Module *j)
 {
     return (j->width()-(i->x() - j->x()));
 }
-double moduleOverlap_X_r(Module *i, Module *j)
-{
-    return (j->width()-(i->x() - j->x()));
-}
 bool compareNodes(const pair<DAG_Node *, double> &a, const pair<DAG_Node *, double> &b)
 {
     return a.first == b.first;
@@ -2057,10 +2053,12 @@ void Placement::construct_DAG_L()
     int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y()+_dataBase->row(_dataBase->getNumRows() - 1)->height();
     int row_bottom_boundary = _dataBase->row(0)->y();
     DAG_Node *L = new DAG_Node();
+    L->set_isFF(0);
     L->setName("Left_boundary");
     L->setX(row_left_boundary);
     L->setY(row_top_boundary);
     DAG_Node *R = new DAG_Node();
+    R->set_isFF(0);
     R->setName("Right_boundary");
     R->setX(row_right_boundary);
     R->setY(row_top_boundary);
@@ -2250,6 +2248,27 @@ void Placement::construct_DAG_L()
             ++i; // BL後面一定是BR，跳過BR
         }
     }
+
+    _DAG_nodes.push_back(L);
+    _DAG_nodes.push_back(R);
+    // test
+    // for(int i=0;i<_DAG_nodes.size();++i)
+    // {
+    //     if(_DAG_nodes[i]->getModule()==NULL)
+    //         cout<<_DAG_nodes[i]->getName()<<": ";
+    //     else
+    //         cout<<_DAG_nodes[i]->getModule()->name()<<": ";
+    //     for(int j=0;j<_DAG_nodes[i]->getEdge().size();++j)
+    //     {
+    //         vector<pair<DAG_Node *,double > > buff = _DAG_nodes[i]->getEdge();
+    //         if(buff[j].first==NULL)
+    //         {
+    //             cout<<"fuck U~~"<<endl;
+    //             return;
+    //         }
+    //      }
+    // }
+
 }
 
 void Placement::construct_DAG_R()
@@ -2489,7 +2508,6 @@ void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
 {
     stack<DAG_Node *> Stack;
     vector<DAG_Node *> visited;
-
     for (int i = 0; i < nodes.size(); i++)
     {
         nodes[i]->setPreviousNode(NULL);
@@ -2503,7 +2521,10 @@ void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
         // {
         //      nodes[i]->setwidth(9000000000);
         // }
-        nodes[i]->setwidth(nodes[i]->getModule()->width());
+        if(nodes[i]->getModule()==NULL)
+            nodes[i]->setwidth(0);
+        else
+            nodes[i]->setwidth(nodes[i]->getModule()->width());
         nodes[i]->setwstar(0);
         nodes[i]->setorder(i);
         nodes[i]->setPreviousGate(NULL);
@@ -2550,7 +2571,7 @@ void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
             adjNode->setPreviousNode(node);  
             adjNode->record = node->record;
             adjNode->record.insert(node->getorder());
-    }
+        }
 
     }
 
@@ -2602,7 +2623,7 @@ void Placement::calculateLongestPaths_R(vector<DAG_Node *> &nodes)
 {
     stack<DAG_Node *> Stack;
     vector<DAG_Node *> visited;
-
+    
     for (int i = 0; i < nodes.size(); i++)
     {
         nodes[i]->setPreviousNode(NULL);
@@ -2616,7 +2637,10 @@ void Placement::calculateLongestPaths_R(vector<DAG_Node *> &nodes)
         // {
         //      nodes[i]->setwidth(9000000000);
         // }
-        nodes[i]->setwidth(nodes[i]->getModule()->width());
+        if(nodes[i]->getModule()==NULL)
+            nodes[i]->setwidth(0);
+        else
+            nodes[i]->setwidth(nodes[i]->getModule()->width());
         nodes[i]->setwstar(0);
         nodes[i]->setorder(i);
         nodes[i]->setPreviousGate(NULL);
@@ -2694,6 +2718,15 @@ void Placement::calculateLongestPaths_R(vector<DAG_Node *> &nodes)
             node->set_ri(-DBL_MAX);
         }
     }
+    // for (int i=0; i< _DAG_nodes.size(); ++i)
+    // {
+    //     if(_DAG_nodes[i]->getName()=="Left_boundary")
+    //     {
+    //         cout<<"hello"<<endl;
+    //         printLongestPath(_DAG_nodes[i]);
+    //         return ;
+    //     }
+    // }
 
 }
 

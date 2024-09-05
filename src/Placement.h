@@ -33,10 +33,7 @@ public:
    void windows();
    void constructGraph();
    void printLongestPath(DAG_Node *node);
-   void calculateLongestPaths_L(std::vector<DAG_Node*>& nodes);
-   void topologicalSortUtil_L(DAG_Node* node, std::stack<DAG_Node*>& Stack, std::vector<DAG_Node*>& visited);
-   void calculateLongestPaths_R(std::vector<DAG_Node*>& nodes);
-   void topologicalSortUtil_R(DAG_Node* node, std::stack<DAG_Node*>& Stack, std::vector<DAG_Node*>& visited);
+
    // clang-format off
    set<set<Module *> > calMaxClique(Net *targetNet);
    set<Module*> adjustClique(Net *targetNet , set<Module*> targetClique);

@@ -52,7 +52,6 @@ int main(int argc, char **argv)
   Database testDTB;
   testDTB.parser(argv[1]);
   cout << "Done parser!!!" << endl;
-
   testDTB.setPositive_slack();
   cout << "Done positive slack!!!" << endl;
 
@@ -108,79 +107,31 @@ int main(int argc, char **argv)
 
   testGraph.calculateLongestPaths_L(testGraph._DAG_nodes);
   cout << "Done LongestPath" << endl;
-
   
+  testGraph.cal_rhoi();
+  cout << "Rho_i done!" << endl;
+
   testGraph.calculateLongestPaths_R(testGraph._DAG_nodes);
   cout << "Done LongestPath R" << endl;
 
-  testGraph.cal_rhoi();
-  cout << "Rho_i done!" << endl;
-//   // for(int i=0; i < testGraph._DAG_nodes.size();i++)
-//   // {
-//   //   if(testGraph._DAG_nodes[i]->isFF() && testGraph._DAG_nodes[i]->getrhoi()>500)
-//   //   {
-//   //     cout<<"node"<<i<<" mName :  "<< testGraph._DAG_nodes[i]->getModule()->name()<<"  "<<testGraph._DAG_nodes[i]->getrhoi()<<" "<<testGraph._DAG_nodes[i]->isFF()<<endl;
-//   //   }
-//   // }
-//   // for(int i=0; i < testGraph._DAG_nodes.size();i++)
-//   // {
-//   //   if(testGraph._DAG_nodes[i]->isFF() && testGraph._DAG_nodes[i]->getrhoi()>500)
-//   //   {
-//   //     cout<<"node"<<i<<" :  "<<testGraph._DAG_nodes[i]->getrhoi()<<endl;
-//   //   }
-//   // }
   testGraph.cal_thetai();
   cout << "Theta_i done!" << endl;
-//   // for(int i=0; i < testGraph._DAG_nodes.size();i++)
-//   // {
-//   //   if(testGraph._DAG_nodes[i]->isFF()&& testGraph._DAG_nodes[i]->getthetai()>0 )
-//   //   cout<<"node"<<i<<" mName :  "<<testGraph._DAG_nodes[i]->getModule()->name()<<"  "<<testGraph._DAG_nodes[i]->getthetai()<<" "<<testGraph._DAG_nodes[i]->isFF()<<endl;
-//   // }
-//   // for(int i=0; i < testGraph._DAG_nodes.size();i++)
-//   // {
-//   //   if(testGraph._DAG_nodes[i]->isFF() && testGraph._DAG_nodes[i]->getthetai()>500)
-//   //   {
-//   //     cout<<"node"<<i<<" :  "<<testGraph._DAG_nodes[i]->getthetai()<<endl;
-//   //   }
 
-//   // }
-
-
-
-// // testGraph.getDatabase()->getmodule()[2]->setPosition(11,100);
-// //   testGraph.getDatabase()->getmodule()[2]->cellType()->setHeight(5);
-// //   testGraph.getDatabase()->getmodule()[2]->cellType()->setWidth(5);
-// //   node2->setModule(testGraph.getDatabase()->getmodule()[2]);
-// //   node2->setwidth(5);
-// //   node2->setX(11);
-// //   node2->setY(100);
-
-// // testGraph.getDatabase()->getmodule()[6]->setPosition(16,100);
-// //   testGraph.getDatabase()->getmodule()[6]->cellType()->setHeight(5);
-// //   testGraph.getDatabase()->getmodule()[6]->cellType()->setWidth(5);
-// //   node3->setModule(testGraph.getDatabase()->getmodule()[6]);
-// //   node3->setwidth(5);
-// //   node3->setX(16);
-// //   node3->setY(100);
-
-// //    testGraph._DAG_nodes.push_back(node2);
-// //    testGraph._DAG_nodes.push_back(node1);
-// //    testGraph._DAG_nodes.push_back(node3);
-
-//   // testGraph.contour_L();
-//   // cout << "Done Contour_L Graph!!!" << endl;
-//   // testGraph.contourL_HY();
-//   cout << "Done Contour_L Graph!!!" << endl;
-
-//   // testGraph.contourR_HY();
-//   // cout << "Done Contour_R Graph!!!" << endl;
-//   // testGraph.contour_R();
-//   cout << "Done Contour_R Graph!!!" << endl;
-
-
+  for(int i=0;i<testGraph._DAG_nodes.size();++i)
+  {
+    if(testGraph._DAG_nodes[i]->isFF())
+    {
+       cout<< testGraph._DAG_nodes[i]->get_li()<<" ";
+      cout<< testGraph._DAG_nodes[i]->get_ri()<<" ";
+      cout<< testGraph._DAG_nodes[i]->getrhoi()<<" ";
+      cout<< testGraph._DAG_nodes[i]->getthetai()<<"\n";
+    }
+  }
   cout << "----------start cal displacement----------" << endl;
   testGraph.Displacement();
   cout << "Done Displacement!!!" << endl;
+ 
+
   //testDTB.outputTofile(argv[2]);
 
   ModuleList ttt = testDTB.getmodule();
