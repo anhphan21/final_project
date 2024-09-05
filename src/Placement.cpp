@@ -2831,8 +2831,8 @@ void Placement::Displacement()
     for (int i = 0; i < _DAG_nodes.size(); i++)
     {
         double mui = _DAG_nodes[i]->get_mui();
-        int li_yi = _DAG_nodes[i]->get_li() - _DAG_nodes[i]->get_deltaY();
-        int ri_yi = _DAG_nodes[i]->get_deltaY() - _DAG_nodes[i]->get_ri();
+        int li_yi = _DAG_nodes[i]->get_li() - 0;
+        int ri_yi = 0 - _DAG_nodes[i]->get_ri();
         int displacement = 0;
         int x = 0;
         if (_DAG_nodes[i]->isFF() == 1)
