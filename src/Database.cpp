@@ -1115,12 +1115,14 @@ void Database::assignNOTonSite()
     double rowYdis = _rows[1]->y() - _rows[0]->y();
     unsigned maxrowID = getNumRows() - 1;
     unsigned maxXID;
+    
     for (size_t i = 0; i < _moduletoBeAss.size(); i++)
     {
         while (_rows[maxrowID]->y() + _moduletoBeAss[i]->height() > getBoundaryTop())
         {
             maxrowID--;
         }
+
         maxXID = _rows[0]->numSites();
         while (_rows[maxrowID]->x() + _rows[maxrowID]->width() * maxXID + _moduletoBeAss[i]->width() > getBoundaryRight())
         {
@@ -1128,23 +1130,32 @@ void Database::assignNOTonSite()
         }
 
         int idx, idy;
-        idx = round((_moduletoBeAss[i]->x() - row(0)->x()) / _rows[0]->width());
+        // 使用 (int)(值 + 0.5) 來代替 round
+        idx = (int)((_moduletoBeAss[i]->x() - row(0)->x()) / _rows[0]->width() + 0.5);
         if (idx < 0)
             idx = 0;
-        idy = round((_moduletoBeAss[i]->y() - row(0)->y()) / rowYdis);
+        
+        idy = (int)((_moduletoBeAss[i]->y() - row(0)->y()) / rowYdis + 0.5);
         if (idy < 0)
             idy = 0;
-        int needOccidx = ceil(_moduletoBeAss[i]->width() / _rows[0]->width());
-        int needOccidy = ceil(_moduletoBeAss[i]->height() / rowYdis);
-        cout << "nedd " << needOccidx << endl;
+        
+        // 使用 ceil 計算佔用的空間
+        int needOccidx = (int)ceil(_moduletoBeAss[i]->width() / _rows[0]->width());
+        int needOccidy = (int)ceil(_moduletoBeAss[i]->height() / rowYdis);
+        
+        cout << "need " << needOccidx << endl;
         cout << needOccidy << endl;
+
         int offsetx = 0;
         int offsety = 0;
         int counter = 0;
+        bool good;
+
         while (1)
         {
             counter++;
-            bool good = true;
+            good = true;
+
             if (counter % 2 == 0)
             {
                 offsetx++;
@@ -1154,6 +1165,7 @@ void Database::assignNOTonSite()
                 offsety++;
             }
 
+            // 檢查範圍邊界
             if (offsetx + idx + needOccidx > maxXID)
             {
                 continue;
@@ -1162,33 +1174,40 @@ void Database::assignNOTonSite()
             {
                 continue;
             }
-            for (size_t j = 0; j < needOccidy; j++)
+
+            // 檢查是否可以放置模組
+            size_t j, k;
+            for (j = 0; j < needOccidy; j++)
             {
-                for (size_t k = 0; k < needOccidx; k++)
+                for (k = 0; k < needOccidx; k++)
                 {
-                    if (_rows[idy + offsety + j]->isOccupied(idx + offsetx + k) == true)
+                    if (_rows[idy + offsety + j]->isOccupied(idx + offsetx + k))
                     {
                         good = false;
                         cout << "kk" << endl;
                         break;
                     }
                 }
-                if (good == false)
+                if (!good)
                 {
                     break;
                 }
             }
 
-            if (good == true)
-            { // setpos
+            // 如果可以放置模組，設定位置
+            if (good)
+            {
                 cout << "1" << endl;
-                _moduletoBeAss[i]->setPosition(_rows[idy + offsety]->x() + _rows[idy + offsety]->width() *
-                                                                               (idx + offsetx),
-                                               _rows[idy + offsety]->y());
+                _moduletoBeAss[i]->setPosition(
+                    _rows[idy + offsety]->x() + _rows[idy + offsety]->width() * (idx + offsetx),
+                    _rows[idy + offsety]->y()
+                );
                 break;
             }
 
+            // 重置 `good`，嘗試往負方向尋找空間
             good = true;
+
             if (idx - offsetx < 0)
             {
                 continue;
@@ -1198,23 +1217,31 @@ void Database::assignNOTonSite()
                 continue;
             }
 
-            for (size_t j = 0; j < needOccidy; j++)
+            // 檢查是否可以在負方向放置模組
+            for (j = 0; j < needOccidy; j++)
             {
-                for (size_t k = 0; k < needOccidx; k++)
+                for (k = 0; k < needOccidx; k++)
                 {
-                    if (_rows[idy - offsety + j]->isOccupied(idx - offsetx + k) == true)
+                    if (_rows[idy - offsety + j]->isOccupied(idx - offsetx + k))
                     {
                         good = false;
                         break;
                     }
                 }
+                if (!good)
+                {
+                    break;
+                }
             }
-            if (good == true)
+
+            // 如果可以放置模組，設定位置
+            if (good)
             {
                 cout << "2" << endl;
-                _moduletoBeAss[i]->setPosition(_rows[idy - offsety]->x() + _rows[idy - offsety]->width() *
-                                                                               (idx - offsetx),
-                                               _rows[idy - offsety]->y());
+                _moduletoBeAss[i]->setPosition(
+                    _rows[idy - offsety]->x() + _rows[idy - offsety]->width() * (idx - offsetx),
+                    _rows[idy - offsety]->y()
+                );
                 break;
             }
         }
