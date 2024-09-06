@@ -2615,25 +2615,25 @@ void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
         nodes[i]->setPreviousGate(NULL);
     }
 
-    // quickSort_dag(nodes,0,nodes.size()-1);
-    // cout <<nodes[0]->getName()<<endl;
-    // cout <<nodes[nodes.size()-1]->getName()<<endl;
-    // int size = nodes.size();
-    // for(int i = 0; i<size;i++)
-    // {
-    //     Stack.push(nodes[i]);
-    // }
-
-    // 進行拓撲排序
-    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+    quickSort_dag(nodes,0,nodes.size()-1);
+    cout <<nodes[0]->getName()<<endl;
+    cout <<nodes[nodes.size()-1]->getName()<<endl;
+    int size = nodes.size();
+    for(int i = 0; i<size;i++)
     {
-        DAG_Node *node = *it;
-        if (find(visited.begin(), visited.end(), node) == visited.end())
-        {
-            topologicalSortUtil_L(node, Stack, visited);
-        }
+        Stack.push(nodes[i]);
     }
-    cout << Stack.top()->getName()<<endl;
+
+    // // 進行拓撲排序
+    // for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+    // {
+    //     DAG_Node *node = *it;
+    //     if (find(visited.begin(), visited.end(), node) == visited.end())
+    //     {
+    //         topologicalSortUtil_L(node, Stack, visited);
+    //     }
+    // }
+    // cout << Stack.top()->getName()<<endl;
 
  
 
@@ -2825,15 +2825,23 @@ void Placement::calculateLongestPaths_R(vector<DAG_Node *> &nodes)
         nodes[i]->setorder(i);
         nodes[i]->setPreviousGate(NULL);
     }
-    // 進行拓撲排序
-    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+    quickSort_dag(nodes,0,nodes.size()-1);
+    cout <<nodes[0]->getName()<<endl;
+    cout <<nodes[nodes.size()-1]->getName()<<endl;
+    int size = nodes.size();
+    for(int i = 0; i<size;i++)
     {
-        DAG_Node *node = *it;
-        if (find(visited.begin(), visited.end(), node) == visited.end())
-        {
-            topologicalSortUtil_R(node, Stack, visited);
-        }
+        Stack.push(nodes[i]);
     }
+    // 進行拓撲排序
+    // for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+    // {
+    //     DAG_Node *node = *it;
+    //     if (find(visited.begin(), visited.end(), node) == visited.end())
+    //     {
+    //         topologicalSortUtil_R(node, Stack, visited);
+    //     }
+    // }
 
     // 動態規劃計算最長路徑
     while (!Stack.empty())

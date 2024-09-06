@@ -249,13 +249,13 @@ testGraph.cal_thetai();
 
 // cout << "Li Ri done!" <<endl;
 // cout << "Rho_i done!" << endl;
-testGraph.calculateLongestPaths_R(testGraph._DAG_nodes);
-for(int i=0; i < testGraph._DAG_nodes.size();i++)
-{
-  cout <<"Name: "<<testGraph._DAG_nodes[i]->getModule()->name()<<endl;
-  cout << " Ri: "<<testGraph._DAG_nodes[i]->get_ri()<<" ";
-  cout << " Li: "<<testGraph._DAG_nodes[i]->get_li()<<" ";
-}
+// testGraph.calculateLongestPaths_R(testGraph._DAG_nodes);
+// for(int i=0; i < testGraph._DAG_nodes.size();i++)
+// {
+//   cout <<"Name: "<<testGraph._DAG_nodes[i]->getModule()->name()<<endl;
+//   cout << " Ri: "<<testGraph._DAG_nodes[i]->get_ri()<<" ";
+//   cout << " Li: "<<testGraph._DAG_nodes[i]->get_li()<<" ";
+// }
 
 // cout<<"-----calculateLongestPaths_R done--------"<<endl;
 
