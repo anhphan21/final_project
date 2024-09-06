@@ -26,14 +26,14 @@ public:
 
    void cal_rhoi();
    void cal_thetai();
+   void cal_li();
    Rhombus *findInputRegion(Module *ff);
    vector<Rhombus *> findOutputRegion(Module *ff);
    bool overlap_ornot(vector<Rhombus *> &input_rhombus, double &leftBound, double &rightBound, double &botBound, double &topBound);
    void windows();
    void constructGraph();
    void printLongestPath(DAG_Node *node);
-   void calculateLongestPaths(std::vector<DAG_Node *> &nodes);
-   void topologicalSortUtil(DAG_Node *node, std::stack<DAG_Node *> &Stack, std::vector<DAG_Node *> &visited);
+
    // clang-format off
    set<set<Module *> > calMaxClique(Net *targetNet);
    set<Module*> adjustClique(Net *targetNet , set<Module*> targetClique);
@@ -72,16 +72,14 @@ public:
    Database *getDatabase() { return _dataBase; }
    map<string, vector<Module *> > CLKNetModule;
    vector<pair<vector<string>, string> > latch_record;
-
+   void legalize();
    //DAG
    DAG_Node *DAGnode(unsigned nodeId){ return _DAG_nodes[nodeId];}
    void add_DAG_nodes(DAG_Node *node) { _DAG_nodes.push_back(node); }
    unsigned getNum_DAG_Node() { return _DAG_nodes.size(); }
-   void construct_DAG();
-   int contour_L();
-   int contour_R();
-   void contourL_HY();
-   void contourR_HY();
+   void construct_DAG_L();
+   void construct_DAG_R();
+   
    unsigned getmaxCliqesize(){ return _maxClique.size(); }
    // clang-format off
    set<Module*> getLargestCliqSet()
@@ -111,10 +109,13 @@ public:
    }
    set<set<Module*> > getwholeCliq(){ return _maxClique; }
    void clearmaxCliq() { _maxClique.clear(); }
+   void assignNeedM();
+
+   void calculateLongestPaths_L(stack<DAG_Node *> Stack);
+   void topologicalSortUtil_L(DAG_Node* node, std::stack<DAG_Node*>& Stack, std::vector<DAG_Node*>& visited);
+   void calculateLongestPaths_R(stack<DAG_Node *> Stack);
+   void topologicalSortUtil_R(DAG_Node* node, std::stack<DAG_Node*>& Stack, std::vector<DAG_Node*>& visited);
    
-   DAG_NodeList _DAG_nodes;
-   void Displacement();
-   // row assignment ////////
    void DelmoduleAss(Module* mod)
    {
       vector<Module*>::iterator it = find(_moduleNeedAss.begin(), _moduleNeedAss.end(), mod);
@@ -124,8 +125,10 @@ public:
       }
       return;
    }
-   void assignNeedM();
-   bool checkwidth();
+
+   DAG_NodeList _DAG_nodes;
+   DAG_NodeList _DAG_nodes_reverse;
+   void Displacement();
 private:
    Database *_dataBase;
    // construct graph
@@ -136,15 +139,14 @@ private:
 
    map<double, map<double, double> > _binMap;
    
-   DAG_NodeList _fixed_cells;
    map<pair<int ,int >,vector<DAG_Node *> > _Position2_DAG_Node;
    map<int , vector<DAG_Node *> > _x2_DAG_Node;
    set<set<Module *> > _maxClique;
 
 
    map<string, Module* > _name2Module;
-   // modules needed to be assigned 
    vector<Module*> _moduleNeedAss;
+   map<int ,int > _y2xmax;
    // clang-format on
 };
 

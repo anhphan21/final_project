@@ -24,7 +24,7 @@ class Database
 public:
     Database();
     ~Database();
-
+    void assignNOTonSite();
     void parser(const string &filename);
     void outputTofile(const string &filename);
     // Design parameters
@@ -276,6 +276,8 @@ private:
     set<Pin *> _initial_negSlack;
 
     vector<Module *> _buffer;
+
+    vector<Module *> _moduletoBeAss;
 };
 
 #endif // DATABASE_H

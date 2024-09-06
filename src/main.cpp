@@ -50,15 +50,18 @@ void layout(const string &filename, const int x, const int y, vector<Module> &mo
 int main(int argc, char **argv)
 {
   Database testDTB;
-  testDTB.parser(argv[1]);
-  cout << "Done parser!!!" << endl;
-
-  testDTB.setPositive_slack();
-  cout << "Done positive slack!!!" << endl;
-
-  testDTB.buildBestCelltype();
   Placement testGraph;
   testGraph.setDatabase(&testDTB);
+  testDTB.parser(argv[1]);
+  cout << "Done parser!!!" << endl;
+  // testDTB.setPositive_slack();
+  // cout << "Done positive slack!!!" << endl;
+  testDTB.buildBestCelltype();
+  cout << "11 " << endl;
+  testDTB.assignNOTonSite();
+  testDTB.outputTofile(argv[2]);
+  return -1;
+
   testGraph.debankAllFF();
   cout << "Done debank!!!" << endl;
   testGraph.netListGraph();
@@ -98,65 +101,49 @@ int main(int argc, char **argv)
   }
   cout << "Done merging! " << endl;
   testDTB.buildEachRowWidth();
-  testGraph.assignNeedM();
-  cout << "done assign" << endl;
-  testGraph.construct_DAG();
-  cout << "Done DAG Graph!!!" << endl;
-  cout << testGraph._DAG_nodes.size() << endl;
-  testGraph.calculateLongestPaths(testGraph._DAG_nodes);
-  cout << "Done LongestPath" << endl;
 
+  cout << "done assign" << endl;
+  testGraph.construct_DAG_L();
+  cout << "Done DAG_L Graph!!!" << endl;
+
+  // testGraph.construct_DAG_R();
+  // cout << "Done DAG_R Graph!!!" << endl;
+
+  // testGraph.calculateLongestPaths_L(testGraph._DAG_nodes);
+  // cout << "Done LongestPath" << endl;
   testGraph.cal_rhoi();
   cout << "Rho_i done!" << endl;
-  // for(int i=0; i < testGraph._DAG_nodes.size();i++)
-  // {
-  //   if(testGraph._DAG_nodes[i]->isFF() && testGraph._DAG_nodes[i]->getrhoi()>500)
-  //   {
-  //     cout<<"node"<<i<<" mName :  "<< testGraph._DAG_nodes[i]->getModule()->name()<<"  "<<testGraph._DAG_nodes[i]->getrhoi()<<" "<<testGraph._DAG_nodes[i]->isFF()<<endl;
-  //   }
-  // }
-  // for(int i=0; i < testGraph._DAG_nodes.size();i++)
-  // {
-  //   if(testGraph._DAG_nodes[i]->isFF() && testGraph._DAG_nodes[i]->getrhoi()>500)
-  //   {
-  //     cout<<"node"<<i<<" :  "<<testGraph._DAG_nodes[i]->getrhoi()<<endl;
-  //   }
-  // }
-  testGraph.cal_thetai();
-  cout << "Theta_i done!" << endl;
-  // for(int i=0; i < testGraph._DAG_nodes.size();i++)
-  // {
-  //   if(testGraph._DAG_nodes[i]->isFF()&& testGraph._DAG_nodes[i]->getthetai()>0 )
-  //   cout<<"node"<<i<<" mName :  "<<testGraph._DAG_nodes[i]->getModule()->name()<<"  "<<testGraph._DAG_nodes[i]->getthetai()<<" "<<testGraph._DAG_nodes[i]->isFF()<<endl;
-  // }
-  // for(int i=0; i < testGraph._DAG_nodes.size();i++)
-  // {
-  //   if(testGraph._DAG_nodes[i]->isFF() && testGraph._DAG_nodes[i]->getthetai()>500)
-  //   {
-  //     cout<<"node"<<i<<" :  "<<testGraph._DAG_nodes[i]->getthetai()<<endl;
-  //   }
 
-  // }
+  // testGraph.calculateLongestPaths_R(testGraph._DAG_nodes);
+  // cout << "Done LongestPath R" << endl;
 
-  testGraph.contourL_HY();
-  cout << "Done Contour_L Graph!!!" << endl;
+  // testGraph.cal_thetai();
+  // cout << "Theta_i done!" << endl;
 
-  testGraph.contourR_HY();
-  cout << "Done Contour_R Graph!!!" << endl;
-
+  for (int i = 0; i < testGraph._DAG_nodes.size(); ++i)
+  {
+    if (testGraph._DAG_nodes[i]->isFF())
+    {
+      cout << testGraph._DAG_nodes[i]->get_li() << " ";
+      cout << testGraph._DAG_nodes[i]->get_ri() << " ";
+      cout << testGraph._DAG_nodes[i]->getrhoi() << " ";
+      cout << testGraph._DAG_nodes[i]->getthetai() << "\n";
+    }
+  }
   cout << "----------start cal displacement----------" << endl;
   testGraph.Displacement();
   cout << "Done Displacement!!!" << endl;
-  testDTB.outputTofile(argv[2]);
 
-  // ModuleList ttt = testDTB.getmodule();
+  // testDTB.outputTofile(argv[2]);
 
-  // vector<Module> mods;
-  // for(int i = 0; i < ttt.size(); ++i)
-  // {
-  //   mods.push_back(*ttt[i]);
-  // }
+  ModuleList ttt = testDTB.getmodule();
 
-  // layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), mods);
+  vector<Module> mods;
+  for (int i = 0; i < ttt.size(); ++i)
+  {
+    mods.push_back(*ttt[i]);
+  }
+
+  layout(argv[2], testDTB.getBoundaryRight(), testDTB.getBoundaryTop(), mods);
   return 0;
 }
