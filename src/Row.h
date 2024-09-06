@@ -21,7 +21,10 @@ public:
         OR_FE
     };
 
-    Row() : _x(-1), _y(-1), _siteWidth(-1), _siteHeight(-1), _siteSpacing(-1), _numSites(0), _orient(OR_N), _isSymmetric(1), _totModuleWidth(0) {}
+    Row() : _x(-1), _y(-1), _siteWidth(-1), _siteHeight(-1), _siteSpacing(-1), _numSites(0), _orient(OR_N), _isSymmetric(1), _totModuleWidth(0)
+    {
+        occupied.clear();
+    }
 
     Row(double &x, double &y, double siteWidth, double siteHeight, double &set_step) : _x(x), _y(y), _siteWidth(siteWidth), _siteHeight(siteHeight), _siteSpacing(0), _orient(OR_N), _numSites(set_step), _isSymmetric(1), _totModuleWidth(0) {}
 
@@ -59,11 +62,15 @@ public:
     void setNumSites(unsigned numSites) { _numSites = numSites; }
     void setOrient(Orient orient) { _orient = orient; }
     void setIsSymmetric(bool isSymmetric) { _isSymmetric = isSymmetric; }
+    void setOccupied(unsigned index, bool val) { occupied[index] = val; }
 
     double getModWid() { return _totModuleWidth; }
     void setModWid(double wid) { _totModuleWidth = wid; }
     void incModWid(double wid) { _totModuleWidth += wid; }
     void decModWid(double wid) { _totModuleWidth -= wid; }
+    bool isOccupied(unsigned index) const { return occupied[index]; }
+    int Occupiedsize() { return occupied.size(); }
+    void resizeOcc() { occupied.resize(_numSites, false); }
 
 private:
     // variables from benchmark input
@@ -76,6 +83,7 @@ private:
     bool _isSymmetric;   // symmetry
     // row assignment
     double _totModuleWidth;
+    vector<bool> occupied;
 };
 
 #endif // ROW_H

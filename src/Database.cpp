@@ -33,7 +33,7 @@ Database::Database()
       _lambda(-1),
       record(0) {}
 
-Database::~Database() {}
+Database::~Database() { _moduletoBeAss.clear(); }
 
 void Database::parser(const string &filename)
 {
@@ -930,46 +930,83 @@ void Database::adjust_position(Pin *fix_pin, Pin *adjust_pin, double radius, dou
 
 void Database::buildBestCelltype()
 {
-    for (size_t i = 0; i < _ffLib.size(); i++)
+    // for (size_t i = 0; i < _ffLib.size(); i++)
+    // {
+    //     vector<FFCell *> cellv = _ffLib[pow(2, i)];
+    //     double maxCost = 0;
+    //     unsigned bestid;
+    //     vector<double> disCost;
+    //     disCost.clear();
+    //     // find best among cellv(same bit celltype)
+    //     for (size_t j = 0; j < cellv.size(); j++)
+    //     { // cal displacement cost
+    //         unsigned clkidx = cellv[j]->clkPinIdx();
+    //         double cost = 0;
+    //         for (size_t k = 0; k < cellv[j]->getInNum(); k++)
+    //         {
+    //             if (k != clkidx)
+    //             {
+    //                 cost += (cellv[j]->pinOffsetX(k) + cellv[j]->pinOffsetY(k)) * _dDelay;
+    //             }
+    //         }
+    //         disCost.push_back(cost);
+    //         if (cost > maxCost)
+    //         {
+    //             maxCost = cost;
+    //         }
+    //     }
+    //     double mintotCost = DBL_MAX;
+    //     for (size_t j = 0; j < cellv.size(); j++)
+    //     {
+    //         double totcost = 0;
+    //         totcost += maxCost - disCost[j];
+    //         totcost += cellv[j]->getArea() + cellv[j]->getPower();
+    //         if (totcost < mintotCost)
+    //         {
+    //             mintotCost = totcost;
+    //             bestid = j;
+    //         }
+    //     }
+    //     _bestCells[pow(2, i)] = cellv[bestid];
+    // }
+    // _ffLibMaxBit = pow(2, _ffLib.size() - 1);
+    // set row site
+    for (size_t i = 0; i < _rows.size(); i++)
     {
-        vector<FFCell *> cellv = _ffLib[pow(2, i)];
-        double maxCost = 0;
-        unsigned bestid;
-        vector<double> disCost;
-        disCost.clear();
-        // find best among cellv(same bit celltype)
-        for (size_t j = 0; j < cellv.size(); j++)
-        { // cal displacement cost
-            unsigned clkidx = cellv[j]->clkPinIdx();
-            double cost = 0;
-            for (size_t k = 0; k < cellv[j]->getInNum(); k++)
+        _rows[i]->resizeOcc();
+    }
+
+    for (size_t i = 0; i < _modules.size(); i++)
+    {
+        double rowidx = (_modules[i]->x() - _rows[0]->x()) / _rows[0]->width();
+        double rowidy = (_modules[i]->y() - _rows[0]->y()) / (_rows[1]->y() - _rows[0]->y());
+        if (rowidx >= 0 && rowidy >= 0 && fmod(rowidx, 1.0) == 0.0 && fmod(rowidy, 1.0) == 0.0)
+        {
+            int coverX = ceil(_modules[i]->width() / _rows[0]->width());
+            int coverY = ceil(_modules[i]->height() / (_rows[1]->y() - _rows[0]->y()));
+            for (size_t j = 0; j < coverY; j++)
             {
-                if (k != clkidx)
+                for (size_t k = 0; k < coverX; k++)
                 {
-                    cost += (cellv[j]->pinOffsetX(k) + cellv[j]->pinOffsetY(k)) * _dDelay;
+                    if (rowidy + j < _rows.size() && rowidx + k < _rows[0]->numSites())
+                    {
+                        _rows[rowidy + j]->setOccupied(rowidx + k, true);
+                    }
                 }
             }
-            disCost.push_back(cost);
-            if (cost > maxCost)
-            {
-                maxCost = cost;
-            }
         }
-        double mintotCost = DBL_MAX;
-        for (size_t j = 0; j < cellv.size(); j++)
+        else
         {
-            double totcost = 0;
-            totcost += maxCost - disCost[j];
-            totcost += cellv[j]->getArea() + cellv[j]->getPower();
-            if (totcost < mintotCost)
+            cout << _modules[i]->x() << " " << _modules[i]->y() << endl;
+            if (_modules[i]->isFF() == false)
             {
-                mintotCost = totcost;
-                bestid = j;
+                cout << "bad testcase" << endl;
             }
+            // not on site
+            _moduletoBeAss.push_back(_modules[i]);
         }
-        _bestCells[pow(2, i)] = cellv[bestid];
     }
-    _ffLibMaxBit = pow(2, _ffLib.size() - 1);
+
     return;
 }
 
@@ -1007,7 +1044,7 @@ void Database::outputTofile(const string &filename)
             letters += nname[i];
     }
     int num = atoi(numbers.c_str());
-    
+
     for (size_t i = 0; i < _ffModules.size(); ++i)
     {
         num++;
@@ -1072,3 +1109,114 @@ void Database::buildEachRowWidth()
     return;
 }
 // assign row for unsited FF
+void Database::assignNOTonSite()
+{
+    cout << _moduletoBeAss.size() << endl;
+    double rowYdis = _rows[1]->y() - _rows[0]->y();
+    unsigned maxrowID = getNumRows() - 1;
+    unsigned maxXID;
+    for (size_t i = 0; i < _moduletoBeAss.size(); i++)
+    {
+        while (_rows[maxrowID]->y() + _moduletoBeAss[i]->height() > getBoundaryTop())
+        {
+            maxrowID--;
+        }
+        maxXID = _rows[0]->numSites();
+        while (_rows[maxrowID]->x() + _rows[maxrowID]->width() * maxXID + _moduletoBeAss[i]->width() > getBoundaryRight())
+        {
+            maxXID--;
+        }
+
+        int idx, idy;
+        idx = round((_moduletoBeAss[i]->x() - row(0)->x()) / _rows[0]->width());
+        if (idx < 0)
+            idx = 0;
+        idy = round((_moduletoBeAss[i]->y() - row(0)->y()) / rowYdis);
+        if (idy < 0)
+            idy = 0;
+        int needOccidx = ceil(_moduletoBeAss[i]->width() / _rows[0]->width());
+        int needOccidy = ceil(_moduletoBeAss[i]->height() / rowYdis);
+        cout << "nedd " << needOccidx << endl;
+        cout << needOccidy << endl;
+        int offsetx = 0;
+        int offsety = 0;
+        int counter = 0;
+        while (1)
+        {
+            counter++;
+            bool good = true;
+            if (counter % 2 == 0)
+            {
+                offsetx++;
+            }
+            else
+            {
+                offsety++;
+            }
+
+            if (offsetx + idx + needOccidx > maxXID)
+            {
+                continue;
+            }
+            if (offsety + idy + needOccidy > maxrowID)
+            {
+                continue;
+            }
+            for (size_t j = 0; j < needOccidy; j++)
+            {
+                for (size_t k = 0; k < needOccidx; k++)
+                {
+                    if (_rows[idy + offsety + j]->isOccupied(idx + offsetx + k) == true)
+                    {
+                        good = false;
+                        cout << "kk" << endl;
+                        break;
+                    }
+                }
+                if (good == false)
+                {
+                    break;
+                }
+            }
+
+            if (good == true)
+            { // setpos
+                cout << "1" << endl;
+                _moduletoBeAss[i]->setPosition(_rows[idy + offsety]->x() + _rows[idy + offsety]->width() *
+                                                                               (idx + offsetx),
+                                               _rows[idy + offsety]->y());
+                break;
+            }
+
+            good = true;
+            if (idx - offsetx < 0)
+            {
+                continue;
+            }
+            if (idy - offsety < 0)
+            {
+                continue;
+            }
+
+            for (size_t j = 0; j < needOccidy; j++)
+            {
+                for (size_t k = 0; k < needOccidx; k++)
+                {
+                    if (_rows[idy - offsety + j]->isOccupied(idx - offsetx + k) == true)
+                    {
+                        good = false;
+                        break;
+                    }
+                }
+            }
+            if (good == true)
+            {
+                cout << "2" << endl;
+                _moduletoBeAss[i]->setPosition(_rows[idy - offsety]->x() + _rows[idy - offsety]->width() *
+                                                                               (idx - offsetx),
+                                               _rows[idy - offsety]->y());
+                break;
+            }
+        }
+    }
+}

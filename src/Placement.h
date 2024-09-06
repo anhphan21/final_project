@@ -111,9 +111,9 @@ public:
    void clearmaxCliq() { _maxClique.clear(); }
    void assignNeedM();
 
-   void calculateLongestPaths_L(std::vector<DAG_Node*>& nodes);
+   void calculateLongestPaths_L(stack<DAG_Node *> Stack);
    void topologicalSortUtil_L(DAG_Node* node, std::stack<DAG_Node*>& Stack, std::vector<DAG_Node*>& visited);
-   void calculateLongestPaths_R(std::vector<DAG_Node*>& nodes);
+   void calculateLongestPaths_R(stack<DAG_Node *> Stack);
    void topologicalSortUtil_R(DAG_Node* node, std::stack<DAG_Node*>& Stack, std::vector<DAG_Node*>& visited);
    
    void DelmoduleAss(Module* mod)
@@ -142,6 +142,7 @@ private:
    map<pair<int ,int >,vector<DAG_Node *> > _Position2_DAG_Node;
    map<int , vector<DAG_Node *> > _x2_DAG_Node;
    set<set<Module *> > _maxClique;
+
 
    map<string, Module* > _name2Module;
    vector<Module*> _moduleNeedAss;

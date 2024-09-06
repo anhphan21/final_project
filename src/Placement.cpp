@@ -1939,7 +1939,6 @@ void quickSort(std::vector<Module *> &modules, int low, int high)
     }
 }
 
-
 bool compareModules_r(const Module *a, const Module *b)
 {
     if (a->x() == b->x())
@@ -2012,15 +2011,14 @@ void quickSort_dag(std::vector<DAG_Node *> &modules, int low, int high)
     }
 }
 
-
 double moduleOverlap_X(Module *i, Module *j)
 {
-    return (i->width()-(j->x() - i->x()));
-    return (i->width()-(j->x() - i->x()));
+    return (i->width() - (j->x() - i->x()));
+    return (i->width() - (j->x() - i->x()));
 }
 double moduleOverlap_X_r(Module *i, Module *j)
 {
-    return (j->width()-(i->x() - j->x()));
+    return (j->width() - (i->x() - j->x()));
 }
 bool compareNodes(const pair<DAG_Node *, double> &a, const pair<DAG_Node *, double> &b)
 {
@@ -2059,7 +2057,7 @@ bool isDuplicate(vector<pair<DAG_Node *, double> > edges, const pair<DAG_Node *,
 }
 void Placement::construct_DAG_L()
 {
-int row_left_boundary = _dataBase->row(0)->x();
+    int row_left_boundary = _dataBase->row(0)->x();
     int row_right_boundary = _dataBase->row(0)->x() + (_dataBase->row(0)->numSites()) * _dataBase->row(0)->width();
     int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y()+_dataBase->row(_dataBase->getNumRows() - 1)->height();
     int row_bottom_boundary = _dataBase->row(0)->y();
@@ -2217,52 +2215,52 @@ int row_left_boundary = _dataBase->row(0)->x();
         }
         else
         { // gate
-                double weight = (-1)*_DAG_nodes[i]->getModule()->width();
-                _DAG_nodes[i]->addEdge(_DAG_nodes[i + 1], weight); // L -> R
-                _DAG_nodes[i+1]->addEdge_r(_DAG_nodes[i], weight); // L -> R
-                int curr_level = _DAG_nodes[i]->getY() / RowHeight;
-                int i_total_level = (_DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height()) / RowHeight;
-                if ((int)_DAG_nodes[i]->getModule()->height() % (int)RowHeight != 0)
-                    i_total_level++;
-                map<int, vector<DAG_Node *> >::iterator it = _x2_DAG_Node.find(_DAG_nodes[i]->getX() / RowWidth);
-                for (curr_level; curr_level < i_total_level; ++curr_level)
-                { // clang-format on
-                    if (it != _x2_DAG_Node.end())
+            double weight = (-1)*_DAG_nodes[i]->getModule()->width();
+            _DAG_nodes[i]->addEdge(_DAG_nodes[i + 1], weight); // L -> R
+            _DAG_nodes[i+1]->addEdge_r(_DAG_nodes[i], weight); // L -> R
+            int curr_level = _DAG_nodes[i]->getY() / RowHeight;
+            int i_total_level = (_DAG_nodes[i]->getY() + _DAG_nodes[i]->getModule()->height()) / RowHeight;
+            if ((int)_DAG_nodes[i]->getModule()->height() % (int)RowHeight != 0)
+                i_total_level++;
+
+            map<int, vector<DAG_Node *> >::iterator it = _x2_DAG_Node.find(_DAG_nodes[i]->getX() / RowWidth);
+            for (curr_level; curr_level <= i_total_level; ++curr_level)
+            { // clang-format on
+                if (it != _x2_DAG_Node.end())
+                {
+                    for (int k = 0, sizetmp = it->second.size(); k < sizetmp; ++k)
                     {
-                        for (int k = 0, sizetmp = it->second.size(); k < sizetmp; ++k)
+                        if ((it->second[k]->getY() / RowHeight == curr_level) && (it->second[k] != _DAG_nodes[i]))
                         {
-                            if (((it->second[k]->getY() / RowHeight) == curr_level) && (it->second[k]->getModule()->name() != _DAG_nodes[i]->getModule()->name()))
+                            double weight = moduleOverlap_X(_DAG_nodes[i]->getModule(), it->second[k]->getModule());
+                            if (isDuplicate(_DAG_nodes[i]->getEdge(), {it->second[k], weight}) == 0)
                             {
-                                double weight = moduleOverlap_X(_DAG_nodes[i]->getModule(), it->second[k]->getModule());
-                                if (isDuplicate(_DAG_nodes[i]->getEdge(), {it->second[k], weight}) == 0)
-                                {
-                                    _DAG_nodes[i + 1]->addEdge(it->second[k], weight); // R連接
-                                    it->second[k]->addEdge_r(_DAG_nodes[i + 1], weight); // R連接
-                                }
-                                is_find = true;
-                                break;
+                                _DAG_nodes[i + 1]->addEdge(it->second[k], weight); // R連接
+                                it->second[k]->addEdge_r(_DAG_nodes[i + 1], weight); // R連接
                             }
-                        }
-                    }
-                    if (is_find)
-                    {
-                        it = _x2_DAG_Node.find(_DAG_nodes[i]->getX() / RowWidth);
-                        is_find = false;
-                    }
-                    else
-                    { // 這層y沒找到
-                        ++it;
-                        if (it == _x2_DAG_Node.end() || (it->first) * RowWidth >= row_right_boundary)
-                        {
-                            double weight = _DAG_nodes[i]->getX() + _DAG_nodes[i]->getModule()->width() - R->getX();
-                            _DAG_nodes[i + 1]->addEdge(R, weight); // R連接
-                            R->addEdge_r(_DAG_nodes[i + 1], weight); // R連接
                             is_find = true;
+                            break;
                         }
-                        --curr_level;
                     }
                 }
-            
+                if (is_find)
+                {
+                    it = _x2_DAG_Node.find(_DAG_nodes[i]->getX() / RowWidth);
+                    is_find = false;
+                }
+                else
+                { // 這層y沒找到
+                    ++it;
+                    if (it == _x2_DAG_Node.end() || (it->first) * RowWidth >= row_right_boundary)
+                    {
+                        double weight = _DAG_nodes[i]->getX() + _DAG_nodes[i]->getModule()->width() - R->getX();
+                        _DAG_nodes[i + 1]->addEdge(R, weight); // R連接
+                        R->addEdge_r(_DAG_nodes[i + 1], weight); // R連接
+                        is_find = true;
+                    }
+                    --curr_level;
+                }
+            }
             ++i; // BL後面一定是BR，跳過BR
         }
     }
@@ -2287,80 +2285,13 @@ int row_left_boundary = _dataBase->row(0)->x();
     //      }
     // }
 
-    // for(int i=0;i<_DAG_nodes.size();++i)
-    // {
-    //     if(_DAG_nodes[i]->getModule()->name()=="C102729")
-    //     {
-    //         vector<pair<DAG_Node *, double> > edges = _DAG_nodes[i]->getEdge();
-    //         for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) 
-    //         {
-    //             DAG_Node *node = it->first;
-    //             double weight = it->second;
-    //             cout << "Node: " << node->getModule()->name() << ", Weight: " << weight << std::endl;
-    //         }
-    //     }
-    // }
-    //     for(int i=0;i<_DAG_nodes.size();++i)
-    // {
-    //     if(_DAG_nodes[i]->getModule()->name()=="C43116")
-    //     {
-    //         vector<pair<DAG_Node *, double> > edges = _DAG_nodes[i]->getEdge();
-    //         for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) 
-    //         {
-    //             DAG_Node *node = it->first;
-    //             double weight = it->second;
-    //             cout << "Node: " << node->getModule()->name() << ", Weight: " << weight << std::endl;
-    //         }
-    //     }
-    // }
-
-    for (int i = 0; i < _DAG_nodes.size(); ++i) 
-    {
-    // if (_DAG_nodes[i]->getEdge().empty() && _DAG_nodes[i]->getEdge_r().empty()) 
-    // {
-    //     cout << "Node " << _DAG_nodes[i]->getName() << " is isolated" << std::endl;
-    // }
-        if(_DAG_nodes[i]->getModule()==NULL)
-        {
-            // cout << "I'm " << _DAG_nodes[i]->getName() << endl;
-            // vector<pair<DAG_Node *, double> > edges = _DAG_nodes[i]->getEdge();
-            // for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) 
-            // {
-            //     DAG_Node *node = it->first;
-            //     double weight = it->second;
-            //     if(it->first->getModule()==NULL)
-            //     {
-            //         cout << "Node: " << node->getName() << ", Weight: " << weight << endl;
-            //     }
-            //     else
-            //         cout << "Node: " << node->getModule()->name() << ", Weight: " << weight << endl;
-            // }
-        }
-        else if(_DAG_nodes[i]->getModule()->name() == "C102728")
-        {
-            cout << "I'm " << _DAG_nodes[i]->getModule()->name() << endl;
-            vector<pair<DAG_Node *, double> > edges = _DAG_nodes[i]->getEdge();
-            for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) 
-            {
-                DAG_Node *node = it->first;
-                double weight = it->second;
-                if(it->first->getModule()==NULL)
-                {
-                    cout << "adjNode: " << node->getName() << ", Weight: " << weight << endl;
-                }
-                else
-                    cout << "adjNode: " << node->getModule()->name() << ", Weight: " << weight << endl;
-            }
-            cout << "------"<< endl;
-        }
-    } 
 }
 
 void Placement::construct_DAG_R()
 {
     int row_left_boundary = _dataBase->row(0)->x();
     int row_right_boundary = _dataBase->row(0)->x() + (_dataBase->row(0)->numSites()) * _dataBase->row(0)->width();
-    int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y()+_dataBase->row(_dataBase->getNumRows() - 1)->height();
+    int row_top_boundary = _dataBase->row(_dataBase->getNumRows() - 1)->y() + _dataBase->row(_dataBase->getNumRows() - 1)->height();
     int row_bottom_boundary = _dataBase->row(0)->y();
     DAG_Node *L = new DAG_Node();
     L->setName("Left_boundary");
@@ -2370,6 +2301,7 @@ void Placement::construct_DAG_R()
     R->setName("Right_boundary");
     R->setX(row_right_boundary);
     R->setY(row_top_boundary);
+    // clang-format off
     map<int, vector<DAG_Node *>, greater<int> > _x2_DAG_Node_R;
     vector<Module *> modules = _dataBase->getmodule();
     quickSort_r(modules, 0, modules.size() - 1);
@@ -2390,7 +2322,7 @@ void Placement::construct_DAG_R()
             DAG_Node *dag_node_R = new DAG_Node;
 
             dag_node_L->setModule(modules[i]);
-            dag_node_L->setX(modules[i]->x()+ modules[i]->width());
+            dag_node_L->setX(modules[i]->x() + modules[i]->width());
             dag_node_L->setY(modules[i]->y());
             dag_node_L->set_isFF(false);
 
@@ -2504,7 +2436,7 @@ void Placement::construct_DAG_R()
         }
         else
         { // gate
-            double weight = (-1)*_DAG_nodes_reverse[i]->getModule()->width();
+            double weight = (-1) * _DAG_nodes_reverse[i]->getModule()->width();
             _DAG_nodes_reverse[i]->addEdge(_DAG_nodes_reverse[i + 1], weight); // R -> L
 
             int curr_level = _DAG_nodes_reverse[i]->getY() / RowHeight;
@@ -2565,7 +2497,6 @@ void Placement::construct_DAG_R()
     //         }
     //      }
     // }
-
 }
 // clang-format off
 void Placement::topologicalSortUtil_L(DAG_Node *node, stack<DAG_Node *> &Stack, vector<DAG_Node *> &visited)
@@ -2589,7 +2520,7 @@ void Placement::topologicalSortUtil_L(DAG_Node *node, stack<DAG_Node *> &Stack, 
 }
 
 // 計算 DAG 中每個節點的最長路徑
-void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
+void Placement::calculateLongestPaths_L(stack<DAG_Node *> inStack)
 {
     stack<DAG_Node *> Stack;
     vector<DAG_Node *> visited;
@@ -2614,32 +2545,19 @@ void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
         nodes[i]->setorder(i);
         nodes[i]->setPreviousGate(NULL);
     }
-
-    quickSort_dag(nodes,0,nodes.size()-1);
-    cout <<nodes[0]->getName()<<endl;
-    cout <<nodes[nodes.size()-1]->getName()<<endl;
-    int size = nodes.size();
-    for(int i = 0; i<size;i++)
+    // 進行拓撲排序
+    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
     {
-        Stack.push(nodes[i]);
+        DAG_Node *node = *it;
+        if (find(visited.begin(), visited.end(), node) == visited.end())
+        {
+            topologicalSortUtil_L(node, Stack, visited);
+        }
     }
 
-    // // 進行拓撲排序
-    // for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
-    // {
-    //     DAG_Node *node = *it;
-    //     if (find(visited.begin(), visited.end(), node) == visited.end())
-    //     {
-    //         topologicalSortUtil_L(node, Stack, visited);
-    //     }
-    // }
-    // cout << Stack.top()->getName()<<endl;
-
- 
-
     // 動態規劃計算最長路徑
-    while (!Stack.empty())
-    {
+    Stack.top()->setLongestPath(0);  
+    while (!Stack.empty()) {
         DAG_Node *node = Stack.top();
         Stack.pop();
 
@@ -2648,31 +2566,13 @@ void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
             node->setLongestPath(0);
         }
 
-        vector<pair<DAG_Node *, double> > edges = node->getEdge();
-        //-------
-        if(node->getModule()==NULL)
-            cout<<"node " <<node->getName()<<endl;
-        else
-            cout<<"node " <<node->getModule()->name()<<endl;
-        //-------
+       vector<pair<DAG_Node *, double> > edges = node->getEdge();
         for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) {
         DAG_Node *adjNode = it->first;
-        //-------
-        if(adjNode->getModule()==NULL)
-            cout<<"adjnode " <<adjNode->getName()<<endl;
-        else
-            cout<<"adjnode " <<adjNode->getModule()->name()<<endl;
-        //-------
         double weight = it->second;
 
             if(node->isFF()==1)
             {
-                // if(node->getPreviousNode() == NULL)
-                // {
-                //     cout << "NULL" << endl;
-                //     cout << node->getModule()->name()<<endl;
-                // }
-                // cout << node->getPreviousGate()->getName() <<endl;
                 adjNode->setPreviousGate(node->getPreviousGate());
                 adjNode->FFnum= (node->FFnum+1);
                 adjNode->setwstar(node->getwidth()+node->getwstar());
@@ -2683,77 +2583,14 @@ void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
                 adjNode->FFnum= (node->FFnum);
                 adjNode->setwstar(node->getwstar());
             }
-
             adjNode->setLongestPath(node->getLongestPath() + weight);
-            adjNode->setPreviousNode(node);
+            adjNode->setPreviousNode(node);  
             adjNode->record = node->record;
             adjNode->record.insert(node->getorder());
-            if (node->getPreviousNode() == NULL) 
-            {
-                if(node->getModule()==NULL)
-                {
-                    cout << node->getName() <<endl;
-                    continue;
-                }
-                else
-                {
-                    cout << "HERE!!"<<endl;
-                    cout << node->getModule()->name() <<endl;
-                    return;
-                }
-            }
-            if (adjNode->getPreviousNode() == NULL) {
-                cout << "Error: adjNode's PreviousNode is NULL after being set." << endl;
-                return;
-            }
-            // if(node->getName() == "Left_boundary" | node->getName() == "Right_boundary")
-            // {
-            //     continue;
-            // }
-            // else{
-            //     if(node->getPreviousNode() == NULL)
-            //     {
-            //          cout << node->getModule()->name()<<endl;
-            //     }
-
-            //     else if(node->getPreviousNode()->getName() == "Left_boundary" | node->getPreviousNode()->getName() == "Right_boundary")
-            //     {
-            //         cout << "node " << node->getModule()->name() <<endl;
-            //         cout << "previous node " << node->getPreviousNode()->getName()<<endl;
-            //         cout << "adjnode "<< adjNode->getModule()->name() << endl;
-            //     }
-
-            //     else 
-            //     {
-            //         cout << "node " << node->getModule()->name() << endl;
-            //         cout << "previous node " << node->getPreviousNode()->getModule()->name()<<endl;
-            //         cout << "adjnode "<< adjNode->getModule()->name() << endl;
-            //     }
-
-            // }
-            cout << endl;
         }
 
     }
-    int bug=0;
-    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
-    {
-        DAG_Node *node = *it;
-        if (node->getPreviousNode() == NULL) 
-        {
-            bug++;
-            cout << "BUG" << endl;
-            if(node->getModule()==NULL)
-            {
-                cout << node->getName() <<endl;
-            }
-            else
-                cout << node->getModule()->name() <<endl;
-            // return;
 
-        }
-    }
-    cout << bug << endl;
     for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
     {
         DAG_Node *node = *it;
@@ -2762,13 +2599,12 @@ void Placement::calculateLongestPaths_L(vector<DAG_Node *> &nodes)
             // cout<<"node name: "<<node->getName()<<endl;
             if(node->getPreviousGate()!= NULL)
             {
-            //cout<<"CASE1"<<endl;
+            // cout<<"CASE1"<<endl;
             // cout<<"Previous Gate: "<<node->getPreviousGate()->getName()<<endl;
              node->set_li( node->getLongestPath() - node->getPreviousGate()->getLongestPath());
             }
             else
             {
-                // cout << "========================" <<endl;
                 // cout<<"CASE2"<<endl;
                 node->set_li(node->getLongestPath());
             }
@@ -2799,9 +2635,10 @@ void Placement::topologicalSortUtil_R(DAG_Node *node, stack<DAG_Node *> &Stack, 
 }
 
 
-void Placement::calculateLongestPaths_R(vector<DAG_Node *> &nodes)
+void Placement::calculateLongestPaths_R(stack<DAG_Node *> inStack)
 {
-    stack<DAG_Node *> Stack;
+    // stack<DAG_Node *> Stack;
+    stack<DAG_Node *> Stack = inStack;
     vector<DAG_Node *> visited;
     
     for (int i = 0; i < nodes.size(); i++)
@@ -2825,59 +2662,36 @@ void Placement::calculateLongestPaths_R(vector<DAG_Node *> &nodes)
         nodes[i]->setorder(i);
         nodes[i]->setPreviousGate(NULL);
     }
-    quickSort_dag(nodes,0,nodes.size()-1);
-    cout <<nodes[0]->getName()<<endl;
-    cout <<nodes[nodes.size()-1]->getName()<<endl;
-    int size = nodes.size();
-    for(int i = 0; i<size;i++)
-    {
-        Stack.push(nodes[i]);
-    }
     // 進行拓撲排序
-    // for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
-    // {
-    //     DAG_Node *node = *it;
-    //     if (find(visited.begin(), visited.end(), node) == visited.end())
-    //     {
-    //         topologicalSortUtil_R(node, Stack, visited);
-    //     }
-    // }
+    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+    {
+        DAG_Node *node = *it;
+        if (find(visited.begin(), visited.end(), node) == visited.end())
+        {
+            topologicalSortUtil_R(node, Stack, visited);
+        }
+    }
 
     // 動態規劃計算最長路徑
-    while (!Stack.empty())
-    {
+    while (!Stack.empty()) {
         DAG_Node *node = Stack.top();
         Stack.pop();
 
-        if (node->getLongestPath() == -DBL_MAX)
-        {
-            node->setLongestPath(0);
+        if (node->getLongestPath() == -DBL_MAX) {
+            node->setLongestPath(0);  
         }
 
-        vector<pair<DAG_Node *, double> > edges = node->getEdge_r();
+       vector<pair<DAG_Node *, double> > edges = node->getEdge();
         for (vector<pair<DAG_Node *, double> >::iterator it = edges.begin(); it != edges.end(); ++it) {
         DAG_Node *adjNode = it->first;
         double weight = it->second;
-        if(node==NULL)
-        {
-            cout<<"YAHOO"<<endl;
-        }
-            if(node->isFF()==1)
-            {
-                adjNode->setPreviousGate(node->getPreviousGate());
-                adjNode->FFnum= (node->FFnum+1);
-                adjNode->setwstar(node->getwidth()+node->getwstar());
-            }
-            else
-            {
-                adjNode->setPreviousGate(node);
-                adjNode->FFnum= (node->FFnum);
-                adjNode->setwstar(node->getwstar());
-            }
+        if (node->getLongestPath() + weight > adjNode->getLongestPath()) {
+            adjNode->setwstar(node->getwidth()+node->getwstar());
             adjNode->setLongestPath(node->getLongestPath() + weight);
             adjNode->setPreviousNode(node);  
             adjNode->record = node->record;
             adjNode->record.insert(node->getorder());
+        }
     }
 
     }
@@ -2896,8 +2710,7 @@ void Placement::calculateLongestPaths_R(vector<DAG_Node *> &nodes)
             }
             else
             {
-                cout << "========================" <<endl;
-                cout<<"CASE2"<<endl;
+                // cout<<"CASE2"<<endl;
                 node->set_ri(node->getLongestPath());
             }
         }
@@ -2931,49 +2744,100 @@ void Placement::printLongestPath(DAG_Node *node)
 
 void Placement::cal_rhoi()
 {
-    for (int i = 0; i < this->_DAG_nodes.size(); i++)
+    vector<DAG_Node *> visited;
+    DAG_NodeList nodes = _DAG_nodes;
+    stack<DAG_Node *> Stack;
+    for (int i = 0; i < nodes.size(); i++)
     {
+        nodes[i]->setPreviousNode(NULL);
+        //---------------------------
+        //---------------------------
+        // if(nodes[i]->getModule()->isFF())
+        // {
+        //      nodes[i]->setwidth(5);     
+        // }
+        // else
+        // {
+        //      nodes[i]->setwidth(9000000000);
+        // }
+        if(nodes[i]->getModule()==NULL)
+            nodes[i]->setwidth(0);
+        else
+            nodes[i]->setwidth(nodes[i]->getModule()->width());
+        nodes[i]->setwstar(0);
+        nodes[i]->setorder(i);
+        nodes[i]->setPreviousNode(NULL);
+        nodes[i]->set_li(INT_MIN);
+        nodes[i]->set_ri(INT_MIN);
+        nodes[i]->setrhoi(-__DBL_MAX__);
+        nodes[i]->setthetai(-DBL_MAX);
+        nodes[i]->setLongestPath(-DBL_MAX);
+    }
+    // 進行拓撲排序
+    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+    {
+        DAG_Node *node = *it;
+        if (find(visited.begin(), visited.end(), node) == visited.end())
+        {
+            topologicalSortUtil_L(node, Stack, visited);
+        }
+    }
+    int counter = 0;
+    while (!Stack.empty())
+    {
+        counter++;
+        if (counter % 1000 == 0)
+        {
+            cout <<"count "<<counter<<endl;
+        }
+        
         // if(i==135752)
         // {
         //             cout<<"-----testing test-----"<<endl;
         //             cout<<"Mname: "<<_DAG_nodes[i]->getModule()->name()<<endl;
         // }
+        calculateLongestPaths_L(Stack);
+        DAG_Node *outDAG = Stack.top();
+        Stack.pop();
+        // cal target to others W*star
         double rhoi = -DBL_MAX;
-        if (_DAG_nodes[i]->isFF() == 0)
+        double theta = __DBL_MAX__;
+        int ri = INT_MIN;
+        stack<DAG_Node*> partStack = Stack;
+        while (!partStack.empty())
         {
+            DAG_Node *inDAG = partStack.top();
+            partStack.pop();
+            double Ski = inDAG->getwstar() - (inDAG->getX() -outDAG->getX());
+            double Sij = inDAG->getwstar() - (inDAG->getX() -outDAG->getX());
+            if (Sij > theta)
+            {
+                theta = Sij;
+            }
+            if (inDAG->isFF() == false)
+            {
+                if (Sij > ri)
+                {
+                    ri = Sij;
+                }
+            }
             
-            //cout<<"NONONO"<<endl;
-            rhoi = -DBL_MAX;
-            _DAG_nodes[i]->setrhoi(rhoi);
-            continue;
+            if (Ski > inDAG->getrhoi())
+            {
+                inDAG->setrhoi(Ski);
+            }
+            if (outDAG->isFF() == false)
+            {
+                // update li
+                if (Ski > inDAG->get_li())
+                {
+                    inDAG->set_li(Ski);
+                }
+            }  
         }
-        for (int j = 0; j <= i; j++)
-        {
-
-            if (i == j)
-            {
-                rhoi = max(rhoi,double(0));
-            }
-            else if (_DAG_nodes[i]->record.find(j) == _DAG_nodes[i]->record.end() || _DAG_nodes[j]->isFF() == 0)
-            {
-                
-                rhoi = max(rhoi, -DBL_MAX);    
-            }
-            else
-            {
-                 rhoi = max(rhoi,( _DAG_nodes[i]->getwstar()-_DAG_nodes[j]->getwstar() - (_DAG_nodes[i]->getX() - _DAG_nodes[j]->getX()) ));
-                //  if(i==135752)
-                //  {
-                //     //cout<<"CASE3"<<endl;
-                //     cout<<_DAG_nodes[i]->getModule()->width()<<endl;
-                //     cout<<"update: "<<rhoi<<" wstardiff:"<<_DAG_nodes[i]->getwstar()-_DAG_nodes[j]->getwstar()<<" xdiff: "<<(_DAG_nodes[i]->getX() - _DAG_nodes[j]->getX())<<" ON PATH FF: "<<_DAG_nodes[i]->FFnum-_DAG_nodes[j]->FFnum<<" "<<endl;
-                //  }
-            
-            }
-        }
+        outDAG->set_ri(ri);
+        outDAG->setthetai(theta);
         
-        _DAG_nodes[i]->setrhoi(rhoi);
-
     }
 }
 
@@ -3013,25 +2877,74 @@ void* calculate_thetai(void* arg) {
     return NULL;
 }
 
-void Placement::cal_thetai() {
-    long num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
-    cout<<"CPU num: "<<num_cpus<<endl;
-    const int num_threads = num_cpus/2;  // 可以根據 CPU 核心數調整
-    pthread_t threads[num_threads];
-    ThreadData thread_data[num_threads];
-
-    int nodes_per_thread = this->_DAG_nodes.size() / num_threads;
-
-    for(int i = 0; i < num_threads; i++) {
-        thread_data[i].placement = this;
-        thread_data[i].start = i * nodes_per_thread;
-        thread_data[i].end = (i == num_threads - 1) ? this->_DAG_nodes.size() : (i + 1) * nodes_per_thread;
-
-        pthread_create(&threads[i], NULL, calculate_thetai, &thread_data[i]);
+void Placement::cal_thetai() 
+{
+    vector<DAG_Node *> visited;
+    DAG_NodeList nodes = _DAG_nodes;
+    stack<DAG_Node *> Stack;
+    for (int i = 0; i < nodes.size(); i++)
+    {
+        nodes[i]->setPreviousNode(NULL);
+        //---------------------------
+        //---------------------------
+        // if(nodes[i]->getModule()->isFF())
+        // {
+        //      nodes[i]->setwidth(5);     
+        // }
+        // else
+        // {
+        //      nodes[i]->setwidth(9000000000);
+        // }
+        if(nodes[i]->getModule()==NULL)
+            nodes[i]->setwidth(0);
+        else
+            nodes[i]->setwidth(nodes[i]->getModule()->width());
+        nodes[i]->setwstar(0);
+        nodes[i]->setorder(i);
+        nodes[i]->setPreviousGate(NULL);
     }
-
-    for(int i = 0; i < num_threads; i++) {
-        pthread_join(threads[i], NULL);
+    // 進行拓撲排序
+    for (vector<DAG_Node *>::iterator it = nodes.begin(); it != nodes.end(); ++it)
+    {
+        DAG_Node *node = *it;
+        if (find(visited.begin(), visited.end(), node) == visited.end())
+        {
+            topologicalSortUtil_R(node, Stack, visited);
+        }
+    }
+    int counter = 0;
+    while (!Stack.empty())
+    {
+        cout <<"theta "<< counter++<<endl;
+        // if(i==135752)
+        // {
+        //             cout<<"-----testing test-----"<<endl;
+        //             cout<<"Mname: "<<_DAG_nodes[i]->getModule()->name()<<endl;
+        // }
+        calculateLongestPaths_R(Stack);
+        DAG_Node *JDAG = Stack.top();
+        Stack.pop();
+        // cal target to others W*star
+        double rhoi = -DBL_MAX;
+        stack<DAG_Node*> partStack = Stack;
+        while (!partStack.empty())
+        {
+            DAG_Node *IDAG = partStack.top();
+            partStack.pop();
+            double Sij = IDAG->getwstar() - (JDAG->getX() -IDAG->getX());
+            if (Sij > IDAG->getthetai())
+            {
+                IDAG->setthetai(Sij);
+            }
+            if (JDAG->isFF() == false)
+            {
+                // update ri
+                if (Sij > IDAG->get_ri())
+                {
+                    IDAG->set_ri(Sij);
+                }
+            }  
+        }   
     }
 }
 
